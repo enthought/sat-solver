@@ -61,7 +61,7 @@ class SimpleSATSolver(object):
             lit.name for clause in clauses for lit in clause
         })
 
-    def _setup_watchlist(self):
+    def _setup(self):
         # Boolean assignment that the solver is currently trying.
         self._assignment = {variable: None for variable in self.variables}
 
@@ -76,7 +76,7 @@ class SimpleSATSolver(object):
     def solve(self):
         """Return an iterator over all solutions for this SAT problem.
         """
-        self._setup_watchlist()
+        self._setup()
 
         index = 0
         while True:
