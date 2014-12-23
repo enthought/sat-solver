@@ -70,6 +70,19 @@ class Clause(Constraint):
         # propagated.
         return lits[0]
 
+    def calculate_reason(self, p=None):
+        """For a conflicting clause, return the reason for propagating p.
+
+        For example, if the clause is x \/ y \/ z, then the reason for
+        propagating x is -y /\ -z. By convention, f the literal p does not
+        occur in the clause, the negative of the whole clause is returned.
+
+        """
+        # TODO: We can speed this up if we can guarantee that we'll only ask
+        # for the reason of the first literal, as is the case in the Minisat
+        # paper.
+        return [-lit for lit in self.lits if lit != p]
+
     def __len__(self):
         return len(self.lits)
 
@@ -87,7 +100,15 @@ class Solver(object):
         self.watches = defaultdict(list)
 
         self.assignments = {}  # XXX
+
+        # A list of literals which become successively true (because of direct
+        # assignment, or by unit propagation).
+        self.levels = defaultdict(int)
+        # The number of decisions that have been made.
+        self.decision_level = 0
+
         self.prop_queue = deque()
+        self.trail = []
 
         # Whether the system is satisfiable.
         self.status = None
@@ -151,5 +172,19 @@ class Solver(object):
         else:
             # New fact, store it.
             self.assignments[abs(lit)] = (lit > 0)
+
             self.prop_queue.append(lit)
+            self.trail.append(lit)
+            self.levels[abs(lit)] = self.decision_level
+
             return True
+
+    def undo_one(self):
+        """Backtrack by one step.
+        """
+        pass
+
+    def analyze(self, conflict):
+        """ Produce a reason clause for a conflict.
+        """
+        pass

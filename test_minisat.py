@@ -43,6 +43,16 @@ class TestClause(unittest.TestCase):
         self.assertEqual(unit, 1)
         self.assertItemsEqual(c.lits, [1, -2, 5])
 
+    def test_calculate_reason(self):
+        # Given
+        c = Clause([1, -2, 5])
+
+        # When / then
+        reason = c.calculate_reason(1)
+        self.assertItemsEqual(reason, [2, -5])
+        reason = c.calculate_reason(9)
+        self.assertItemsEqual(reason, [-1, 2, -5])
+
 
 class TestSolver(unittest.TestCase):
 
@@ -213,6 +223,7 @@ class TestSolver(unittest.TestCase):
         # Then
         self.assertIsNone(conflict)
         self.assertEqual(s.assignments, {1: True, 2: False, 3: None, 4: None})
+        self.assertEqual(s.trail, [-2, 1])
         self.assertItemsEqual(s.watches[-1], [cl1, cl2])
         self.assertItemsEqual(s.watches[-2], [cl1])
         self.assertItemsEqual(s.watches[-3], [cl2])
@@ -236,6 +247,7 @@ class TestSolver(unittest.TestCase):
         self.assertIsNone(conflict)
         self.assertEqual(s.assignments,
                          {1: False, 2: False, 3: False, 4: False})
+        self.assertEqual(s.trail, [-1, -2, -3, -4])
 
     def test_propagation_with_queue_conflicted(self):
         # Check that we can recover from a conflict that arises during unit
@@ -258,11 +270,13 @@ class TestSolver(unittest.TestCase):
 
         # Then
         self.assertIsNotNone(conflict)
+        self.assertEqual(s.trail, [-1, -2, 3])
         self.assertItemsEqual(s.watches[-3], [cl3])
         self.assertItemsEqual(s.watches[-2], [cl2, cl3])
         self.assertItemsEqual(s.watches[-1], [cl1])
         self.assertItemsEqual(s.watches[2], [cl1])
         self.assertItemsEqual(s.watches[3], [cl2])
+
 
 if __name__ == '__main__':
     unittest.main()
