@@ -277,6 +277,66 @@ class TestSolver(unittest.TestCase):
         self.assertItemsEqual(s.watches[2], [cl1])
         self.assertItemsEqual(s.watches[3], [cl2])
 
+    def test_undo_one(self):
+        # Given
+        s = Solver()
+        s.trail = [1, 2, -3]
+        s.assignments = {1: None, 2: None, 3: True}
+
+        # When
+        s.undo_one()
+
+        # Then
+        self.assertEqual(s.assignments, {1: None, 2: None, 3: None})
+        self.assertEqual(s.trail, [1, 2])
+
+    def test_cancel(self):
+        # Given
+        s = Solver()
+        s.trail = [1, 2, -3, 4, 5, 6, -9, 10, 13]
+        s.trail_lim = [0, 2, 4, 6]
+
+        # When
+        s.cancel()
+
+        # Then
+        self.assertEqual(s.decision_level, 3)
+        self.assertEqual(s.trail,  [1, 2, -3, 4, 5, 6])
+        self.assertEqual(s.trail_lim, [0, 2, 4])
+
+    def test_cancel_until(self):
+        # Given
+        s = Solver()
+        s.trail = [1, 2, -3, 4, 5, 6, -9, 10, 13]
+        s.trail_lim = [0, 2, 4, 6]
+
+        # When
+        s.cancel_until(1)
+
+        # Then
+        self.assertEqual(s.decision_level, 1)
+        self.assertEqual(s.trail_lim, [0])
+        self.assertEqual(s.trail, [1, 2])
+
+    def test_assume_cancel_roundtrip(self):
+        # Given
+        s = Solver()
+        s.assignments = {1: None}
+
+        # When / then
+        s.assume(-1)
+        self.assertFalse(s.assignments[1])
+        self.assertEqual(s.decision_level, 1)
+        self.assertEqual(s.trail, [-1])
+        self.assertEqual(s.trail_lim, [0])
+
+        # When / then
+        s.cancel()
+        self.assertIsNone(s.assignments[1])
+        self.assertEqual(s.decision_level, 0)
+        self.assertEqual(s.trail, [])
+        self.assertEqual(s.trail_lim, [])
+
 
 if __name__ == '__main__':
     unittest.main()

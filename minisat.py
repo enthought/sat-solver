@@ -104,11 +104,14 @@ class Solver(object):
         # A list of literals which become successively true (because of direct
         # assignment, or by unit propagation).
         self.levels = defaultdict(int)
-        # The number of decisions that have been made.
-        self.decision_level = 0
 
         self.prop_queue = deque()
+        # A list of all the decisions that we've made so far.
         self.trail = []
+        # Keeps track of the independent assumptions so far. Each entry in
+        # trail_lim is an index pointing to an assumption in trail. TODO:
+        # Structure self.trail so that it keeps track of decisions per level.
+        self.trail_lim = []
 
         # Whether the system is satisfiable.
         self.status = None
@@ -179,12 +182,80 @@ class Solver(object):
 
             return True
 
-    def undo_one(self):
-        """Backtrack by one step.
-        """
-        pass
+    def search(self):
+        root_level = self.decision_level
+        while True:
+            conflict = self.propagate()
+            if conflict is None:
+                if self.number_assigned == self.number_variables:
+                    # Model found.
+                    return self.assignments.copy()  # Do something better...
+                else:
+                    # New variable decision.
+
+                    # TODO As we don't record variable activities, we simply
+                    # select the next unassigned variable.
+                    p = next(key for key, value in self.assignments.items()
+                             if value is None)
+                    self.assume(p)
+            else:
+                # Conflict!
+                if root_level == self.decision_level:
+                    # FIXME Fundamentally unsolvable? I don't know what this
+                    # means...
+                    return False
+
+                # TODO Actually do the learning here.
+                backtrack_level = 0
+                self.cancel_until(max(backtrack_level, root_level))
 
     def analyze(self, conflict):
         """ Produce a reason clause for a conflict.
         """
         pass
+
+    def undo_one(self):
+        """Backtrack by one step.
+        """
+        p = self.trail.pop()
+        v = abs(p)  # Underlying variable
+        self.assignments[v] = None
+        # self.reason[v] = None
+        self.levels[v] = -1  # FIXME Why -1?
+
+    def cancel_until(self, level):
+        """Cancel all decisions up a given level.
+        """
+        while self.decision_level > level:
+            self.cancel()
+
+    def cancel(self):
+        """Undo all decisions in the current decision level.
+        """
+        # Taken verbatim from Minisat paper.
+        c = len(self.trail) - self.trail_lim.pop()
+        for _ in xrange(c):
+            self.undo_one()
+
+    def assume(self, lit):
+        self.trail_lim.append(len(self.trail))  # FIXME: This is fishy.
+        return self.enqueue(lit)
+
+    @property
+    def number_assigned(self):
+        """ Return the number of currently assigned variables.
+        """
+        return len([value for value in self.assignments.values()
+                    if value is not None])
+
+    @property
+    def number_variables(self):
+        """ Return the number of variables in the SAT problem.
+        """
+        return len(self.assignments)
+
+    @property
+    def decision_level(self):
+        """ Return the number of independent assumptions made so far.
+        """
+        return len(self.trail_lim)
