@@ -2,7 +2,43 @@ import unittest
 
 import mock
 
-from minisat import Clause, Solver
+from minisat import Clause, Solver, value
+
+# TODO: Move all ZM01 related tests to a separate module.
+
+
+def zm01_solver(add_conflict=False):
+    """Create a solver with a non-trivial implication graph.
+
+    The system is taken from Figure 2 in "Efficient Conflict Driven Learning in
+    Boolean Satisfiability Solver", by Zhang, Madigan, Moskewicz, and Malik
+    (2001).
+
+    """
+    s = Solver()
+    s.add_clause(Clause([-12, 6, -11]))
+    s.add_clause(Clause([16, -11, 13]))
+    s.add_clause(Clause([-2, 12, -16]))
+    s.add_clause(Clause([-10, -4, 2]))
+    s.add_clause(Clause([1, -8, 10]))
+    s.add_clause(Clause([3, 10]))
+    s.add_clause(Clause([-5, 10]))
+    s.add_clause(Clause([18, 17, -1, -3, 5]))
+    if add_conflict:
+        s.add_clause(Clause([-18, -3, -19]))
+
+    s.assignments = {k: None for k in range(20)}
+
+    # Load up the assignments from lower decision levels. The call to
+    # assume() will enter a new decision level and enqueue.
+    s.assume(-6)
+    s.enqueue(-17)
+    s.assume(8)
+    s.enqueue(-13)
+    s.assume(4)
+    s.enqueue(19)
+
+    return s
 
 
 class TestClause(unittest.TestCase):
@@ -277,6 +313,39 @@ class TestSolver(unittest.TestCase):
         self.assertItemsEqual(s.watches[2], [cl1])
         self.assertItemsEqual(s.watches[3], [cl2])
 
+    def test_propagate_zm01(self):
+        # Test that the solver can replicate the implication graph of ZM01. For
+        # details on the assignments, see that paper.
+
+        # Given
+        s = zm01_solver(add_conflict=True)
+
+        # When
+        s.assume(11)
+        conflict = s.propagate()
+
+        # Then
+        self.assertIsNotNone(conflict)
+        self.assertEqual(s.trail_lim, [0, 2, 4, 6])
+
+        last = s.trail_lim[-1]
+        self.assertItemsEqual(s.trail[last:],
+                              [11, -12, 16, -2, -10, 1, 3, -5, 18])
+
+        expected_assignments = {
+            1: True,
+            2: False,
+            3: True,
+            5: False,
+            10: False,
+            11: True,
+            12: False,
+            16: True,
+            18: True
+        }
+        for var, value in expected_assignments.items():
+            self.assertEqual(s.assignments[var], value)
+
     def test_undo_one(self):
         # Given
         s = Solver()
@@ -337,6 +406,77 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(s.trail, [])
         self.assertEqual(s.trail_lim, [])
 
+    def test_cancel_zm01(self):
+        # Check that we can resolve a conflict on the implication graph of
+        # ZM01, and that the watch lists are left in a consistent state
+        # afterwards.
+
+        # Given
+        s = zm01_solver(add_conflict=True)
+
+        # When
+        s.assume(11)
+        conflict = s.propagate()
+
+        # Then
+        self.assertIsNotNone(conflict)
+        self.assertEqual(s.decision_level, 4)
+
+        # When
+        s.cancel()
+
+        # Then
+        self.assertEqual(s.decision_level, 3)
+        for var in [1, 2, 5, 10, 11, 12, 16, 18]:
+            self.assertIsNone(s.assignments[var])
+            self.assertIsNone(s.reason[var])
+        for lit, clauses in s.watches.items():
+            if len(clauses) > 2:
+                self.assertNotEqual(value(-lit, s.assignments), False)
+
+    def test_analyze_same_level(self):
+        # Given
+        s = Solver()
+        s.add_clause(Clause([1, 2]))
+        s.add_clause(Clause([1, -2]))
+        s.assume(-1)
+        conflict = s.propagate()
+
+        # When
+        learned_clause, bt_level = s.analyze(conflict)
+
+        # Then
+        self.assertItemsEqual(learned_clause.lits, [1])
+        self.assertEqual(bt_level, 0)
+
+    def test_analyze_lower_level(self):
+        # Given
+        s = Solver()
+        s.add_clause(Clause([1, -2, 3]))
+        s.add_clause(Clause([1, 2]))
+        s.assume(-3)
+        s.assume(-1)
+        conflict = s.propagate()
+
+        # When
+        learned_clause, bt_level = s.analyze(conflict)
+
+        # Then
+        self.assertItemsEqual(learned_clause.lits, [1, 3])
+        self.assertEqual(bt_level, 1)
+
+    def test_analyze_conflict_zm01(self):
+        # Given
+        s = zm01_solver(add_conflict=True)
+        s.assume(11)
+        conflict = s.propagate()
+
+        # When
+        learned_clause, bt_level = s.analyze(conflict)
+
+        # Then
+        self.assertItemsEqual(learned_clause.lits, [-8, 10, 17, -19])
+        self.assertEqual(bt_level, 3)
 
 if __name__ == '__main__':
     unittest.main()

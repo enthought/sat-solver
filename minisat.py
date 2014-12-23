@@ -96,6 +96,7 @@ class Clause(Constraint):
 class Solver(object):
 
     def __init__(self):
+
         self.clauses = []
         self.watches = defaultdict(list)
 
@@ -112,6 +113,9 @@ class Solver(object):
         # trail_lim is an index pointing to an assumption in trail. TODO:
         # Structure self.trail so that it keeps track of decisions per level.
         self.trail_lim = []
+
+        # XXX Describe this...
+        self.reason = {}
 
         # Whether the system is satisfiable.
         self.status = None
@@ -179,6 +183,7 @@ class Solver(object):
             self.prop_queue.append(lit)
             self.trail.append(lit)
             self.levels[abs(lit)] = self.decision_level
+            self.reason[abs(lit)] = cause
 
             return True
 
@@ -212,7 +217,52 @@ class Solver(object):
     def analyze(self, conflict):
         """ Produce a reason clause for a conflict.
         """
-        pass
+        p = None  # Will hold the UIP at the end of the search.
+
+        # A tally of the number of literals encountered so far in the current
+        # decision level, and downstream from the UIP.
+        counter = 0
+        # Variables that we've encountered during the search.
+        seen = set()
+
+        # TODO (Here and elsewhere) remove the "out_" prefix from return vals.
+
+        # Literals for the clause that we're learning.
+        out_learnt = []
+        # Level to backtrack to.
+        out_btlevel = 0
+
+        while True:
+            reason = conflict.calculate_reason(p)
+
+            # Trace reason for current p.
+            for lit in reason:
+                var = abs(lit)
+                if var not in seen:
+                    seen.add(var)
+                    if self.levels[var] == self.decision_level:
+                        # A new literal on the current decision level.
+                        counter += 1
+                    else:
+                        # At this point, we don't treat level 0 as
+                        # special. Maybe that's a mistake...
+                        out_learnt.append(-lit)
+                        out_btlevel = max(out_btlevel, self.levels[var])
+
+            # Select next literal to look at.
+            while True:
+                p = self.trail[-1]
+                conflict = self.reason[abs(p)]
+                self.undo_one()
+                if abs(p) in seen:
+                    break
+
+            counter -= 1
+            if counter == 0:
+                break
+
+        out_learnt.append(-p)  # At this point p is the UIP.
+        return Clause(out_learnt, learnt=True), out_btlevel
 
     def undo_one(self):
         """Backtrack by one step.
@@ -220,7 +270,7 @@ class Solver(object):
         p = self.trail.pop()
         v = abs(p)  # Underlying variable
         self.assignments[v] = None
-        # self.reason[v] = None
+        self.reason[v] = None
         self.levels[v] = -1  # FIXME Why -1?
 
     def cancel_until(self, level):
