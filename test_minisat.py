@@ -478,5 +478,18 @@ class TestSolver(unittest.TestCase):
         self.assertItemsEqual(learned_clause.lits, [-8, 10, 17, -19])
         self.assertEqual(bt_level, 3)
 
+    def test_record_learned_clause(self):
+        # Given
+        s = Solver()
+        s.levels = {1: 0, 2: 0, 3: 5, 4: 25}
+        clause = Clause([2, 3, -4, 5])
+
+        # When
+        s.record(clause)
+
+        # Then
+        self.assertEqual(clause.lits, [5, -4, 3, 2])
+        self.assertItemsEqual(s.prop_queue, [5])
+
 if __name__ == '__main__':
     unittest.main()

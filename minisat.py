@@ -188,6 +188,8 @@ class Solver(object):
             return True
 
     def search(self):
+        """ Main backtracking loop.
+        """
         root_level = self.decision_level
         while True:
             conflict = self.propagate()
@@ -210,9 +212,9 @@ class Solver(object):
                     # means...
                     return False
 
-                # TODO Actually do the learning here.
-                backtrack_level = 0
-                self.cancel_until(max(backtrack_level, root_level))
+                learned_clause, bt_level = self.analyze(conflict)
+                self.cancel_until(max(bt_level, root_level))
+                self.record(learned_clause)
 
     def analyze(self, conflict):
         """ Produce a reason clause for a conflict.
@@ -263,6 +265,25 @@ class Solver(object):
 
         out_learnt.append(-p)  # At this point p is the UIP.
         return Clause(out_learnt, learnt=True), out_btlevel
+
+    def record(self, learned_clause):  # Needs test.
+        """Drive the backtracking by adding a learned clause, which is unit by
+        assumption.
+
+        """
+        # Reorder the learned clause, so that lits[0] is the asserting literal,
+        # and lits[1] is the literal with highest decision level. This literal
+        # will first become unbound by backtracking.
+        lits = learned_clause.lits
+        lits[0], lits[-1] = lits[-1], lits[0]  # XXX
+
+        # Index of the literal with the highest decision level.
+        max_i = max(enumerate([self.levels.get(abs(lit), 0) for lit in lits]),
+                    key=lambda (n, level): level)[0]
+        lits[1], lits[max_i] = lits[max_i], lits[1]
+
+        self.add_clause(learned_clause, learned=True)
+        self.enqueue(learned_clause.lits[0], learned_clause)
 
     def undo_one(self):
         """Backtrack by one step.
