@@ -280,7 +280,8 @@ class Solver(object):
         # Index of the literal with the highest decision level.
         max_i = max(enumerate([self.levels.get(abs(lit), 0) for lit in lits]),
                     key=lambda (n, level): level)[0]
-        lits[1], lits[max_i] = lits[max_i], lits[1]
+        if len(lits) >= 2:
+            lits[1], lits[max_i] = lits[max_i], lits[1]
 
         self.add_clause(learned_clause, learned=True)
         self.enqueue(learned_clause.lits[0], learned_clause)
