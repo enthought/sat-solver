@@ -208,8 +208,6 @@ class Solver(object):
             else:
                 # Conflict!
                 if root_level == self.decision_level:
-                    # FIXME Fundamentally unsolvable? I don't know what this
-                    # means...
                     return False
 
                 learned_clause, bt_level = self.analyze(conflict)
