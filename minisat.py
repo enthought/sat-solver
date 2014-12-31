@@ -162,7 +162,7 @@ class Solver(object):
                         # unwatched clauses into the watch list.
                         self.prop_queue.clear()
                         for remaining in clauses:
-                            self.watches[-remaining.lits[1]].append(remaining)
+                            self.watches[lit].append(remaining)
                         return clause
                     else:
                         # Non-conflicting unit literal.
@@ -188,7 +188,7 @@ class Solver(object):
             return True
 
     def search(self):
-        """ Main backtracking loop.
+        """ Return next solution, or False if unsatisfiable.
         """
         root_level = self.decision_level
         while True:
