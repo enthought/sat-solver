@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from utils import Clause, Literal
+from simplesat.utils import Clause, Literal
 
 
 class TestLiteral(TestCase):

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from simple_solver import Watchlist, SimpleSATSolver
-from utils import Clause, Literal
+from simplesat.simple_solver import Watchlist, SimpleSATSolver
+from simplesat.utils import Clause, Literal
 
 
 class TestWatchlist(TestCase):
