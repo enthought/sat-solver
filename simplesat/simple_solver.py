@@ -7,15 +7,7 @@ http://sahandsaba.com/understanding-sat-by-implementing-a-simple-sat-solver-in-p
 
 from collections import defaultdict
 
-
-def value(lit, assignments):
-    """ Value of a literal given variable assignments.
-    """
-    status = assignments.get(abs(lit))
-    if status is None:
-        return None
-    is_conjugated = lit < 0
-    return is_conjugated is not status
+from .utils import value
 
 
 class Watchlist(object):
