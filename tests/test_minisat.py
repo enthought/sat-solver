@@ -2,7 +2,7 @@ import unittest
 
 import mock
 
-from minisat import Clause, Solver, value
+from simplesat.api import Clause, Solver, value
 
 # TODO: Move all ZM01 related tests to a separate module.
 

@@ -1,6 +1,6 @@
 import unittest
 
-from minisat import Clause, Solver, value
+from simplesat.api import Clause, Solver, value
 
 
 class TestMinisatProblems(unittest.TestCase):

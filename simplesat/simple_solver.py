@@ -7,7 +7,7 @@ http://sahandsaba.com/understanding-sat-by-implementing-a-simple-sat-solver-in-p
 
 from collections import defaultdict
 
-from utils import Literal
+from .utils import Literal
 
 
 class Watchlist(object):
