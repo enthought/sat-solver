@@ -7,7 +7,15 @@ http://sahandsaba.com/understanding-sat-by-implementing-a-simple-sat-solver-in-p
 
 from collections import defaultdict
 
-from .utils import Literal
+
+def value(lit, assignments):
+    """ Value of a literal given variable assignments.
+    """
+    status = assignments.get(abs(lit))
+    if status is None:
+        return None
+    is_conjugated = lit < 0
+    return is_conjugated is not status
 
 
 class Watchlist(object):
@@ -26,15 +34,13 @@ class Watchlist(object):
         # Note: this can run indefinitely if updating with a false_literal
         # which does not correspond to a False variable in assignments. The
         # following assert checks for this inconsistency.
-        assert assignments[false_literal.name] is false_literal.is_conjugated
+        assert value(false_literal, assignments) is not True
 
         clauses = self._watchlist[false_literal]
         while len(clauses) > 0:
             clause = clauses[-1]
             for literal in clause:
-                var = literal.name
-                if assignments[var] is None or \
-                        assignments[var] is not literal.is_conjugated:
+                if value(literal, assignments) is not False:
                     # Found an alternative literal; migrate clause.
                     self._watchlist[literal].append(clause)
                     clauses.pop()
@@ -46,19 +52,13 @@ class Watchlist(object):
         # All clauses have been re-assigned.
         return True
 
-    def dump(self):
-        for key, values in self._watchlist.items():
-            print key, ':'
-            for clause in values:
-                print '\t', clause
-
 
 class SimpleSATSolver(object):
 
     def __init__(self, clauses):
         self._clauses = clauses
         self.variables = list({
-            lit.name for clause in clauses for lit in clause
+            abs(lit) for clause in clauses for lit in clause
         })
 
     def _setup(self):
@@ -96,9 +96,9 @@ class SimpleSATSolver(object):
                 self._assignment[variable] = choice
                 tried_something = True
 
+                sign = -1 if choice else +1
                 succeeded = self._watchlist.update(
-                    Literal(variable, is_conjugated=choice),
-                    self._assignment)
+                    sign * variable, self._assignment)
                 if not succeeded:
                     self._assignment[variable] = None
                 else:
