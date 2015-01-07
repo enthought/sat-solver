@@ -343,8 +343,8 @@ class TestSolver(unittest.TestCase):
             16: True,
             18: True
         }
-        for var, value in expected_assignments.items():
-            self.assertEqual(s.assignments[var], value)
+        for var, _value in expected_assignments.items():
+            self.assertEqual(s.assignments[var], _value)
 
     def test_undo_one(self):
         # Given
@@ -490,6 +490,3 @@ class TestSolver(unittest.TestCase):
         # Then
         self.assertEqual(clause.lits, [5, -4, 3, 2])
         self.assertItemsEqual(s.prop_queue, [5])
-
-if __name__ == '__main__':
-    unittest.main()

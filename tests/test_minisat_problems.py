@@ -121,7 +121,3 @@ class TestMinisatVanDerWaerden(unittest.TestCase):
 
         # Then
         self.assertFalse(solution)
-
-
-if __name__ == '__main__':
-    unittest.main()

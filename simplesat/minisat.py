@@ -217,12 +217,10 @@ class Solver(object):
         # Variables that we've encountered during the search.
         seen = set()
 
-        # TODO (Here and elsewhere) remove the "out_" prefix from return vals.
-
         # Literals for the clause that we're learning.
-        out_learnt = []
+        learnt = []
         # Level to backtrack to.
-        out_btlevel = 0
+        btlevel = 0
 
         while True:
             reason = conflict.calculate_reason(p)
@@ -238,8 +236,8 @@ class Solver(object):
                     else:
                         # At this point, we don't treat level 0 as
                         # special. Maybe that's a mistake...
-                        out_learnt.append(-lit)
-                        out_btlevel = max(out_btlevel, self.levels[var])
+                        learnt.append(-lit)
+                        btlevel = max(btlevel, self.levels[var])
 
             # Select next literal to look at.
             while True:
@@ -253,8 +251,8 @@ class Solver(object):
             if counter == 0:
                 break
 
-        out_learnt.append(-p)  # At this point p is the UIP.
-        return Clause(out_learnt, learnt=True), out_btlevel
+        learnt.append(-p)  # At this point p is the UIP.
+        return Clause(learnt, learnt=True), btlevel
 
     def record(self, learned_clause):  # Needs test.
         """Drive the backtracking by adding a learned clause, which is unit by
