@@ -1,32 +1,31 @@
 import subprocess
 
 
-def rules_set_to_dimacs(rules_generator, fp):
+def rules_set_to_dimacs(pool, rules, fp):
     """
     Translate a rules generator into a dimacs file.
 
     Parameters
     ----------
-    rules_generator : RulesGenerator
+    pool: Pool
+    rules: RulesGenerator
     fp : file-like object
         A file-like object to write the rules into.
     """
-    pool = rules_generator._pool
     max_id = pool._id
 
-    rules_set = rules_generator.iter_rules()
     fp.write("c written by new_solver\n")
-    fp.write("p cnf {0} {1}\n".format(max_id, len(rules_set)))
-    for rule in rules_set:
+    fp.write("p cnf {0} {1}\n".format(max_id, len(rules)))
+    for rule in rules:
         fp.write(" ".join(str(i) for i in rule.literals) + " 0\n")
 
 
-def solve_sat(pool, rules_generator):
+def solve_sat(pool, rules):
     input_filename = "problem.dimacs"
     output_filename = "problem.sol"
 
     with open(input_filename, "wt") as fp:
-        rules_set_to_dimacs(rules_generator, fp)
+        rules_set_to_dimacs(pool, rules, fp)
 
     code = subprocess.call(["minisat", input_filename, output_filename])
     assert code == 10
@@ -44,3 +43,16 @@ def solution_to_package_strings(fp):
     data = fp.readline()
 
     return [int(value) for value in data.split()[:-1]]
+
+
+def is_satisfable(pool, rules):
+    input_filename = "problem.dimacs"
+    output_filename = "problem.sol"
+
+    with open(input_filename, "wt") as fp:
+        rules_set_to_dimacs(pool, rules, fp)
+
+    code = subprocess.call(["minisat", input_filename, output_filename])
+    assert code in (10, 20)
+
+    return code == 10
