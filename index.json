@@ -1,0 +1,56 @@
+{
+    "MKL-10.2-1.egg": {
+        "available": true,
+        "build": 1,
+        "md5": "4a58b9c2a86fb4ae5070b5d5613b88c6",
+        "mtime": 1266275689.0,
+        "name": "mkl",
+        "product": "free",
+        "python": null,
+        "size": 63295480,
+        "type": "egg",
+        "version": "10.2"
+    },
+    "MKL-10.3-1.egg": {
+        "available": true,
+        "build": 1,
+        "md5": "34eacc23d412be8521c9be6097e01b11",
+        "mtime": 1296760704.0,
+        "name": "mkl",
+        "product": "free",
+        "python": null,
+        "size": 78220750,
+        "type": "egg",
+        "version": "10.3"
+    },
+    "numpy-1.7.1-1.egg": {
+        "available": true,
+        "build": 1,
+        "md5": "8b4eaf2fa8c2d491ccba104313ca3842",
+        "mtime": 1370530688.0,
+        "name": "numpy",
+        "packages": [
+            "MKL 10.3-1"
+        ],
+        "product": "free",
+        "python": "2.7",
+        "size": 3694014,
+        "type": "egg",
+        "version": "1.7.1"
+    },
+    "numpy-1.8.1-1.egg": {
+        "available": true,
+        "build": 1,
+        "md5": "9c3808a46bffbeb78cdd8c9aaf302af4",
+        "mtime": 1407894392.0,
+        "name": "numpy",
+        "packages": [
+            "MKL 10.3-1"
+        ],
+        "product": "free",
+        "python": "2.7",
+        "size": 6497213,
+        "type": "egg",
+        "version": "1.8.1"
+    }
+}
