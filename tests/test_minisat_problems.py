@@ -18,7 +18,7 @@ class TestMinisatProblems(unittest.TestCase):
         s.add_clause(cl1)
         s.add_clause(cl2)
         s.add_clause(cl3)
-        s.assignments = {1: None, 2: None, 3: None, 4: None}
+        s._setup_assignments()
 
         # When
         sol = s.search()
@@ -36,7 +36,7 @@ class TestMinisatProblems(unittest.TestCase):
         cl3 = Clause([-1,  -2,  3, -4])
         s.add_clause(cl1)
         s.add_clause(cl3)
-        s.assignments = {1: None, 2: None, 3: None, 4: None}
+        s._setup_assignments()
 
         # When
         sol = s.search()
@@ -84,15 +84,9 @@ class TestMinisatVanDerWaerden(unittest.TestCase):
         j, k, n = 3, 3, 8
         s = Solver()
         clauses = van_der_waerden(j, k, n)
-
-        # TODO Really need to move this to the class...
-        vars = {
-            abs(lit) for clause in clauses for lit in clause.lits
-        }
-        s.assignments = {v: None for v in vars}
-
         for clause in clauses:
             s.add_clause(clause)
+        s._setup_assignments()
 
         # When
         solution = s.search()
@@ -106,15 +100,9 @@ class TestMinisatVanDerWaerden(unittest.TestCase):
         j, k, n = 3, 3, 9
         s = Solver()
         clauses = van_der_waerden(j, k, n)
-
-        # TODO Really need to move this to the class...
-        vars = {
-            abs(lit) for clause in clauses for lit in clause.lits
-        }
-        s.assignments = {v: None for v in vars}
-
         for clause in clauses:
             s.add_clause(clause)
+        s._setup_assignments()
 
         # When
         solution = s.search()

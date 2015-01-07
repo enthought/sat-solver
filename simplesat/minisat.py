@@ -132,6 +132,13 @@ class Solver(object):
 
             self.clauses.append(clause)
 
+    def _setup_assignments(self):
+        """Initialize assignments table.
+        """
+        self.assignments = {
+            abs(lit): None for clause in self.clauses for lit in clause
+        }
+
     def propagate(self):
         while len(self.prop_queue) > 0:
             lit = self.prop_queue.popleft()
