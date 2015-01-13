@@ -13,8 +13,8 @@ class Constraint(object):
 
 class Clause(Constraint):
 
-    def __init__(self, lits, learnt=False):
-        self.learnt = learnt
+    def __init__(self, lits, learned=False):
+        self.learned = learned
         self.lits = OrderedDict.fromkeys(lits).keys()
 
     def rewatch(self, assignments, lit):
@@ -80,7 +80,7 @@ class Clause(Constraint):
         return self.lits[s]
 
     def __repr__(self):
-        return "Clause({}, learnt={})".format(self.lits, self.learnt)
+        return "Clause({}, learned={})".format(self.lits, self.learned)
 
 
 class Solver(object):
@@ -226,7 +226,7 @@ class Solver(object):
         seen = set()
 
         # Literals for the clause that we're learning.
-        learnt = []
+        learned_lits = []
         # Level to backtrack to.
         btlevel = 0
 
@@ -244,7 +244,7 @@ class Solver(object):
                     else:
                         # At this point, we don't treat level 0 as
                         # special. Maybe that's a mistake...
-                        learnt.append(-lit)
+                        learned_lits.append(-lit)
                         btlevel = max(btlevel, self.levels[var])
 
             # Select next literal to look at.
@@ -259,8 +259,8 @@ class Solver(object):
             if counter == 0:
                 break
 
-        learnt.append(-p)  # At this point p is the UIP.
-        return Clause(learnt, learnt=True), btlevel
+        learned_lits.append(-p)  # At this point p is the UIP.
+        return Clause(learned_lits, learned=True), btlevel
 
     def record(self, learned_clause):  # Needs test.
         """Drive the backtracking by adding a learned clause, which is unit by
