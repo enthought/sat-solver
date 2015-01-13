@@ -1,6 +1,7 @@
 import unittest
 
 from simplesat.api import Clause, Solver, value
+from simplesat.examples.van_der_waerden import van_der_waerden
 
 
 class TestMinisatProblems(unittest.TestCase):
@@ -55,26 +56,6 @@ def check_solution(clauses, solution):
             # No true literal
             return False
     return True
-
-
-def _van_der_waerden_helper(j, n, is_conjugated):
-    sign = -1 if is_conjugated else +1
-    clauses = []
-    max_d = (n - 1) / (j - 1) + 1
-    for d in range(1, max_d + 1):
-        for i in range(1, n - (j - 1) * d + 1):
-            digits = [i + p * d for p in range(0, j)]
-            clauses.append(
-                Clause([sign*digit for digit in digits]))
-    return clauses
-
-
-# TODO code duplication with examples module
-def van_der_waerden(j, k, n):
-    clauses = []
-    clauses.extend(_van_der_waerden_helper(j, n, False))
-    clauses.extend(_van_der_waerden_helper(k, n, True))
-    return clauses
 
 
 class TestMinisatVanDerWaerden(unittest.TestCase):

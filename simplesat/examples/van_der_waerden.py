@@ -7,31 +7,26 @@ that contains either j digits 0 or k digits 1, for given integers j and k.
 import sys
 import time
 
-from utils import Clause, Literal
-from simple_solver import SimpleSATSolver
+from simplesat.api import SimpleSATSolver
 
 
-def _van_der_waerden_helper(j, n, is_conjugated):
-    clauses = []
+def _van_der_waerden_helper(j, n, sign):
+    clause_data = []
     max_d = (n - 1) / (j - 1) + 1
     for d in range(1, max_d + 1):
         for i in range(1, n - (j - 1) * d + 1):
-            digits = [i + p * d for p in range(0, j)]
-            clauses.append(
-                Clause(*[Literal(digit, is_conjugated) for digit in digits])
-            )
-    return clauses
+            clause = [sign * (i + p * d) for p in range(0, j)]
+            clause_data.append(clause)
+    return clause_data
 
 
 def van_der_waerden(j, k, n):
+    """Generate clauses for the van der Waerden problem.
     """
-    Generate clauses for the van der Waerden problem.
-
-    """
-    clauses = []
-    clauses.extend(_van_der_waerden_helper(j, n, False))
-    clauses.extend(_van_der_waerden_helper(k, n, True))
-    return clauses
+    return (
+        _van_der_waerden_helper(j, n, +1) +
+        _van_der_waerden_helper(k, n, -1)
+    )
 
 
 if __name__ == '__main__':
