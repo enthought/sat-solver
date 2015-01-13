@@ -17,9 +17,7 @@ class Clause(Constraint):
         self.learnt = learnt
         self.lits = OrderedDict.fromkeys(lits).keys()
 
-    # TODO: Name is not really appropriate anymore.
-    # TODO: Don't need to do this dance with lit vs. -lit anymore.
-    def propagate(self, assignments, lit):
+    def rewatch(self, assignments, lit):
         """Find a new literal to watch.
 
         The running assumption is that watched literals should either be True
@@ -92,21 +90,24 @@ class Solver(object):
         self.clauses = []
         self.watches = defaultdict(list)
 
-        self.assignments = {}  # XXX
+        self.assignments = {}
 
         # A list of literals which become successively true (because of direct
         # assignment, or by unit propagation).
         self.levels = defaultdict(int)
 
         self.prop_queue = deque()
+
         # A list of all the decisions that we've made so far.
         self.trail = []
+
         # Keeps track of the independent assumptions so far. Each entry in
         # trail_lim is an index pointing to an assumption in trail. TODO:
         # Structure self.trail so that it keeps track of decisions per level.
         self.trail_lim = []
 
-        # XXX Describe this...
+        # For each variable assignment, a reference to the clause that forced
+        # this assignment.
         self.reason = {}
 
         # Whether the system is satisfiable.
@@ -147,7 +148,7 @@ class Solver(object):
 
             while len(clauses) > 0:
                 clause = clauses.pop()
-                unit = clause.propagate(self.assignments, lit)
+                unit = clause.rewatch(self.assignments, lit)
 
                 # Re-insert in the appropriate watch list.
                 self.watches[-clause.lits[1]].append(clause)
@@ -270,7 +271,7 @@ class Solver(object):
         # and lits[1] is the literal with highest decision level. This literal
         # will first become unbound by backtracking.
         lits = learned_clause.lits
-        lits[0], lits[-1] = lits[-1], lits[0]  # XXX
+        lits[0], lits[-1] = lits[-1], lits[0]
 
         # Index of the literal with the highest decision level.
         max_i = max(enumerate([self.levels.get(abs(lit), 0) for lit in lits]),

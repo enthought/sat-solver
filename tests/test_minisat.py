@@ -43,37 +43,37 @@ def zm01_solver(add_conflict=False):
 
 class TestClause(unittest.TestCase):
 
-    def test_propagate(self):
+    def test_rewatch(self):
         # Given
         c = Clause([1, -2, 5])
         assignments = {1: False, 2: None, 5: None}
 
         # When
-        unit = c.propagate(assignments, -1)
+        unit = c.rewatch(assignments, -1)
 
         # Then
         self.assertIsNone(unit)
         self.assertItemsEqual(c.lits, [5, -2, 1])
 
-    def test_propagate_true(self):
+    def test_rewatch_true(self):
         # Given
         c = Clause([1, -2, 5])
         assignments = {1: True, 2: None, 5: None}
 
         # When
-        unit = c.propagate(assignments, -1)
+        unit = c.rewatch(assignments, -1)
 
         # Then
         self.assertIsNone(unit)
         self.assertItemsEqual(c.lits, [1, -2, 5])
 
-    def test_propagate_unit(self):
+    def test_rewatch_unit(self):
         # Given
         c = Clause([1, -2, 5])
         assignments = {1: False, 2: True, 5: False}
 
         # When
-        unit = c.propagate(assignments, 2)
+        unit = c.rewatch(assignments, 2)
 
         # Then
         self.assertEqual(unit, 1)
