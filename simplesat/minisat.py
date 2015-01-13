@@ -113,11 +113,14 @@ class Solver(object):
         # Whether the system is satisfiable.
         self.status = None
 
-    def add_clause(self, clause, learned=False):
+    def add_clause(self, clause):
         """ Add a new clause to the solver.
         """
         # TODO: Do some simplifications, and check whether clause contains p
         # and -p at the same time.
+
+        if isinstance(clause, list):
+            clause = Clause(clause, learned=False)
 
         if len(clause) == 0:
             # Clause is guaranteed to be false under the current variable
@@ -279,7 +282,7 @@ class Solver(object):
         if len(lits) >= 2:
             lits[1], lits[max_i] = lits[max_i], lits[1]
 
-        self.add_clause(learned_clause, learned=True)
+        self.add_clause(learned_clause)
         self.enqueue(learned_clause.lits[0], learned_clause)
 
     def undo_one(self):

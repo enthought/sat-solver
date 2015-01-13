@@ -124,14 +124,16 @@ class TestSolver(unittest.TestCase):
     def test_add_clause(self, mock_enqueue):
         # Given
         s = Solver()
-        clause = [-1, 2, 4]
+        lits = [-1, 2, 4]
 
         # When
-        s.add_clause(clause)
+        s.add_clause(lits)
 
         # Then
         self.assertIsNone(s.status)
 
+        self.assertEqual(len(s.clauses), 1)
+        clause = s.clauses[0]
         self.assertEqual(len(s.watches), 2)
         self.assertItemsEqual(s.watches[1], [clause])
         self.assertItemsEqual(s.watches[-2], [clause])
