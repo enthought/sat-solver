@@ -182,7 +182,7 @@ class RulesGenerator(object):
 
     def _add_dependencies_rules(self, package, work_queue):
         for dependency in package.dependencies:
-            requirement = Requirement.from_legay_requirement_string(dependency)
+            requirement = Requirement.from_legacy_requirement_string(dependency)
             dependency_candidates = self._pool.what_provides(requirement)
             assert len(dependency_candidates) > 0
             rule = self._create_dependency_rule(package, dependency_candidates,
@@ -208,7 +208,7 @@ class RulesGenerator(object):
 
                 self._add_dependencies_rules(p, work_queue)
 
-                requirement = Requirement.from_legay_requirement_string(p.name)
+                requirement = Requirement.from_legacy_requirement_string(p.name)
                 obsolete_providers = self._pool.what_provides(requirement)
                 for provider in obsolete_providers:
                     if provider != p:

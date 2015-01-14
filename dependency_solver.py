@@ -37,11 +37,11 @@ pool = Pool([repository])
 requirement_str = "scikit_learn < 0.14"
 requirement = Requirement._from_string(requirement_str)
 
-if False:
-    candidates = pool.what_provides(requirement)
-    for candidate in sorted(candidates,
-                            key=operator.attrgetter("version")):
-        print(pool.id_to_string(candidate.id))
+# if False:
+#     candidates = pool.what_provides(requirement)
+#     for candidate in sorted(candidates,
+#                             key=operator.attrgetter("version")):
+#         print(pool.id_to_string(candidate.id))
 
 request = Request()
 request.install(requirement)
@@ -77,7 +77,7 @@ def optimize_at_level(pool, parent_package, rules, solution):
     best_dependencies = []
 
     for dependency in parent_package.dependencies:
-        requirement = Requirement.from_legay_requirement_string(dependency)
+        requirement = Requirement.from_legacy_requirement_string(dependency)
         best_candidate = find_best_candidate(pool, requirement, new_rules)
 
         new_rules.append(PackageRule((best_candidate.id,)))
