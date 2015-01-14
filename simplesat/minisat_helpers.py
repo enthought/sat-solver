@@ -1,5 +1,7 @@
+import os
 import subprocess
 
+DEVNULL = open(os.devnull, 'w')
 
 def rules_set_to_dimacs(pool, rules, fp):
     """
@@ -27,7 +29,8 @@ def solve_sat(pool, rules):
     with open(input_filename, "wt") as fp:
         rules_set_to_dimacs(pool, rules, fp)
 
-    code = subprocess.call(["minisat", input_filename, output_filename])
+    code = subprocess.call(["minisat", input_filename, output_filename],
+                           stdout=DEVNULL, stderr=subprocess.STDOUT)
     assert code == 10
 
     with open(output_filename, "rt") as fp:
@@ -52,7 +55,8 @@ def is_satisfable(pool, rules):
     with open(input_filename, "wt") as fp:
         rules_set_to_dimacs(pool, rules, fp)
 
-    code = subprocess.call(["minisat", input_filename, output_filename])
+    code = subprocess.call(["minisat", input_filename, output_filename],
+                           stdout=DEVNULL, stderr=subprocess.STDOUT)
     assert code in (10, 20)
 
     return code == 10
