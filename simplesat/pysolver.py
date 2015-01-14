@@ -9,19 +9,6 @@ from enstaller.new_solver.tests.common import repository_from_index
 from enstaller.solver import Request
 
 
-repository = repository_from_index("full_index.json")
-pool = Pool([repository])
-
-requirement_str = "scikit_learn < 0.14"
-requirement = Requirement._from_string(requirement_str)
-
-request = Request()
-request.install(requirement)
-
-rules_generator = RulesGenerator(pool, request)
-rules = list(rules_generator.iter_rules())
-
-
 def sorted_candidates(pool, requirement):
     """
     Returns the sorted package metadata (highest version first), within
@@ -72,6 +59,19 @@ def optimize(pool, requirement, rules):
     return optimize_at_level(pool, best_package, rules, solution)
 
 
-solution = optimize(pool, requirement, rules)
-for decision in solution:
-    print(decision.name, str(decision.version))
+if __name__ == '__main__':
+    repository = repository_from_index("full_index.json")
+    pool = Pool([repository])
+
+    requirement_str = "scikit_learn < 0.14"
+    requirement = Requirement._from_string(requirement_str)
+
+    request = Request()
+    request.install(requirement)
+
+    rules_generator = RulesGenerator(pool, request)
+    rules = list(rules_generator.iter_rules())
+
+    solution = optimize(pool, requirement, rules)
+    for decision in solution:
+        print(decision.name, str(decision.version))

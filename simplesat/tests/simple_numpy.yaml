@@ -1,0 +1,9 @@
+packages:
+    - mkl-10.2-1
+    - mkl-10.3-1
+    - numpy-1.7.1-1; depends (mkl == 10.3-1)
+    - numpy-1.8.1-1; depends (mkl == 10.3-1)
+
+request:
+    - operation: "install"
+      requirement: "numpy"
