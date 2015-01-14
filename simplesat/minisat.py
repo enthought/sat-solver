@@ -13,13 +13,11 @@ class Constraint(object):
 
 class Clause(Constraint):
 
-    def __init__(self, lits, learnt=False):
-        self.learnt = learnt
+    def __init__(self, lits, learned=False):
+        self.learned = learned
         self.lits = OrderedDict.fromkeys(lits).keys()
 
-    # TODO: Name is not really appropriate anymore.
-    # TODO: Don't need to do this dance with lit vs. -lit anymore.
-    def propagate(self, assignments, lit):
+    def rewatch(self, assignments, lit):
         """Find a new literal to watch.
 
         The running assumption is that watched literals should either be True
@@ -82,7 +80,7 @@ class Clause(Constraint):
         return self.lits[s]
 
     def __repr__(self):
-        return "Clause({}, learnt={})".format(self.lits, self.learnt)
+        return "Clause({}, learned={})".format(self.lits, self.learned)
 
 
 class Solver(object):
@@ -92,31 +90,37 @@ class Solver(object):
         self.clauses = []
         self.watches = defaultdict(list)
 
-        self.assignments = {}  # XXX
+        self.assignments = {}
 
         # A list of literals which become successively true (because of direct
         # assignment, or by unit propagation).
         self.levels = defaultdict(int)
 
         self.prop_queue = deque()
+
         # A list of all the decisions that we've made so far.
         self.trail = []
+
         # Keeps track of the independent assumptions so far. Each entry in
         # trail_lim is an index pointing to an assumption in trail. TODO:
         # Structure self.trail so that it keeps track of decisions per level.
         self.trail_lim = []
 
-        # XXX Describe this...
+        # For each variable assignment, a reference to the clause that forced
+        # this assignment.
         self.reason = {}
 
         # Whether the system is satisfiable.
         self.status = None
 
-    def add_clause(self, clause, learned=False):
+    def add_clause(self, clause):
         """ Add a new clause to the solver.
         """
         # TODO: Do some simplifications, and check whether clause contains p
         # and -p at the same time.
+
+        if isinstance(clause, list):
+            clause = Clause(clause, learned=False)
 
         if len(clause) == 0:
             # Clause is guaranteed to be false under the current variable
@@ -132,6 +136,13 @@ class Solver(object):
 
             self.clauses.append(clause)
 
+    def _setup_assignments(self):
+        """Initialize assignments table.
+        """
+        self.assignments = {
+            abs(lit): None for clause in self.clauses for lit in clause
+        }
+
     def propagate(self):
         while len(self.prop_queue) > 0:
             lit = self.prop_queue.popleft()
@@ -140,7 +151,7 @@ class Solver(object):
 
             while len(clauses) > 0:
                 clause = clauses.pop()
-                unit = clause.propagate(self.assignments, lit)
+                unit = clause.rewatch(self.assignments, lit)
 
                 # Re-insert in the appropriate watch list.
                 self.watches[-clause.lits[1]].append(clause)
@@ -217,12 +228,10 @@ class Solver(object):
         # Variables that we've encountered during the search.
         seen = set()
 
-        # TODO (Here and elsewhere) remove the "out_" prefix from return vals.
-
         # Literals for the clause that we're learning.
-        out_learnt = []
+        learned_lits = []
         # Level to backtrack to.
-        out_btlevel = 0
+        btlevel = 0
 
         while True:
             reason = conflict.calculate_reason(p)
@@ -238,8 +247,8 @@ class Solver(object):
                     else:
                         # At this point, we don't treat level 0 as
                         # special. Maybe that's a mistake...
-                        out_learnt.append(-lit)
-                        out_btlevel = max(out_btlevel, self.levels[var])
+                        learned_lits.append(-lit)
+                        btlevel = max(btlevel, self.levels[var])
 
             # Select next literal to look at.
             while True:
@@ -253,8 +262,8 @@ class Solver(object):
             if counter == 0:
                 break
 
-        out_learnt.append(-p)  # At this point p is the UIP.
-        return Clause(out_learnt, learnt=True), out_btlevel
+        learned_lits.append(-p)  # At this point p is the UIP.
+        return Clause(learned_lits, learned=True), btlevel
 
     def record(self, learned_clause):  # Needs test.
         """Drive the backtracking by adding a learned clause, which is unit by
@@ -265,7 +274,7 @@ class Solver(object):
         # and lits[1] is the literal with highest decision level. This literal
         # will first become unbound by backtracking.
         lits = learned_clause.lits
-        lits[0], lits[-1] = lits[-1], lits[0]  # XXX
+        lits[0], lits[-1] = lits[-1], lits[0]
 
         # Index of the literal with the highest decision level.
         max_i = max(enumerate([self.levels.get(abs(lit), 0) for lit in lits]),
@@ -273,7 +282,7 @@ class Solver(object):
         if len(lits) >= 2:
             lits[1], lits[max_i] = lits[max_i], lits[1]
 
-        self.add_clause(learned_clause, learned=True)
+        self.add_clause(learned_clause)
         self.enqueue(learned_clause.lits[0], learned_clause)
 
     def undo_one(self):

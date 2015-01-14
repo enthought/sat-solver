@@ -43,37 +43,37 @@ def zm01_solver(add_conflict=False):
 
 class TestClause(unittest.TestCase):
 
-    def test_propagate(self):
+    def test_rewatch(self):
         # Given
         c = Clause([1, -2, 5])
         assignments = {1: False, 2: None, 5: None}
 
         # When
-        unit = c.propagate(assignments, -1)
+        unit = c.rewatch(assignments, -1)
 
         # Then
         self.assertIsNone(unit)
         self.assertItemsEqual(c.lits, [5, -2, 1])
 
-    def test_propagate_true(self):
+    def test_rewatch_true(self):
         # Given
         c = Clause([1, -2, 5])
         assignments = {1: True, 2: None, 5: None}
 
         # When
-        unit = c.propagate(assignments, -1)
+        unit = c.rewatch(assignments, -1)
 
         # Then
         self.assertIsNone(unit)
         self.assertItemsEqual(c.lits, [1, -2, 5])
 
-    def test_propagate_unit(self):
+    def test_rewatch_unit(self):
         # Given
         c = Clause([1, -2, 5])
         assignments = {1: False, 2: True, 5: False}
 
         # When
-        unit = c.propagate(assignments, 2)
+        unit = c.rewatch(assignments, 2)
 
         # Then
         self.assertEqual(unit, 1)
@@ -124,14 +124,16 @@ class TestSolver(unittest.TestCase):
     def test_add_clause(self, mock_enqueue):
         # Given
         s = Solver()
-        clause = [-1, 2, 4]
+        lits = [-1, 2, 4]
 
         # When
-        s.add_clause(clause)
+        s.add_clause(lits)
 
         # Then
         self.assertIsNone(s.status)
 
+        self.assertEqual(len(s.clauses), 1)
+        clause = s.clauses[0]
         self.assertEqual(len(s.watches), 2)
         self.assertItemsEqual(s.watches[1], [clause])
         self.assertItemsEqual(s.watches[-2], [clause])
@@ -343,8 +345,8 @@ class TestSolver(unittest.TestCase):
             16: True,
             18: True
         }
-        for var, value in expected_assignments.items():
-            self.assertEqual(s.assignments[var], value)
+        for var, _value in expected_assignments.items():
+            self.assertEqual(s.assignments[var], _value)
 
     def test_undo_one(self):
         # Given
@@ -490,6 +492,3 @@ class TestSolver(unittest.TestCase):
         # Then
         self.assertEqual(clause.lits, [5, -4, 3, 2])
         self.assertItemsEqual(s.prop_queue, [5])
-
-if __name__ == '__main__':
-    unittest.main()
