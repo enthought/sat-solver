@@ -1,17 +1,18 @@
 from unittest import TestCase
 
 from simplesat.pysolver import optimize
-from .test_tools import ScenarioMixin
+from .common import generate_rules_for_requirement, parse_scenario_file
 
 
-class TestSolverSimple(TestCase, ScenarioMixin):
+class ScenarioTestAssistant(object):
 
-    def test_simple_numpy(self):
+    def _check_solution(self, filename):
+        # Test that the solution described in the scenario file matches with
+        # what the SAT solver computes.
+
         # Given
-        scenario = 'simple_numpy.yaml'
-
-        pool, requirement, expected = self.parse_scenario_file(scenario)
-        rules = self.generate_rules_for_requirement(pool, requirement)
+        pool, requirement, expected = parse_scenario_file(filename)
+        rules = generate_rules_for_requirement(pool, requirement)
 
         # When
         solution = optimize(pool, requirement, rules)
@@ -19,16 +20,26 @@ class TestSolverSimple(TestCase, ScenarioMixin):
         # Then
         self.assertItemsEqual(solution, expected)
 
-    def test_ipython(self):
-        # Given
-        scenario = 'ipython.yaml'
 
-        # When
-        pool, requirement, expected = self.parse_scenario_file(scenario)
-        rules = self.generate_rules_for_requirement(pool, requirement)
+class TestSimpleNumpy(TestCase, ScenarioTestAssistant):
 
-        # When
-        solution = optimize(pool, requirement, rules)
+    SCENARIO = 'simple_numpy.yaml'
 
-        # Then
-        self.assertItemsEqual(solution, expected)
+    def test_solution(self):
+        self._check_solution(self.SCENARIO)
+
+
+class TestIPython(TestCase, ScenarioTestAssistant):
+
+    SCENARIO = 'ipython.yaml'
+
+    def test_solution(self):
+        self._check_solution(self.SCENARIO)
+
+
+class TestIris(TestCase, ScenarioTestAssistant):
+
+    SCENARIO = 'iris.yaml'
+
+    def test_solution(self):
+        self._check_solution(self.SCENARIO)
