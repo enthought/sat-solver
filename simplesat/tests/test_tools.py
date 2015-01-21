@@ -50,7 +50,16 @@ class ScenarioMixin(object):
             package = parser.parse_to_package(package_str, "2.7")
             repository.add_package(package)
 
-        return Pool([repository]), requirement
+        pool = Pool([repository])
+
+        solution = []
+        solution_strings = data['solution']
+        for solution_str in solution_strings:
+            package_str = '-'.join(solution_str.split())
+            r = Requirement.from_package_string(package_str)
+            solution.extend(pool.what_provides(r))
+
+        return pool, requirement, solution
 
     def generate_rules_for_requirement(self, pool, requirement):
         """Generate CNF rules for a requirement.

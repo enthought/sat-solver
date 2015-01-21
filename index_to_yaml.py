@@ -6,6 +6,8 @@ from enstaller.new_solver.constraint_types import (
 from enstaller.versions.enpkg import EnpkgVersion
 
 
+# TODO Can use new enstaller pretty printer here...
+
 def dependency_to_string(dependency):
     req = Requirement.from_legacy_requirement_string(dependency)
     constraints = list(req._constraints._constraints)
@@ -23,7 +25,7 @@ def dependency_to_string(dependency):
 
 
 def requirements_string(package):
-    template = "{name}-{version}"
+    template = "{name} {version}"
     if len(package.dependencies) > 0:
         template += "; depends ({dependencies})"
     dependencies = ', '.join(
@@ -32,7 +34,7 @@ def requirements_string(package):
         name=package.name, version=package.version, dependencies=dependencies)
 
 
-repository = repository_from_index('index.json')
+repository = repository_from_index('filtered_full_index.json')
 for package in repository.iter_packages():
     # print package.name
     # print str(package.version)

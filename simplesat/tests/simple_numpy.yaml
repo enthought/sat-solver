@@ -7,3 +7,7 @@ packages:
 request:
     - operation: "install"
       requirement: "numpy"
+
+solution:
+    - mkl 10.3-1
+    - numpy 1.8.1-1
