@@ -1,19 +1,14 @@
 import os
-import re
 from unittest import TestCase
 
 import yaml
 
-from enstaller.repository import PackageMetadata
+
 from enstaller import Repository
+from enstaller.new_solver.package_parser import PrettyPackageStringParser
 from enstaller.new_solver.pool import Pool
 from enstaller.new_solver.requirement import Requirement
-from enstaller.new_solver.constraints_parser import (
-    _RawRequirementParser
-)
-from enstaller.new_solver.constraint_types import (
-    Any, EnpkgUpstreamMatch, Equal
-)
+
 from enstaller.solver import Request
 from enstaller.versions.enpkg import EnpkgVersion
 
@@ -21,21 +16,6 @@ from simplesat.pysolver import optimize
 from simplesat.rules_generator import RulesGenerator
 
 HERE = os.path.dirname(__file__)
-
-PACKAGE_RE = re.compile("""
-    (?P<name>\w+)
-    -
-    (?P<version>[^;\s]+)  # Anything but whitespace and semi-colon.
-    \s*
-    (
-        ;\s*
-        depends
-        \s*
-        \(
-        (?P<dependencies>.*)
-        \)
-    )?
-""", flags=re.VERBOSE)
 
 
 def scenario_factory(filename):
@@ -51,42 +31,9 @@ def scenario_factory(filename):
 
     repository = Repository()
 
-    parser = _RawRequirementParser()
+    parser = PrettyPackageStringParser(EnpkgVersion.from_string)
     for package_str in packages:
-        m = PACKAGE_RE.match(package_str)
-        assert m is not None
-        results = m.groupdict()
-
-        name = results['name']
-        version = EnpkgVersion.from_string(results['version'])
-        dependencies_str = results['dependencies']
-        if dependencies_str is not None:
-            constraints = parser.parse(dependencies_str, EnpkgVersion.from_string)
-
-            legacy_constraints = []
-            for constraint_name, constraint_set in constraints.items():
-                assert len(constraint_set) == 1
-                constraint = constraint_set.pop()
-                assert isinstance(constraint,
-                                  (EnpkgUpstreamMatch, Any, Equal))
-                if isinstance(constraint, Any):
-                    legacy_constraint = constraint_name
-                elif isinstance(constraint, Equal):
-                    legacy_constraint = (
-                        constraint_name + ' ' + str(constraint.version))
-                else:  # EnpkgUpstreamMatch
-                    assert isinstance(constraint.version, EnpkgVersion)
-                    legacy_constraint = (
-                        constraint_name + ' ' + str(constraint.version.upstream))
-                legacy_constraints.append(legacy_constraint)
-        else:
-            legacy_constraints = []
-        package = PackageMetadata(name + '-' + str(version),
-                                  name,
-                                  version,
-                                  legacy_constraints,
-                                  '2.7')
-
+        package = parser.parse_to_package(package_str, "2.7")
         repository.add_package(package)
 
     return Pool([repository]), requirement
