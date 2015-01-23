@@ -184,7 +184,9 @@ class RulesGenerator(object):
         for dependency in package.dependencies:
             requirement = Requirement.from_legacy_requirement_string(dependency)
             dependency_candidates = self._pool.what_provides(requirement)
-            assert len(dependency_candidates) > 0
+            assert len(dependency_candidates) > 0, \
+                ("No candidates found for requirement {0!r}, needed for "
+                 "dependency {1!r}".format(requirement.name, package))
             rule = self._create_dependency_rule(package, dependency_candidates,
                                                 "package_requires",
                                                 str(dependency))

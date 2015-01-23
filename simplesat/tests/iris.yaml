@@ -1,16 +1,35 @@
 packages:
+    - zlib 1.2.6-1
+    - basemap 1.0-3; depends (matplotlib ~= 1.0.1, numpy ~= 1.6.0)
+    - basemap 1.0.6-7; depends (numpy ~= 1.8.0, matplotlib ~= 1.3.1)
+    - basemap 1.0.6-2; depends (numpy ~= 1.6.1, matplotlib ~= 1.2.0)
+    - basemap 1.0.6-1; depends (numpy ~= 1.6.1, matplotlib ~= 1.2.0)
+    - basemap 1.0.6-3; depends (numpy ~= 1.7.1, matplotlib ~= 1.2.0)
+    - basemap 1.0.7-4; depends (geos ~= 3.4.2, numpy ~= 1.8.1, matplotlib ~= 1.4.0)
+    - basemap 1.0.7-2; depends (numpy ~= 1.8.1, matplotlib ~= 1.3.1)
+    - basemap 1.0.1-1; depends (matplotlib ~= 1.0.1, numpy ~= 1.6.0)
+    - basemap 1.0.7-1; depends (numpy ~= 1.8.0, matplotlib ~= 1.3.1)
+    - basemap 1.0-2; depends (numpy ~= 1.5.1, matplotlib ~= 1.0.1)
+    - basemap 1.0.1-3; depends (matplotlib ~= 1.1.0, numpy ~= 1.6.1)
+    - basemap 1.0.7-5; depends (geos ~= 3.4.2, numpy ~= 1.8.1, matplotlib ~= 1.4.2)
+    - basemap 1.0.2-1; depends (matplotlib ~= 1.1.0, numpy ~= 1.6.1)
+    - basemap 1.0.6-6; depends (numpy ~= 1.7.1, matplotlib ~= 1.3.1)
+    - basemap 1.0.1-2; depends (numpy ~= 1.6.1, matplotlib ~= 1.0.1)
+    - basemap 1.0.6-5; depends (numpy ~= 1.7.1, matplotlib ~= 1.3.0)
+    - basemap 1.0.6-4; depends (numpy ~= 1.7.1, matplotlib ~= 1.2.1)
+    - basemap 1.0.7-3; depends (matplotlib ~= 1.4.0, numpy ~= 1.8.1)
     - configobj 4.7.2-2
     - configobj 5.0.5-1
     - configobj 5.0.6-1
-    - mkl 10.2-1
-    - mkl 10.3-1
-    - mkl 10.2-2
-    - pil 1.1.7-14; depends (libjpeg ~= 7.0, freetype ~= 2.5.3)
-    - pil 1.1.7-12; depends (libjpeg ~= 7.0, freetype ~= 2.4.4)
-    - pil 1.1.7-4; depends (libjpeg ~= 7.0, freetype ~= 2.4.4)
-    - pil 1.1.7-3; depends (freetype ~= 2.4.4)
-    - pil 1.1.7-10; depends (libjpeg ~= 7.0, freetype ~= 2.4.4)
-    - pil 1.1.7-13; depends (libjpeg ~= 7.0, freetype ~= 2.5.3)
+    - MKL 10.2-1
+    - MKL 10.3-1
+    - MKL 10.2-2
+    - PIL 1.1.7-14; depends (libjpeg ~= 7.0, freetype ~= 2.5.3)
+    - PIL 1.1.7-12; depends (libjpeg ~= 7.0, freetype ~= 2.4.4)
+    - PIL 1.1.7-4; depends (libjpeg ~= 7.0, freetype ~= 2.4.4)
+    - PIL 1.1.7-3; depends (freetype ~= 2.4.4)
+    - PIL 1.1.7-10; depends (libjpeg ~= 7.0, freetype ~= 2.4.4)
+    - PIL 1.1.7-13; depends (libjpeg ~= 7.0, freetype ~= 2.5.3)
     - htmltemplate 1.5.0-1
     - htmltemplate 1.5.0-2
     - libxml2 2.7.3-3
@@ -33,15 +52,15 @@ packages:
     - distribute 0.6.25-1
     - distribute 0.6.24-1
     - pyke 1.1.1-1; depends (htmltemplate ~= 1.5.0, doctest_tools ~= 1.0a3)
-    - wxpython 2.8.10.1-2
-    - wxpython 2.8.10.1-3
-    - wxpython 2.8.10.1-7
-    - shapely 1.5.1-1; depends (geos ~= 3.4.2)
-    - shapely 1.3.2-1; depends (basemap ~= 1.0.7)
-    - shapely 1.2.14-1; depends (basemap ~= 1.0.2)
-    - shapely 1.2.17-1; depends (basemap ~= 1.0.6)
-    - shapely 1.4.1-1; depends (geos ~= 3.4.2)
-    - shapely 1.2.17-2; depends (basemap ~= 1.0.7)
+    - wxPython 2.8.10.1-2
+    - wxPython 2.8.10.1-3
+    - wxPython 2.8.10.1-7
+    - Shapely 1.5.1-1; depends (geos ~= 3.4.2)
+    - Shapely 1.3.2-1; depends (basemap ~= 1.0.7)
+    - Shapely 1.2.14-1; depends (basemap ~= 1.0.2)
+    - Shapely 1.2.17-1; depends (basemap ~= 1.0.6)
+    - Shapely 1.4.1-1; depends (geos ~= 3.4.2)
+    - Shapely 1.2.17-2; depends (basemap ~= 1.0.7)
     - libxslt 1.1.28-1; depends (libxml2 ~= 2.9.2)
     - libxslt 1.1.26-1; depends (libxml2 ~= 2.7.8)
     - libxslt 1.1.28-2; depends (libxml2 ~= 2.9.2)
@@ -60,21 +79,21 @@ packages:
     - curl 7.25.0-2
     - curl 7.37.0-1
     - curl 7.38.0-1
-    - netcdf4 1.0-4; depends (lib_netcdf4 ~= 4.3.0, hdf5 ~= 1.8.9, numpy ~= 1.7.1)
-    - netcdf4 1.1.1-2; depends (lib_netcdf4 ~= 4.3.2, hdf5 ~= 1.8.11, numpy ~= 1.8.1)
-    - netcdf4 1.1.0-1; depends (numpy ~= 1.8.0, lib_netcdf4 ~= 4.3.2, hdf5 ~= 1.8.11)
-    - netcdf4 0.9.4-1; depends (lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1, numpy ~= 1.6.0)
-    - netcdf4 1.1.0-2; depends (lib_netcdf4 ~= 4.3.2, hdf5 ~= 1.8.11, numpy ~= 1.8.1)
-    - netcdf4 0.9.5-2; depends (numpy ~= 1.6.1, lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1)
-    - netcdf4 0.9.3-2; depends (lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1, numpy ~= 1.5.1)
-    - netcdf4 1.0.5-2; depends (lib_netcdf4 ~= 4.3.0, numpy ~= 1.8.0, hdf5 ~= 1.8.11)
-    - netcdf4 0.9.8-1; depends (numpy ~= 1.6.1, lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1)
-    - netcdf4 1.0.7-1; depends (lib_netcdf4 ~= 4.3.0, numpy ~= 1.8.0, hdf5 ~= 1.8.11)
-    - netcdf4 1.0-1; depends (hdf5 ~= 1.8.9, numpy ~= 1.6.1, lib_netcdf4 ~= 4.2)
-    - netcdf4 0.9.5-1; depends (lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1, numpy ~= 1.6.0)
-    - netcdf4 1.0.5-1; depends (lib_netcdf4 ~= 4.3.0, numpy ~= 1.7.1, hdf5 ~= 1.8.11)
-    - netcdf4 0.9.9-1; depends (lib_netcdf4 == 4.1.1-2, numpy ~= 1.6.1, hdf5 ~= 1.8.5.1)
-    - netcdf4 1.1.1-1; depends (lib_netcdf4 ~= 4.3.2, hdf5 ~= 1.8.11, numpy ~= 1.8.1)
+    - netCDF4 1.0-4; depends (lib_netcdf4 ~= 4.3.0, hdf5 ~= 1.8.9, numpy ~= 1.7.1)
+    - netCDF4 1.1.1-2; depends (lib_netcdf4 ~= 4.3.2, hdf5 ~= 1.8.11, numpy ~= 1.8.1)
+    - netCDF4 1.1.0-1; depends (numpy ~= 1.8.0, lib_netcdf4 ~= 4.3.2, hdf5 ~= 1.8.11)
+    - netCDF4 0.9.4-1; depends (lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1, numpy ~= 1.6.0)
+    - netCDF4 1.1.0-2; depends (lib_netcdf4 ~= 4.3.2, hdf5 ~= 1.8.11, numpy ~= 1.8.1)
+    - netCDF4 0.9.5-2; depends (numpy ~= 1.6.1, lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1)
+    - netCDF4 0.9.3-2; depends (lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1, numpy ~= 1.5.1)
+    - netCDF4 1.0.5-2; depends (lib_netcdf4 ~= 4.3.0, numpy ~= 1.8.0, hdf5 ~= 1.8.11)
+    - netCDF4 0.9.8-1; depends (numpy ~= 1.6.1, lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1)
+    - netCDF4 1.0.7-1; depends (lib_netcdf4 ~= 4.3.0, numpy ~= 1.8.0, hdf5 ~= 1.8.11)
+    - netCDF4 1.0-1; depends (hdf5 ~= 1.8.9, numpy ~= 1.6.1, lib_netcdf4 ~= 4.2)
+    - netCDF4 0.9.5-1; depends (lib_netcdf4 == 4.1.1-1, hdf5 ~= 1.8.5.1, numpy ~= 1.6.0)
+    - netCDF4 1.0.5-1; depends (lib_netcdf4 ~= 4.3.0, numpy ~= 1.7.1, hdf5 ~= 1.8.11)
+    - netCDF4 0.9.9-1; depends (lib_netcdf4 == 4.1.1-2, numpy ~= 1.6.1, hdf5 ~= 1.8.5.1)
+    - netCDF4 1.1.1-1; depends (lib_netcdf4 ~= 4.3.2, hdf5 ~= 1.8.11, numpy ~= 1.8.1)
     - lxml 2.3.3-1; depends (libxml2 ~= 2.7.3, libxslt ~= 1.1.24)
     - lxml 3.3.6-1; depends (libxslt ~= 1.1.26, libxml2 ~= 2.7.8)
     - lxml 3.2.3-1; depends (libxslt ~= 1.1.26, libxml2 ~= 2.7.8)
@@ -99,7 +118,7 @@ packages:
     - six 1.8.0-1
     - six 1.4.1-1
     - six 1.7.2-1
-    - biggus 0.7.0-1; depends (pep8 ~= 1.5.7, numpy ~= 1.8.1)
+    - Biggus 0.7.0-1; depends (pep8 ~= 1.5.7, numpy ~= 1.8.1)
     - pygrib 1.9.2-2; depends (numpy ~= 1.7.1, pyproj ~= 1.9.3)
     - pygrib 1.9.2-1; depends (pyproj ~= 1.8.9, numpy ~= 1.6.1)
     - pygrib 1.9.9-1; depends (numpy ~= 1.8.0, pyproj ~= 1.9.3)
@@ -266,22 +285,22 @@ packages:
     - lib_netcdf4 4.2-2; depends (hdf5 ~= 1.8.9, curl ~= 7.25.0)
     - lib_netcdf4 4.3.0-3; depends (hdf5 ~= 1.8.9, curl ~= 7.25.0)
     - ssl_match_hostname 3.4.0.2-1
-    - gdal 1.9.0-3; depends (numpy ~= 1.7.1, libgdal ~= 1.9.0)
-    - gdal 1.10.0-4; depends (libgdal ~= 1.10.1, numpy ~= 1.8.0)
-    - gdal 1.10.0-1; depends (numpy ~= 1.7.1, libgdal ~= 1.10.0)
-    - gdal 1.11.0-5; depends (numpy ~= 1.8.1, libgdal ~= 1.11.0)
-    - gdal 1.11.0-4; depends (numpy ~= 1.8.1, libgdal ~= 1.11.0)
-    - gdal 1.11.0-2; depends (numpy ~= 1.8.0, libgdal ~= 1.11.0)
-    - gdal 1.8.1-2; depends (numpy ~= 1.6.1, libgdal ~= 1.8.1)
-    - gdal 1.10.0-3; depends (libgdal ~= 1.10.1, numpy ~= 1.8.0)
-    - gdal 1.10.0-2; depends (numpy ~= 1.7.1, libgdal ~= 1.10.1)
-    - gdal 1.7.1-1; depends (numpy, libgdal ~= 1.7.2)
-    - gdal 1.10.0-6; depends (numpy ~= 1.8.0, libgdal ~= 1.11.0)
-    - gdal 1.11.0-3; depends (numpy ~= 1.8.1, libgdal ~= 1.11.0)
-    - gdal 1.10.0-5; depends (numpy ~= 1.8.0, libgdal ~= 1.11.0)
-    - gdal 1.11.1-1; depends (numpy ~= 1.8.1, libgdal ~= 1.11.0)
-    - gdal 1.8.1-1; depends (numpy ~= 1.6.1, libgdal ~= 1.8.1)
-    - gdal 1.11.0-1; depends (numpy ~= 1.8.0, libgdal ~= 1.11.0)
+    - GDAL 1.9.0-3; depends (numpy ~= 1.7.1, libgdal ~= 1.9.0)
+    - GDAL 1.10.0-4; depends (libgdal ~= 1.10.1, numpy ~= 1.8.0)
+    - GDAL 1.10.0-1; depends (numpy ~= 1.7.1, libgdal ~= 1.10.0)
+    - GDAL 1.11.0-5; depends (numpy ~= 1.8.1, libgdal ~= 1.11.0)
+    - GDAL 1.11.0-4; depends (numpy ~= 1.8.1, libgdal ~= 1.11.0)
+    - GDAL 1.11.0-2; depends (numpy ~= 1.8.0, libgdal ~= 1.11.0)
+    - GDAL 1.8.1-2; depends (numpy ~= 1.6.1, libgdal ~= 1.8.1)
+    - GDAL 1.10.0-3; depends (libgdal ~= 1.10.1, numpy ~= 1.8.0)
+    - GDAL 1.10.0-2; depends (numpy ~= 1.7.1, libgdal ~= 1.10.1)
+    - GDAL 1.7.1-1; depends (numpy, libgdal ~= 1.7.2)
+    - GDAL 1.10.0-6; depends (numpy ~= 1.8.0, libgdal ~= 1.11.0)
+    - GDAL 1.11.0-3; depends (numpy ~= 1.8.1, libgdal ~= 1.11.0)
+    - GDAL 1.10.0-5; depends (numpy ~= 1.8.0, libgdal ~= 1.11.0)
+    - GDAL 1.11.1-1; depends (numpy ~= 1.8.1, libgdal ~= 1.11.0)
+    - GDAL 1.8.1-1; depends (numpy ~= 1.6.1, libgdal ~= 1.8.1)
+    - GDAL 1.11.0-1; depends (numpy ~= 1.8.0, libgdal ~= 1.11.0)
     - iris 1.7.1-8; depends (numpy ~= 1.8.1, Biggus ~= 0.7.0, libudunits ~= 2.2.11, GDAL ~= 1.11.1, Shapely ~= 1.5.1, pandas ~= 0.15.2, scipy ~= 0.14.0, pyke ~= 1.1.1, matplotlib ~= 1.4.2, cartopy ~= 0.11.0, PIL ~= 1.1.7, expat ~= 2.0.1, netCDF4 ~= 1.1.1, pygrib ~= 1.9.9)
     - iris 1.7.1-7; depends (numpy ~= 1.8.1, Biggus ~= 0.7.0, libudunits ~= 2.2.11, GDAL ~= 1.11.1, Shapely ~= 1.5.1, pandas ~= 0.15.1, scipy ~= 0.14.0, pyke ~= 1.1.1, matplotlib ~= 1.4.2, cartopy ~= 0.11.0, PIL ~= 1.1.7, expat ~= 2.0.1, netCDF4 ~= 1.1.1, pygrib ~= 1.9.9)
     - iris 1.6.1-8; depends (numpy ~= 1.8.1, libudunits ~= 2.2.11, scipy ~= 0.14.0, GDAL ~= 1.11.0, Shapely ~= 1.3.2, pandas ~= 0.14.1, matplotlib ~= 1.4.0, pyke ~= 1.1.1, PIL ~= 1.1.7, expat ~= 2.0.1, cartopy ~= 0.10.0, pygrib ~= 1.9.9, netCDF4 ~= 1.1.0)
@@ -309,10 +328,10 @@ packages:
     - hdf5 1.8.11-1
     - libjpeg 7.0-2
     - libjpeg 7.0-3
-    - owslib 0.8.8-4; depends (python_dateutil ~= 2.2.0, pytz ~= 2014.9.0, lxml ~= 3.4.1)
-    - owslib 0.8.8-2; depends (python_dateutil ~= 2.2.0, lxml ~= 3.4.0, pytz ~= 2013.8.0)
-    - owslib 0.8.8-1; depends (python_dateutil ~= 2.2.0, pytz ~= 2013.8.0, lxml ~= 3.3.6)
-    - owslib 0.8.8-3; depends (python_dateutil ~= 2.2.0, pytz ~= 2014.9.0, lxml ~= 3.4.0)
+    - OWSLib 0.8.8-4; depends (python_dateutil ~= 2.2.0, pytz ~= 2014.9.0, lxml ~= 3.4.1)
+    - OWSLib 0.8.8-2; depends (python_dateutil ~= 2.2.0, lxml ~= 3.4.0, pytz ~= 2013.8.0)
+    - OWSLib 0.8.8-1; depends (python_dateutil ~= 2.2.0, pytz ~= 2013.8.0, lxml ~= 3.3.6)
+    - OWSLib 0.8.8-3; depends (python_dateutil ~= 2.2.0, pytz ~= 2014.9.0, lxml ~= 3.4.0)
     - pyproj 1.8.9-1
     - pyproj 1.9.0-1
     - pyproj 1.8.8-2
@@ -348,27 +367,27 @@ solution:
     - iris 1.7.3-2
     - libudunits 2.2.17-2
     - numpy 1.8.1-1
-    - shapely 1.5.1-1
-    - biggus 0.7.0-1
-    - gdal 1.11.1-1
+    - Shapely 1.5.1-1
+    - Biggus 0.7.0-1
+    - GDAL 1.11.1-1
     - scipy 0.14.1rc1-1
     - pandas 0.15.2-1
     - pyke 1.1.1-1
     - matplotlib 1.4.2-2
     - cartopy 0.11.0-5
-    - pil 1.1.7-14
+    - PIL 1.1.7-14
     - expat 2.0.1-3
-    - netcdf4 1.1.1-2
+    - netCDF4 1.1.1-2
     - pygrib 1.9.9-3
     - expat 2.0.1-3
-    - mkl 10.3-1
+    - MKL 10.3-1
     - geos 3.4.2-1
     - pep8 1.5.7-1
     - numpy 1.8.1-1
-    - mkl 10.3-1
+    - MKL 10.3-1
     - numpy 1.8.1-1
     - libgdal 1.11.0-7
-    - mkl 10.3-1
+    - MKL 10.3-1
     - lib_netcdf4 4.3.2-2
     - hdf5 1.8.11-1
     - curl 7.38.0-1
@@ -379,52 +398,52 @@ solution:
     - curl 7.38.0-1
     - numpy 1.8.1-1
     - libgfortran 3.0.0-2
-    - mkl 10.3-1
-    - mkl 10.3-1
+    - MKL 10.3-1
+    - MKL 10.3-1
     - python_dateutil 2.2.0-5
     - distribute 0.6.49-1
     - numpy 1.8.1-1
     - pytz 2014.9.0-1
     - six 1.8.0-2
-    - mkl 10.3-1
+    - MKL 10.3-1
     - htmltemplate 1.5.0-2
     - doctest_tools 1.0a3-1
     - numpy 1.8.1-1
     - pyparsing 2.0.2-1
     - tornado 4.0.2-2
-    - wxpython 2.8.10.1-7
+    - wxPython 2.8.10.1-7
     - pytz 2014.9.0-1
     - libpng 1.6.12-3
     - python_dateutil 2.2.0-5
     - freetype 2.5.3-4
     - configobj 5.0.6-1
-    - mkl 10.3-1
+    - MKL 10.3-1
     - ssl_match_hostname 3.4.0.2-1
     - six 1.8.0-2
     - libpng 1.6.12-3
-    - shapely 1.5.1-1
+    - Shapely 1.5.1-1
     - libproj 4.8.0-2
     - scipy 0.14.1rc1-1
     - geos 3.4.2-1
     - matplotlib 1.4.2-2
-    - pil 1.1.7-14
-    - owslib 0.8.8-4
+    - PIL 1.1.7-14
+    - OWSLib 0.8.8-4
     - pyshp 1.2.0-1
     - geos 3.4.2-1
     - numpy 1.8.1-1
     - libgfortran 3.0.0-2
-    - mkl 10.3-1
-    - mkl 10.3-1
+    - MKL 10.3-1
+    - MKL 10.3-1
     - numpy 1.8.1-1
     - pyparsing 2.0.2-1
     - tornado 4.0.2-2
-    - wxpython 2.8.10.1-7
+    - wxPython 2.8.10.1-7
     - pytz 2014.9.0-1
     - libpng 1.6.12-3
     - python_dateutil 2.2.0-5
     - freetype 2.5.3-4
     - configobj 5.0.6-1
-    - mkl 10.3-1
+    - MKL 10.3-1
     - ssl_match_hostname 3.4.0.2-1
     - six 1.8.0-2
     - libpng 1.6.12-3
@@ -446,8 +465,8 @@ solution:
     - numpy 1.8.1-1
     - hdf5 1.8.11-1
     - curl 7.38.0-1
-    - mkl 10.3-1
+    - MKL 10.3-1
     - numpy 1.8.1-1
     - pyproj 1.9.3-1
     - libpng 1.6.12-3
-    - mkl 10.3-1
+    - MKL 10.3-1
