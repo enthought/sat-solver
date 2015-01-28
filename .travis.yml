@@ -2,7 +2,11 @@ language: python
 python:
   - "2.7"
 install:
-  - python setup.py develop
+  - pip install requirements.txt
   - pip install -r requirements_tests.txt
+  - python setup.py develop
+  - pushd dependencies/enstaller
+  - python setup.py develop
+  - popd
 script:
   - python -m unittest discover -v
