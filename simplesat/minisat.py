@@ -119,7 +119,7 @@ class Solver(object):
         # TODO: Do some simplifications, and check whether clause contains p
         # and -p at the same time.
 
-        if isinstance(clause, list):
+        if not isinstance(clause, Clause):
             clause = Clause(clause, learned=False)
 
         if len(clause) == 0:
