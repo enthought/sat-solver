@@ -9,4 +9,8 @@ setup(
     url='https://github.com/enthought/sat-solvers',
     description='Simple SAT solvers for use in Enstaller',
     packages=['simplesat'],
+    entry_points="""
+        [console_scripts]
+            yaml_to_repository=simplesat.scripts.yaml_to_repository:main
+    """,
 )
