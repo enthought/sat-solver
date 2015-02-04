@@ -4,13 +4,34 @@ from collections import defaultdict
 
 class InstalledFirstPolicy(object):
 
-    def __init__(self, pool, installed_ids):
+    def __init__(self, pool, installed_ids, requirement):
         self._pool = pool
         self._installed_ids = installed_ids
+        self._requirement = requirement
 
     def get_next_variable(self, assignments):
         # Given a dictionary of partial assignments, get an undecided variable
         # to be decided next.
+
+        # Composer maintains a separate queue and pushes these packages onto
+        # the queue at the beginning of running the solver.
+        preferred = self._pool.what_provides(self._requirement)
+        preferred.sort(key=lambda package: package.version, reverse=True)
+
+        preferred_ids = [self._pool.package_id(package)
+                         for package in preferred]
+        installed_ids = [
+            package_id for package_id, status in assignments.iteritems()
+            if status
+        ]
+        if set(preferred_ids) & set(installed_ids):
+            # We've already installed the requirement, continue with
+            # dependencies.
+            pass
+        else:
+            print "Suggesting", preferred[0]
+            return preferred_ids[0]
+
         undecided = [
             package_id for package_id, status in assignments.iteritems()
             if status is None

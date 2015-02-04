@@ -55,12 +55,12 @@ if __name__ == '__main__':
     installed_data = data.get('installed', [])
     installed_ids = _construct_package_list(pool, installed_data)
 
-    policy = InstalledFirstPolicy(pool, installed_ids)
+    policy = InstalledFirstPolicy(pool, installed_ids, requirement)
 
     rules_generator = RulesGenerator(pool, request)
     rules = list(rules_generator.iter_rules())
 
-    s = solver_from_rules_set(rules)
+    s = solver_from_rules_set(rules, policy)
     solution_ids = solve_sat(s)
     for package_id in solution_ids:
         if package_id > 0:
