@@ -34,10 +34,11 @@ class PackageRule(object):
                       "create rule from it" % package_string
                 raise EnstallerException(msg)
             else:
+                _id = pool.package_id(package_candidates[0])
                 if positive:
-                    package_literals.append(package_candidates[0].id)
+                    package_literals.append(_id)
                 else:
-                    package_literals.append(-package_candidates[0].id)
+                    package_literals.append(-_id)
         return cls(package_literals)
 
     def __init__(self, literals):
@@ -107,11 +108,11 @@ class RulesGenerator(object):
         -------
         rule: PackageRule or None
         """
-        literals = [-package.id]
+        literals = [-self._pool.package_id(package)]
 
         for dependency in dependencies:
             if dependency != package:
-                literals.append(dependency.id)
+                literals.append(self._pool.package_id(dependency))
 
         return PackageRule(literals)
 
@@ -137,7 +138,8 @@ class RulesGenerator(object):
         rule: PackageRule or None
         """
         if issuer != provider:
-            return PackageRule([-issuer.id, -provider.id])
+            return PackageRule([-self._pool.package_id(issuer),
+                                -self._pool.package_id(provider)])
 
     def _create_install_one_rule(self, packages, reason, job):
         """
@@ -158,7 +160,7 @@ class RulesGenerator(object):
         -------
         rule: PackageRule
         """
-        literals = [p.id for p in packages]
+        literals = [self._pool.package_id(p) for p in packages]
         return PackageRule(literals)
 
     # -------------------------------------------------
@@ -205,8 +207,9 @@ class RulesGenerator(object):
         while len(work_queue) > 0:
             p = work_queue.popleft()
 
-            if p.id not in self.added_package_ids:
-                self.added_package_ids.add(p.id)
+            p_id = self._pool.package_id(p)
+            if p_id not in self.added_package_ids:
+                self.added_package_ids.add(p_id)
 
                 self._add_dependencies_rules(p, work_queue)
 

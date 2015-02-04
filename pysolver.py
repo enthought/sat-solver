@@ -13,16 +13,17 @@ from enstaller.solver import Request
 from enstaller.versions.enpkg import EnpkgVersion
 
 
-def _construct_package_list(pool, installed_data):
+def _construct_package_list(pool, package_data):
     # This is completely horrible...
 
     package_ids = []
     parser = PrettyPackageStringParser(EnpkgVersion.from_string)
-    for package_str in packages_data:
+    for package_str in package_data:
         package = parser.parse_to_package(package_str, "2.7")
         for candidate in pool._packages_by_name.get(package.name, []):
             if candidate.version == package.version:
-                package_ids.append(candidate.id)
+                _id = pool.package_id(candidate)
+                package_ids.append(_id)
                 break
         else:
             raise ValueError("No match found for {}".format(package))

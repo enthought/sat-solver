@@ -31,14 +31,14 @@ class InstalledFirstPolicy(object):
                 raise ValueError()
                 candidate = None
 
-        return candidate.id
+        return self._pool.package_id(candidate)
 
     def _group_packages_by_name(self, undecided):
         installed_packages = []
         new_package_map = defaultdict(list)
 
         for package_id in undecided:
-            package = self._pool._packages_by_id[package_id]
+            package = self._pool._id_to_package[package_id]
             if package_id in self._installed_ids:
                 installed_packages.append(package)
             else:
