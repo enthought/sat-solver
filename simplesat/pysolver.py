@@ -22,7 +22,8 @@ def find_best_candidate(pool, requirement, rules):
     candidates = sorted_candidates(pool, requirement)
 
     for candidate in candidates:
-        new_rules = rules[:] + [PackageRule((candidate.id,))]
+        id = pool.package_id(candidate)
+        new_rules = rules[:] + [PackageRule((id,))]
         if is_satisfiable(new_rules):
             break
     else:
@@ -41,7 +42,8 @@ def optimize_at_level(pool, parent_package, rules, solution):
         requirement = Requirement.from_legacy_requirement_string(dependency)
         best_candidate = find_best_candidate(pool, requirement, new_rules)
 
-        new_rules.append(PackageRule((best_candidate.id,)))
+        id = pool.package_id(best_candidate)
+        new_rules.append(PackageRule((id,)))
         best_dependencies.append(best_candidate)
 
     solution.extend(best_dependencies)
