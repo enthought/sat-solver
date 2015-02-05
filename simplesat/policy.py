@@ -24,9 +24,16 @@ class InstalledFirstPolicy(object):
             )
             assigned_ids = set(assignments.keys()) - unassigned_ids
 
+            signed_assignments = set()
+            for variable in assigned_ids:
+                if assignments[variable]:
+                    signed_assignments.add(variable)
+                else:
+                    signed_assignments.add(-variable)
+
             for clause in clauses:
                 # TODO Need clause.undecided_literals property
-                if assigned_ids.intersection(map(abs, clause.lits)):
+                if signed_assignments.intersection(clause.lits):
                     # Clause is true
                     continue
 
