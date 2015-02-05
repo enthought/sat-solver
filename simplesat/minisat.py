@@ -12,7 +12,7 @@ class Constraint(object):
 
 
 class DefaultPolicy(object):
-    def get_next_variable(self, assignments):
+    def get_next_package_id(self, assignments, _):
         # Given a dictionary of partial assignments, get an undecided variable
         # to be decided next.
         undecided = [
@@ -216,12 +216,10 @@ class Solver(object):
                     return self.assignments.copy()  # Do something better...
                 else:
                     # New variable decision.
-
-                    # # TODO As we don't record variable activities, we simply
-                    # # select the next unassigned variable.
-                    # p = next(key for key, value in self.assignments.items()
-                    #          if value is None)
-                    p = self._policy.get_next_variable(self.assignments)
+                    p = self._policy.get_next_package_id(
+                        self.assignments,
+                        self.clauses,
+                    )
 
                     self.assume(p)
             else:

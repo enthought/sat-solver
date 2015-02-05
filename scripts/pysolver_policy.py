@@ -55,7 +55,11 @@ if __name__ == '__main__':
     installed_data = data.get('installed', [])
     installed_ids = _construct_package_list(pool, installed_data)
 
-    policy = InstalledFirstPolicy(pool, installed_ids, requirement)
+    policy = InstalledFirstPolicy(pool)
+    requirement_ids = [
+        pool.package_id(package) for package in pool.what_provides(requirement)
+    ]
+    policy.add_packages_by_id(requirement_ids)
 
     rules_generator = RulesGenerator(pool, request)
     rules = list(rules_generator.iter_rules())

@@ -1,68 +1,63 @@
-# Simple policy class.
 from collections import defaultdict
 
 
 class InstalledFirstPolicy(object):
 
-    def __init__(self, pool, installed_ids, requirement):
+    def __init__(self, pool):
         self._pool = pool
-        self._installed_ids = installed_ids
-        self._requirement = requirement
+        self._decision_set = set()
 
-    def get_next_variable(self, assignments):
-        # Given a dictionary of partial assignments, get an undecided variable
-        # to be decided next.
+    def add_packages_by_id(self, package_ids):
+        # TODO Just make this add_requirement.
+        self._decision_set.update(package_ids)
 
-        # Composer maintains a separate queue and pushes these packages onto
-        # the queue at the beginning of running the solver.
-        preferred = self._pool.what_provides(self._requirement)
-        preferred.sort(key=lambda package: package.version, reverse=True)
+    def get_next_package_id(self, assignments, clauses):
+        """Get the next unassigned package.
+        """
 
-        preferred_ids = [self._pool.package_id(package)
-                         for package in preferred]
-        installed_ids = [
-            package_id for package_id, status in assignments.iteritems()
-            if status
-        ]
-        if set(preferred_ids) & set(installed_ids):
-            # We've already installed the requirement, continue with
-            # dependencies.
-            pass
-        else:
-            print "Suggesting", preferred[0]
-            return preferred_ids[0]
+        decision_set = self._decision_set
+        if len(decision_set) == 0:
+            # TODO inefficient and verbose
+            unassigned_ids = set(
+                literal for literal, status in assignments.iteritems()
+                if status is None
+            )
+            assigned_ids = set(assignments.keys()) - unassigned_ids
 
-        undecided = [
-            package_id for package_id, status in assignments.iteritems()
-            if status is None
-        ]
-        installed_packages, new_package_map = \
-            self._group_packages_by_name(undecided)
+            for clause in clauses:
+                # TODO Need clause.undecided_literals property
+                if assigned_ids.intersection(map(abs, clause.lits)):
+                    # Clause is true
+                    continue
 
-        if len(installed_packages) > 0:
-            candidate = installed_packages[0]
-        else:
-            for new_versions in new_package_map.values():
-                new_versions.sort(
-                    key=lambda package: package.version, reverse=True)
-                candidate = new_versions[0]
-                break
-            else:
-                # This should not happen.
-                raise ValueError()
-                candidate = None
+                literals = clause.lits
+                undecided = unassigned_ids.intersection(literals)
 
-        return self._pool.package_id(candidate)
+                decision_set.update(abs(lit) for lit in undecided)
 
-    def _group_packages_by_name(self, undecided):
-        installed_packages = []
-        new_package_map = defaultdict(list)
+            if len(decision_set) == 0:
+                # This will happen if the remaining packages are irrelevant for
+                # the set of rules that we're trying to satisfy. In that case,
+                # just return one of the undecided IDs.
+                return -unassigned_ids.pop()
 
-        for package_id in undecided:
+        # Sort packages by name
+        packages_by_name = defaultdict(list)
+        for package_id in decision_set:
             package = self._pool._id_to_package[package_id]
-            if package_id in self._installed_ids:
-                installed_packages.append(package)
-            else:
-                new_package_map[package.name].append(package)
+            packages_by_name[package.name].append(package)
 
-        return installed_packages, new_package_map
+        # Get the highest version of the first package that we encounter.
+        candidate_name = packages_by_name.keys()[0]
+        candidate_packages = packages_by_name[candidate_name]
+        max_version = max(candidate_packages,
+                          key=lambda package: package.version)
+
+        max_version_id = self._pool.package_id(max_version)
+
+        assert assignments[max_version_id] is None, \
+            "Trying to assign to a variable which is already assigned."
+
+        # Clear out decision set.
+        self._decision_set = set()
+        return self._pool.package_id(max_version)
