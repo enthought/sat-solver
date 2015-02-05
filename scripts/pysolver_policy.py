@@ -1,74 +1,22 @@
-import sys
+import argparse
 
-import yaml
+from enstaller.new_solver.yaml_utils import Scenario
+from enstaller.new_solver import Pool
 
-from simplesat.policy import InstalledFirstPolicy
-from simplesat.pysolver_helpers import solver_from_rules_set, solve_sat
-from simplesat.rules_generator import RulesGenerator
-from simplesat.tests.common import (
-    _construct_pool, _get_requirement_from_request_block)
-
-from enstaller.new_solver.package_parser import PrettyPackageStringParser
-from enstaller.solver import Request
-from enstaller.versions.enpkg import EnpkgVersion
-
-
-def _construct_package_list(pool, package_data):
-    # This is completely horrible...
-
-    package_ids = []
-    parser = PrettyPackageStringParser(EnpkgVersion.from_string)
-    for package_str in package_data:
-        package = parser.parse_to_package(package_str, "2.7")
-        for candidate in pool._packages_by_name.get(package.name, []):
-            if candidate.version == package.version:
-                _id = pool.package_id(candidate)
-                package_ids.append(_id)
-                break
-        else:
-            raise ValueError("No match found for {}".format(package))
-
-    return package_ids
-
-
-def check_solution(rules, solution):
-    for rule in rules:
-        if not set(rule.literals) & set(solution):
-            return False
-    return True
+from simplesat.pysolver_with_policy import resolve_request
 
 
 if __name__ == '__main__':
-    scenario_path = sys.argv[1]
+    p = argparse.ArgumentParser()
+    p.add_argument("scenario", help="Path to the YAML scenario file.")
+    ns = p.parse_args()
 
-    with open(scenario_path) as fp:
-        data = yaml.load(fp)
+    scenario = Scenario.from_yaml(ns.scenario)
+    pool = Pool(scenario.remote_repositories)
+    request = scenario.request
 
-    packages_data = data.get('packages', [])
-    pool = _construct_pool(packages_data)
+    packages = resolve_request(pool, request)
 
-    request_data = data['request']
-    requirement = _get_requirement_from_request_block(request_data)
-    request = Request()
-    request.install(requirement)
-
-    installed_data = data.get('installed', [])
-    installed_ids = _construct_package_list(pool, installed_data)
-
-    policy = InstalledFirstPolicy(pool)
-    requirement_ids = [
-        pool.package_id(package) for package in pool.what_provides(requirement)
-    ]
-    policy.add_packages_by_id(requirement_ids)
-
-    rules_generator = RulesGenerator(pool, request)
-    rules = list(rules_generator.iter_rules())
-
-    s = solver_from_rules_set(rules, policy)
-    solution_ids = solve_sat(s)
-    for package_id in solution_ids:
-        if package_id > 0:
-            print pool.id_to_string(package_id)
-
-    # Check the solution, just to make sure.
-    print check_solution(rules, solution_ids)
+    for package in packages:
+        package_id = pool.package_id(package)
+        print pool.id_to_string(package_id)
