@@ -16,6 +16,8 @@ class ScenarioTestAssistant(object):
         pool, requirement, expected = parse_scenario_file(filename)
         request = Request()
         request.install(requirement)
+        # Prune duplicated packages
+        expected = list(set(expected))
 
         # When
         solution = resolve_request(pool, request)
@@ -42,7 +44,7 @@ class TestIPython(TestCase, ScenarioTestAssistant):
 
 class TestIris(TestCase, ScenarioTestAssistant):
 
-    SCENARIO = 'iris_php.yaml'
+    SCENARIO = 'iris.yaml'
 
     def test_solution(self):
         self._check_solution(self.SCENARIO)
