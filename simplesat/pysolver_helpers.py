@@ -1,7 +1,7 @@
 from simplesat.api import Solver
 
 
-def solver_from_rules_set(rules):
+def solver_from_rules_set(rules, policy=None):
     """
     Construct a SAT solver from a rules generator.
 
@@ -15,7 +15,7 @@ def solver_from_rules_set(rules):
     solver: Solver.
 
     """
-    s = Solver()
+    s = Solver(policy)
     for rule in rules:
         s.add_clause(rule.literals)
     s._setup_assignments()
