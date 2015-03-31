@@ -11,6 +11,17 @@ class Constraint(object):
     pass
 
 
+class DefaultPolicy(object):
+    def get_next_package_id(self, assignments, _):
+        # Given a dictionary of partial assignments, get an undecided variable
+        # to be decided next.
+        undecided = [
+            package_id for package_id, status in assignments.iteritems()
+            if status is None
+        ]
+        return undecided[0]
+
+
 class Clause(Constraint):
 
     def __init__(self, lits, learned=False):
@@ -85,7 +96,7 @@ class Clause(Constraint):
 
 class Solver(object):
 
-    def __init__(self):
+    def __init__(self, policy=None):
 
         self.clauses = []
         self.watches = defaultdict(list)
@@ -112,6 +123,9 @@ class Solver(object):
 
         # Whether the system is satisfiable.
         self.status = None
+
+        #
+        self._policy = policy or DefaultPolicy()
 
     def add_clause(self, clause):
         """ Add a new clause to the solver.
@@ -202,11 +216,11 @@ class Solver(object):
                     return self.assignments.copy()  # Do something better...
                 else:
                     # New variable decision.
+                    p = self._policy.get_next_package_id(
+                        self.assignments,
+                        self.clauses,
+                    )
 
-                    # TODO As we don't record variable activities, we simply
-                    # select the next unassigned variable.
-                    p = next(key for key, value in self.assignments.items()
-                             if value is None)
                     self.assume(p)
             else:
                 # Conflict!
