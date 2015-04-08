@@ -93,4 +93,4 @@ request:
       requirement: "ipython"
 
 installed:
-    - tornado 4.0.1
+    - tornado 4.0.1-1
