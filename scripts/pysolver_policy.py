@@ -4,24 +4,20 @@ import sys
 from enstaller.new_solver import Pool
 from enstaller.new_solver.yaml_utils import Scenario
 
-from simplesat.pysolver_with_policy import resolve_request
+from simplesat.pysolver_with_policy import Solver
 
 
-def solve(request, remote_repositories, installed_repository):
+def solve_and_print(request, remote_repositories, installed_repository,
+                    print_ids):
     pool = Pool(remote_repositories)
 
-    # This is very hacky...
-    installed = []
-    remote = remote_repositories[0]
-    for pkg_list in installed_repository._name_to_packages.values():
-        for package in pkg_list:
-            installed.append(
-                remote.find_package(package.name, str(package.version))
-            )
-
-    signed_ids = resolve_request(pool, request, installed)
-    for signed_id in signed_ids:
-        print(pool.id_to_string(signed_id))
+    solver = Solver(pool, remote_repositories, installed_repository)
+    if print_ids:
+        for signed_id in solver.solve(request):
+            print(signed_id)
+    else:
+        for signed_id in solver.solve(request):
+            print(solver._pool.id_to_string(signed_id))
 
 
 def main(argv=None):
@@ -29,11 +25,13 @@ def main(argv=None):
 
     p = argparse.ArgumentParser()
     p.add_argument("scenario", help="Path to the YAML scenario file.")
+    p.add_argument("--print-ids", action="store_true")
+
     ns = p.parse_args(argv)
 
     scenario = Scenario.from_yaml(ns.scenario)
-    solve(scenario.request, scenario.remote_repositories,
-          scenario.installed_repository)
+    solve_and_print(scenario.request, scenario.remote_repositories,
+                    scenario.installed_repository, ns.print_ids)
 
 
 if __name__ == '__main__':

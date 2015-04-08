@@ -37,3 +37,28 @@ def resolve_request(pool, request, installed=None):
     solv = solver_from_rules_set(rules, policy)
     solution_ids = solve_sat(solv)
     return solution_ids
+
+
+class Solver(object):
+    def __init__(self, pool, remote_repositories, installed_repository):
+        self._pool = pool
+        self._installed_repository = installed_repository
+        self._remote_repositories = remote_repositories
+
+    def solve(self, request):
+        return self._run_sat(request)
+
+    def _run_sat(self, request):
+        installed = self._compute_installed_packages()
+        return resolve_request(self._pool, request, installed)
+
+    def _compute_installed_packages(self):
+        # This is very hacky...
+        installed = []
+        remote = self._remote_repositories[0]
+        for pkg_list in self._installed_repository._name_to_packages.values():
+            for package in pkg_list:
+                installed.append(
+                    remote.find_package(package.name, str(package.version))
+                )
+        return installed
