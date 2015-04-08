@@ -94,3 +94,14 @@ request:
 
 installed:
     - tornado 4.0.1-1
+
+solution:
+    2: appinst 2.1.2-1
+    8: tornado 4.0.1-1
+    13: MarkupSafe 0.23-1
+    16: Pygments 1.6.0-1
+    23: Jinja2 2.7.3-2
+    28: ipython 2.2.0-2
+    66: zeromq 4.0.4-1
+    72: ssl_match_hostname 3.4.0.2-1
+    87: pyzmq 14.3.1-1

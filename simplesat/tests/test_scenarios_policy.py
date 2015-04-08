@@ -32,25 +32,22 @@ class ScenarioTestAssistant(object):
                               scenario.decisions.keys())
 
 
-class TestSimpleNumpy(TestCase, ScenarioTestAssistant):
+class TestNoInstallSet(TestCase, ScenarioTestAssistant):
 
-    SCENARIO = 'simple_numpy.yaml'
+    def test_simple_numpy(self):
+        self._check_solution("simple_numpy.yaml")
 
-    def test_solution(self):
-        self._check_solution(self.SCENARIO)
+    def test_ipython(self):
+        self._check_solution("ipython.yaml")
 
-
-class TestIPython(TestCase, ScenarioTestAssistant):
-
-    SCENARIO = 'ipython.yaml'
-
-    def test_solution(self):
-        self._check_solution(self.SCENARIO)
+    def test_iris(self):
+        self._check_solution("iris.yaml")
 
 
-class TestIris(TestCase, ScenarioTestAssistant):
+class TestInstallSet(TestCase, ScenarioTestAssistant):
 
-    SCENARIO = 'iris.yaml'
+    def test_simple_numpy(self):
+        self._check_solution("simple_numpy_installed.yaml")
 
-    def test_solution(self):
-        self._check_solution(self.SCENARIO)
+    def test_ipython(self):
+        self._check_solution("ipython_with_installed.yaml")
