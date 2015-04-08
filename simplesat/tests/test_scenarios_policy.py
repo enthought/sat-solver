@@ -1,9 +1,11 @@
+import os.path
+
 from unittest import TestCase
 
-from enstaller.solver import Request
+from enstaller.new_solver import Pool
 
-from simplesat.pysolver_with_policy import resolve_request
-from .common import parse_scenario_file
+from simplesat.pysolver_with_policy import Solver, resolve_request
+from .common import Scenario
 
 
 class ScenarioTestAssistant(object):
@@ -13,17 +15,21 @@ class ScenarioTestAssistant(object):
         # what the SAT solver computes.
 
         # Given
-        pool, requirement, expected = parse_scenario_file(filename)
-        request = Request()
-        request.install(requirement)
-        # Prune duplicated packages
-        expected = list(set(expected))
+        scenario = Scenario.from_yaml(os.path.join(os.path.dirname(__file__), 
+                                      filename))
+        request = scenario.request
 
         # When
-        solution = resolve_request(pool, request)
+        pool = Pool(scenario.remote_repositories)
+        solver = Solver(pool, scenario.remote_repositories,
+                        scenario.installed_repository)
+        decisions_set = solver.solve(request)
 
         # Then
-        self.assertItemsEqual(solution, expected)
+        positive_decisions = set(decision for decision in decisions_set
+                                 if decision > 0)
+        self.assertItemsEqual(positive_decisions,
+                              scenario.decisions.keys())
 
 
 class TestSimpleNumpy(TestCase, ScenarioTestAssistant):
