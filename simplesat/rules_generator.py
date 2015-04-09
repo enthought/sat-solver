@@ -242,6 +242,14 @@ class RulesGenerator(object):
             rule = self._create_install_one_rule(packages, "job_install", job)
             self._add_rule(rule, "job")
 
+    def _add_installed_package_rules(self, package):
+        packages_all_versions = self._pool._packages_by_name[package.name]
+        for other in packages_all_versions:
+            self._add_package_rules(other)
+        rule = self._create_install_one_rule(
+            packages_all_versions, "installed_pkgs", None)
+        self._add_rule(rule, "installed")
+
     def _add_job_rules(self):
         for job in self.request.jobs:
             if job.kind == "install":

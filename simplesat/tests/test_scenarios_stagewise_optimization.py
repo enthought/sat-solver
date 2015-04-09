@@ -1,7 +1,19 @@
+import os.path
+
 from unittest import TestCase
 
+from enstaller.new_solver import Pool, Requirement
+
 from simplesat.pysolver import optimize
-from .common import generate_rules_for_requirement, parse_scenario_file
+from .common import Scenario, generate_rules_for_requirement
+
+
+def _get_requirement_from_request_block(request):
+    assert len(request.jobs) == 1
+    job = request.jobs[0]
+    assert job.kind == 'install'
+    return job.requirement
+    #return Requirement._from_string(requirement_str)
 
 
 class ScenarioTestAssistant(object):
@@ -11,14 +23,18 @@ class ScenarioTestAssistant(object):
         # what the SAT solver computes.
 
         # Given
-        pool, requirement, expected = parse_scenario_file(filename)
+        scenario = Scenario.from_yaml(os.path.join(os.path.dirname(__file__), 
+                                      filename))
+        pool = Pool(scenario.remote_repositories)
+        requirement = _get_requirement_from_request_block(scenario.request)
         rules = generate_rules_for_requirement(pool, requirement)
 
         # When
         solution = optimize(pool, requirement, rules)
 
         # Then
-        self.assertItemsEqual(solution, expected)
+        decisions = set(pool.package_id(p) for p in solution)
+        self.assertItemsEqual(decisions, scenario.decisions.keys())
 
 
 class TestSimpleNumpy(TestCase, ScenarioTestAssistant):
