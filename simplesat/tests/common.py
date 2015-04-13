@@ -112,8 +112,7 @@ class Scenario(object):
         self.request = request
         self.decisions = decisions
 
-    def print_solution(self, positive_decisions):
-        pool = Pool(self.remote_repositories)
+    def print_solution(self, pool, positive_decisions):
         for package_id in sorted(positive_decisions):
             package = pool._id_to_package[package_id]
             print("{}: {} {}".format(package_id, package.name,

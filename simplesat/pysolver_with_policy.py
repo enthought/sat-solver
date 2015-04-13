@@ -3,14 +3,13 @@ from simplesat.pysolver_helpers import solver_from_rules_set, solve_sat
 from simplesat.rules_generator import RulesGenerator
 
 
-def resolve_request(pool, request, installed=None):
+def resolve_request(pool, request, installed_repository):
     """Given an install request, provide a list of packages
     to be installed to resolve this request, or None if no
     resolution could be found.
 
     """
-    installed = installed or []
-    policy = InstalledFirstPolicy(pool)
+    policy = InstalledFirstPolicy(pool, installed_repository)
 
     assert len(request.jobs) == 1
     job = request.jobs[0]
@@ -24,11 +23,12 @@ def resolve_request(pool, request, installed=None):
 
     # Add installed packages.
     policy.add_packages_by_id(
-        [pool.package_id(package) for package in installed]
+        [pool.package_id(package)
+         for package in installed_repository.iter_packages()]
     )
 
     rules_generator = RulesGenerator(pool, request)
-    for package in installed:
+    for package in installed_repository.iter_packages():
         rules_generator._add_installed_package_rules(package)
 
     rules = list(rules_generator.iter_rules())
@@ -47,16 +47,4 @@ class Solver(object):
         return self._run_sat(request)
 
     def _run_sat(self, request):
-        installed = self._compute_installed_packages()
-        return resolve_request(self._pool, request, installed)
-
-    def _compute_installed_packages(self):
-        # This is very hacky...
-        installed = []
-        remote = self._remote_repositories[0]
-        for pkg_list in self._installed_repository._name_to_packages.values():
-            for package in pkg_list:
-                installed.append(
-                    remote.find_package(package.name, str(package.version))
-                )
-        return installed
+        return resolve_request(self._pool, request, self._installed_repository)

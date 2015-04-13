@@ -10,13 +10,15 @@ from simplesat.pysolver_with_policy import Solver
 def solve_and_print(request, remote_repositories, installed_repository,
                     print_ids):
     pool = Pool(remote_repositories)
+    pool.add_repository(installed_repository)
 
     solver = Solver(pool, remote_repositories, installed_repository)
+    signed_ids = solver.solve(request)
     if print_ids:
-        for signed_id in solver.solve(request):
+        for signed_id in signed_ids:
             print(signed_id)
     else:
-        for signed_id in solver.solve(request):
+        for signed_id in signed_ids:
             print(solver._pool.id_to_string(signed_id))
 
 
