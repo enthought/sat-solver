@@ -22,38 +22,10 @@ class InstalledFirstPolicy(object):
 
         decision_set = self._decision_set
         if len(decision_set) == 0:
-            # TODO inefficient and verbose
-            unassigned_ids = set(
-                literal for literal, status in assignments.iteritems()
-                if status is None
-            )
-            assigned_ids = set(assignments.keys()) - unassigned_ids
-
-            signed_assignments = set()
-            for variable in assigned_ids:
-                if assignments[variable]:
-                    signed_assignments.add(variable)
-                else:
-                    signed_assignments.add(-variable)
-
-            for clause in clauses:
-                # TODO Need clause.undecided_literals property
-                if signed_assignments.intersection(clause.lits):
-                    # Clause is true
-                    continue
-
-                literals = clause.lits
-                undecided = unassigned_ids.intersection(literals)
-
-                decision_set.update(abs(lit) for lit in undecided)
-
-            if len(decision_set) == 0:
-                # This will happen if the remaining packages are irrelevant for
-                # the set of rules that we're trying to satisfy. In that case,
-                # just return one of the undecided IDs.
-
-                # We use min to ensure determinisism
-                return -min(unassigned_ids)
+            decision_set, candidate_id = \
+                self._handle_empty_decision_set(assignments, clauses)
+            if candidate_id is not None:
+                return candidate_id
 
         # Sort packages by name
         packages_by_name = DefaultOrderedDict(list)
@@ -75,3 +47,40 @@ class InstalledFirstPolicy(object):
         # Clear out decision set.
         self._decision_set = set()
         return self._pool.package_id(max_version)
+
+
+    def _handle_empty_decision_set(self, assignments, clauses):
+        # TODO inefficient and verbose
+        unassigned_ids = set(
+            literal for literal, status in assignments.iteritems()
+            if status is None
+        )
+        assigned_ids = set(assignments.keys()) - unassigned_ids
+
+        signed_assignments = set()
+        for variable in assigned_ids:
+            if assignments[variable]:
+                signed_assignments.add(variable)
+            else:
+                signed_assignments.add(-variable)
+
+        for clause in clauses:
+            # TODO Need clause.undecided_literals property
+            if signed_assignments.intersection(clause.lits):
+                # Clause is true
+                continue
+
+            literals = clause.lits
+            undecided = unassigned_ids.intersection(literals)
+
+            self._decision_set.update(abs(lit) for lit in undecided)
+
+        if len(self._decision_set) == 0:
+            # This will happen if the remaining packages are irrelevant for
+            # the set of rules that we're trying to satisfy. In that case,
+            # just return one of the undecided IDs.
+
+            # We use min to ensure determinisism
+            return self._decision_set, -min(unassigned_ids)
+        else:
+            return self._decision_set, None
