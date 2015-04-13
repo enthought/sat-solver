@@ -1,4 +1,8 @@
-from collections import defaultdict
+from __future__ import absolute_import
+
+from collections import defaultdict, OrderedDict
+
+from enstaller.collections import DefaultOrderedDict
 
 
 class InstalledFirstPolicy(object):
@@ -9,7 +13,8 @@ class InstalledFirstPolicy(object):
 
     def add_packages_by_id(self, package_ids):
         # TODO Just make this add_requirement.
-        self._decision_set.update(package_ids)
+        for package_id in package_ids:
+            self._decision_set.add(package_id)
 
     def get_next_package_id(self, assignments, clauses):
         """Get the next unassigned package.
@@ -46,10 +51,12 @@ class InstalledFirstPolicy(object):
                 # This will happen if the remaining packages are irrelevant for
                 # the set of rules that we're trying to satisfy. In that case,
                 # just return one of the undecided IDs.
-                return -unassigned_ids.pop()
+
+                # We use min to ensure determinisism
+                return -min(unassigned_ids)
 
         # Sort packages by name
-        packages_by_name = defaultdict(list)
+        packages_by_name = DefaultOrderedDict(list)
         for package_id in decision_set:
             package = self._pool._id_to_package[package_id]
             packages_by_name[package.name].append(package)

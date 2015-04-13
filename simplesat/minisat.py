@@ -101,7 +101,7 @@ class Solver(object):
         self.clauses = []
         self.watches = defaultdict(list)
 
-        self.assignments = {}
+        self.assignments = OrderedDict()
 
         # A list of literals which become successively true (because of direct
         # assignment, or by unit propagation).
@@ -119,7 +119,7 @@ class Solver(object):
 
         # For each variable assignment, a reference to the clause that forced
         # this assignment.
-        self.reason = {}
+        self.reason = OrderedDict()
 
         # Whether the system is satisfiable.
         self.status = None
@@ -153,9 +153,9 @@ class Solver(object):
     def _setup_assignments(self):
         """Initialize assignments table.
         """
-        self.assignments = {
-            abs(lit): None for clause in self.clauses for lit in clause
-        }
+        self.assignments = OrderedDict(
+            (abs(lit), None) for clause in self.clauses for lit in clause
+        )
 
     def propagate(self):
         while len(self.prop_queue) > 0:

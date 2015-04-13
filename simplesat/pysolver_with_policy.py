@@ -9,9 +9,7 @@ def resolve_request(pool, request, installed=None):
     resolution could be found.
 
     """
-    if installed is None:
-        installed = []
-
+    installed = installed or []
     policy = InstalledFirstPolicy(pool)
 
     assert len(request.jobs) == 1
