@@ -1,2 +1,2 @@
 -r dev_requirements.txt
--e git://github.com/enthought/enstaller.git@db81339c87158b1e1c6f2749d9ab98484c73c934#egg=enstaller
+git+https://github.com/enthought/enstaller.git@9e04cf5dfea2e07e0a7b1d31e144d871273e578f#egg=enstaller
