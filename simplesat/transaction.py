@@ -122,8 +122,8 @@ class Transaction(object):
 
     def _compute_transaction_from_maps(self, pool, install_map, update_map,
                                        remove_map):
-        queue = [operation.package for operation
-                 in self._compute_root_packages(pool, install_map, update_map).values()]
+        operations = self._compute_root_packages(pool, install_map, update_map)
+        queue = [operation.package for operation in operations.values()]
 
         visited_ids = set()
 
