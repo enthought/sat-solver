@@ -1,6 +1,7 @@
 from simplesat.policy import InstalledFirstPolicy
 from simplesat.pysolver_helpers import solver_from_rules_set, solve_sat
 from simplesat.rules_generator import RulesGenerator
+from simplesat.transaction import Transaction
 
 
 def resolve_request(pool, request, installed_repository):
@@ -44,7 +45,14 @@ class Solver(object):
         self._remote_repositories = remote_repositories
 
     def solve(self, request):
-        return self._run_sat(request)
+        solution = self._run_sat(request)
+
+        installed_map = set(
+            self._pool.package_id(p)
+            for p in self._installed_repository.iter_packages()
+        )
+
+        return Transaction(self._pool, solution, installed_map)
 
     def _run_sat(self, request):
         return resolve_request(self._pool, request, self._installed_repository)

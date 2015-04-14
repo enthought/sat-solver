@@ -24,13 +24,26 @@ class ScenarioTestAssistant(object):
         pool.add_repository(scenario.installed_repository)
         solver = Solver(pool, scenario.remote_repositories,
                         scenario.installed_repository)
-        decisions_set = solver.solve(request)
+        transaction = solver.solve(request)
 
         # Then
-        positive_decisions = set(decision for decision in decisions_set
-                                 if decision > 0)
-        self.assertItemsEqual(positive_decisions,
-                              scenario.decisions.keys())
+        self.assertEqualOperations(transaction.operations,
+                                   scenario.operations)
+
+    def assertEqualOperations(self, operations, scenario_operations):
+        for i, (left, right) in enumerate(zip(operations, scenario_operations)):
+            if not type(left) == type(right):
+                msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}"
+                self.fail(msg.format(i, type(left), type(right)))
+            left_s = "{0} {1}".format(left.package.name,
+                                      left.package.version)
+            right_s = right.package
+            if left_s != right_s:
+                msg = "Item {0!r}: {1!r} vs {2!r}".format(i, left_s, right_s)
+                self.fail(msg)
+
+        if len(operations) != len(scenario_operations):
+            self.fail("Length of operations differ")
 
 
 class TestNoInstallSet(TestCase, ScenarioTestAssistant):
@@ -41,9 +54,6 @@ class TestNoInstallSet(TestCase, ScenarioTestAssistant):
     def test_ipython(self):
         self._check_solution("ipython.yaml")
 
-    # This one is known to fail because the InstalledPolicy currently
-    # causes spurious dependencies to be pulled in.
-    @expectedFailure
     def test_iris(self):
         self._check_solution("iris.yaml")
 
