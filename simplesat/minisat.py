@@ -231,6 +231,16 @@ class Solver(object):
                 self.cancel_until(max(bt_level, root_level))
                 self.record(learned_clause)
 
+    def validate(self, solution_map):
+        """Check whether a given set of assignments solves this SAT problem.
+        """
+        solution_literals = {(+1 if status else -1) * variable
+                             for variable, status in solution_map.items()}
+        for clause in self.clauses:
+            if len(set(clause.lits) & solution_literals) == 0:
+                return False
+        return True
+
     def analyze(self, conflict):
         """ Produce a reason clause for a conflict.
         """

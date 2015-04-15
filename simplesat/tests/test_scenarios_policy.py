@@ -4,7 +4,7 @@ from unittest import TestCase, expectedFailure
 
 from enstaller.new_solver import Pool
 
-from simplesat.pysolver_with_policy import Solver, resolve_request
+from simplesat.pysolver_with_policy import Solver
 from .common import Scenario
 
 

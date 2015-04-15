@@ -492,3 +492,38 @@ class TestSolver(unittest.TestCase):
         # Then
         self.assertEqual(clause.lits, [5, -4, 3, 2])
         self.assertItemsEqual(s.prop_queue, [5])
+
+    def test_validation(self):
+        # Given
+        s = Solver()
+        cl1 = Clause([1, -2])
+        cl2 = Clause([1,  2, -3])
+        cl3 = Clause([1,  2,  3, -4])
+        s.add_clause(cl1)
+        s.add_clause(cl2)
+        s.add_clause(cl3)
+        solution = {1: False, 2: False, 3: False, 4: False}
+
+        # When
+        status = s.validate(solution)
+
+        # Then
+        self.assertTrue(status)
+
+        # Given
+        solution = {1: False, 2: True, 3: False, 4: True}
+
+        # When
+        status = s.validate(solution)
+
+        # Then
+        self.assertFalse(status)
+
+        # Given
+        solution = {1: False, 2: True, 3: False}
+
+        # When
+        status = s.validate(solution)
+
+        # Then
+        self.assertFalse(status)
