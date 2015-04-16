@@ -82,12 +82,11 @@ class Transaction(object):
             package = pool._id_to_package[package_id]
 
             if decision < 0 and package_id in installed_map:
-                if not package_id in ignored_remove:
+                if package_id not in ignored_remove:
                     remove_map[package_id] = Operation(package)
 
         return self._compute_transaction_from_maps(pool, install_map,
-            update_map, remove_map
-        )
+                                                   update_map, remove_map)
 
     def install(self, package):
         self.operations.append(InstallOperation(package))
@@ -163,7 +162,7 @@ class Transaction(object):
         for package_id, operation in packages.items():
             package = operation.package
 
-            if not package_id in roots:
+            if package_id not in roots:
                 continue
 
             for dependency in package.dependencies:
