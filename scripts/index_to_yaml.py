@@ -1,3 +1,10 @@
+import argparse
+import collections
+import operator
+import sys
+
+import yaml
+
 from enstaller.new_solver.tests.common import repository_from_index
 from enstaller.new_solver.requirement import Requirement
 from enstaller.new_solver.constraint_types import (
@@ -25,18 +32,35 @@ def dependency_to_string(dependency):
 
 
 def requirements_string(package):
+    name = package.key.split("-")[0]
     template = "{name} {version}"
     if len(package.dependencies) > 0:
         template += "; depends ({dependencies})"
     dependencies = ', '.join(
         dependency_to_string(dep) for dep in package.dependencies)
     return template.format(
-        name=package.name, version=package.version, dependencies=dependencies)
+        name=name, version=package.version, dependencies=dependencies)
 
 
-repository = repository_from_index('filtered_full_index.json')
-for package in repository.iter_packages():
-    # print package.name
-    # print str(package.version)
-    # print package.dependencies
-    print requirements_string(package)
+def main(argv=None):
+    argv = argv or sys.argv[1:]
+
+    p = argparse.ArgumentParser()
+    p.add_argument("index")
+
+    ns = p.parse_args(argv)
+
+    repository = repository_from_index(ns.index)
+
+    data = collections.defaultdict(list)
+
+    for package in sorted(repository.iter_packages(),
+                          key=operator.attrgetter("name")):
+        data["packages"].append(requirements_string(package))
+
+    data = dict(data)
+    yaml.dump(data, sys.stdout)
+
+
+if __name__ == "__main__":
+    main()
