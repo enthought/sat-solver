@@ -95,7 +95,7 @@ request:
 installed:
     - tornado 4.0.1-1
 
-solution:
+decisions:
     3: appinst 2.1.2-1
     15: MarkupSafe 0.23-1
     18: Pygments 1.6.0-1
@@ -105,3 +105,21 @@ solution:
     72: ssl_match_hostname 3.4.0.2-1
     87: pyzmq 14.3.1-1
     89: tornado 4.0.1-1
+
+transaction:
+    - kind: "install"
+      package: "ssl_match_hostname 3.4.0.2-1"
+    - kind: "install"
+      package: "zeromq 4.0.4-1"
+    - kind: "install"
+      package: "pyzmq 14.3.1-1"
+    - kind: "install"
+      package: "appinst 2.1.2-1"
+    - kind: "install"
+      package: "Pygments 1.6.0-1"
+    - kind: "install"
+      package: "MarkupSafe 0.23-1"
+    - kind: "install"
+      package: "Jinja2 2.7.3-2"
+    - kind: "install"
+      package: "ipython 2.2.0-2"

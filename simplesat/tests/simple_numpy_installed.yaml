@@ -12,6 +12,10 @@ request:
     - operation: "install"
       requirement: "numpy"
       
-solution:
+decisions:
     3: numpy 1.6.1-1
     6: MKL 10.2-1
+
+transaction:
+    - kind: "install"
+      package: "numpy 1.6.1-1"

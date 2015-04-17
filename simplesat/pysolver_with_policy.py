@@ -1,6 +1,7 @@
 from simplesat.policy import InstalledFirstPolicy
 from simplesat.pysolver_helpers import solver_from_rules_set, solve_sat
 from simplesat.rules_generator import RulesGenerator
+from simplesat.transaction import Transaction
 
 
 class Solver(object):
@@ -16,7 +17,14 @@ class Solver(object):
         to be installed to resolve this request, or None if no
         resolution could be found.
         """
-        return self._run_sat(request)
+        solution = self._run_sat(request)
+
+        installed_map = set(
+            self._pool.package_id(p)
+            for p in self._installed_repository.iter_packages()
+        )
+
+        return Transaction(self._pool, solution, installed_map)
 
     def _create_solver(self, request):
 

@@ -14,6 +14,9 @@ from enstaller.utils import PY_VER
 from enstaller.versions.enpkg import EnpkgVersion
 
 from simplesat.rules_generator import RulesGenerator
+from simplesat.transaction import (InstallOperation, RemoveOperation,
+    UpdateOperation
+)
 
 
 HERE = os.path.dirname(__file__)
@@ -99,18 +102,33 @@ class Scenario(object):
             requirement = Requirement._from_string(operation["requirement"])
             getattr(request, kind)(requirement)
 
-        decisions = data.get("solution", {})
+        decisions = data.get("decisions", {})
+
+        operations = []
+        for operation in data.get("transaction", []):
+            if operation["kind"] == "install":
+                operations.append(InstallOperation(operation["package"]))
+            elif operation["kind"] == "update":
+                operations.append(UpdateOperation(operation["from"],
+                                                  operation["to"]))
+            elif operation["kind"] == "remove":
+                operations.append(RemoveOperation(operation["package"]))
+            else:
+                msg = "invalid operation kind {!r}".format(operation["kind"])
+                raise ValueError(msg)
+
         return cls(packages, [remote_repository(data, packages)],
                    installed_repository(data, packages), request,
-                   decisions)
+                   decisions, operations)
 
     def __init__(self, packages, remote_repositories, installed_repository,
-                 request, decisions):
+                 request, decisions, operations):
         self.packages = packages
         self.remote_repositories = remote_repositories
         self.installed_repository = installed_repository
         self.request = request
         self.decisions = decisions
+        self.operations = operations
 
     def print_solution(self, pool, positive_decisions):
         for package_id in sorted(positive_decisions):

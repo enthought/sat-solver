@@ -92,7 +92,7 @@ request:
     - operation: "install"
       requirement: "ipython"
 
-solution:
+decisions:
     3: appinst 2.1.2-1
     12: tornado 4.0.2-2
     15: MarkupSafe 0.23-1
@@ -102,3 +102,23 @@ solution:
     71: zeromq 4.0.4-1
     72: ssl_match_hostname 3.4.0.2-1
     88: pyzmq 14.4.1-1
+
+transaction:
+    - kind: "install"
+      package: "zeromq 4.0.4-1"
+    - kind: "install"
+      package: "ssl_match_hostname 3.4.0.2-1"
+    - kind: "install"
+      package: "tornado 4.0.2-2"
+    - kind: "install"
+      package: "pyzmq 14.4.1-1"
+    - kind: "install"
+      package: "appinst 2.1.2-1"
+    - kind: "install"
+      package: "Pygments 2.0.1-1"
+    - kind: "install"
+      package: "MarkupSafe 0.23-1"
+    - kind: "install"
+      package: "Jinja2 2.7.3-2"
+    - kind: "install"
+      package: "ipython 2.3.1-2"
