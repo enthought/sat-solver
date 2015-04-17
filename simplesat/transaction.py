@@ -123,7 +123,8 @@ class Transaction(object):
 
         visited_ids = set()
 
-        # Topological sort
+        # Install/update packages, starting from the ones which do not
+        # depend on anything else (using topological sort)
         # FIXME: better implementation
         while len(queue) > 0:
             package = queue.pop()
@@ -151,6 +152,11 @@ class Transaction(object):
             self.remove(operation)
 
     def _compute_root_packages(self, pool, install_map, update_map):
+        """ Look at the root packages in the given maps.
+
+        Root packages are packages which are not dependencies of other
+        packages.
+        """
         packages = OrderedDict(install_map)
         packages.update(update_map)
 
