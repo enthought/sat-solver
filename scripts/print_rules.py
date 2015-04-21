@@ -8,8 +8,7 @@ from simplesat.pysolver_with_policy import Solver
 from simplesat.rules_generator import PackageRule
 
 
-def print_rules(request, remote_repositories, installed_repository,
-                    print_ids):
+def print_rules(request, remote_repositories, installed_repository):
     pool = Pool(remote_repositories)
     pool.add_repository(installed_repository)
 
@@ -28,8 +27,8 @@ def main(argv=None):
     ns = p.parse_args(argv)
 
     scenario = Scenario.from_yaml(ns.scenario)
-    solve_and_print(scenario.request, scenario.remote_repositories,
-                    scenario.installed_repository, ns.print_ids)
+    print_rules(scenario.request, scenario.remote_repositories,
+                scenario.installed_repository)
 
 
 if __name__ == '__main__':
