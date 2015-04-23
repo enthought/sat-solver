@@ -49,8 +49,7 @@ class Solver(object):
 
         # Add installed packages.
         policy.add_packages_by_id(
-            [pool.package_id(package)
-             for package in installed_repository.iter_packages()]
+            [pool.package_id(package) for package in installed_repository]
         )
 
         installed_map = collections.OrderedDict()
