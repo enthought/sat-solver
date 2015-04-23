@@ -59,7 +59,8 @@ def main(argv=None):
         data["packages"].append(requirements_string(package))
 
     data = dict(data)
-    yaml.dump(data, sys.stdout)
+    yaml.safe_dump(data, sys.stdout, allow_unicode=True,
+                   default_flow_style=False)
 
 
 if __name__ == "__main__":
