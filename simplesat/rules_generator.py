@@ -3,6 +3,7 @@ import collections
 from enstaller.errors import EnstallerException
 
 from enstaller.new_solver.requirement import Requirement
+from enstaller.solver import JobType
 
 
 class PackageRule(object):
@@ -252,7 +253,7 @@ class RulesGenerator(object):
 
     def _add_job_rules(self):
         for job in self.request.jobs:
-            if job.kind == "install":
+            if job.kind == JobType.install:
                 self._add_install_job_rules(job)
             else:
                 msg = "Job kind {0!} not supported".format(job.kind)

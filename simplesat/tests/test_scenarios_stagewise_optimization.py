@@ -3,6 +3,7 @@ import os.path
 from unittest import TestCase
 
 from enstaller.new_solver import Pool, Requirement
+from enstaller.solver import JobType
 
 from simplesat.pysolver import optimize
 from .common import Scenario, generate_rules_for_requirement
@@ -11,7 +12,7 @@ from .common import Scenario, generate_rules_for_requirement
 def _get_requirement_from_request_block(request):
     assert len(request.jobs) == 1
     job = request.jobs[0]
-    assert job.kind == 'install'
+    assert job.kind == JobType.install
     return job.requirement
     #return Requirement._from_string(requirement_str)
 
