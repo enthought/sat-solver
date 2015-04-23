@@ -65,21 +65,21 @@ class PackageRule(object):
 
 
 class RulesGenerator(object):
-    def __init__(self, pool, request):
+    def __init__(self, pool, request, installed_map=None):
         self._rules_set = collections.OrderedDict()
         self._pool = pool
 
         self.request = request
-        self.installed_map = collections.OrderedDict()
+        self.installed_map = installed_map or collections.OrderedDict()
         self.added_package_ids = set()
 
     def iter_rules(self):
         """
         Return an iterator over each created rule.
         """
-        if len(self.installed_map) > 0:
-            raise NotImplementedError()
-
+        self.added_package_ids = set()
+        for package in self.installed_map.values():
+            self._add_package_rules(package)
         self._add_job_rules()
         return self._rules_set
 
@@ -142,7 +142,7 @@ class RulesGenerator(object):
             return PackageRule([-self._pool.package_id(issuer),
                                 -self._pool.package_id(provider)])
 
-    def _create_install_one_rule(self, packages, reason, job):
+    def _create_install_one_of_rule(self, packages, reason, job):
         """
         Creates a rule to Install one of the given packages.
 
@@ -163,6 +163,23 @@ class RulesGenerator(object):
         """
         literals = [self._pool.package_id(p) for p in packages]
         return PackageRule(literals)
+
+    def _create_remove_rule(self, package):
+        """
+        Create the rule to remove a package.
+
+        For a package A, the rule is simply (-A)
+
+        Parameters
+        ----------
+        package: PackageInfo
+            The package with a requirement
+
+        Returns
+        -------
+        rule: PackageRule or None
+        """
+        return PackageRule((-self._pool.package_id(package),))
 
     # -------------------------------------------------
     # API to assemble individual rules from requirement
@@ -240,14 +257,20 @@ class RulesGenerator(object):
                 if package not in self.installed_map:
                     self._add_package_rules(package)
 
-            rule = self._create_install_one_rule(packages, "job_install", job)
+            rule = self._create_install_one_of_rule(packages, "job_install", job)
+            self._add_rule(rule, "job")
+
+    def _add_remove_job_rules(self, job):
+        packages = self._pool.what_provides(job.requirement)
+        for package in packages:
+            rule = self._create_remove_rule(package)
             self._add_rule(rule, "job")
 
     def _add_installed_package_rules(self, package):
         packages_all_versions = self._pool._packages_by_name[package.name]
         for other in packages_all_versions:
             self._add_package_rules(other)
-        rule = self._create_install_one_rule(
+        rule = self._create_install_one_of_rule(
             packages_all_versions, "installed_pkgs", None)
         self._add_rule(rule, "installed")
 
@@ -255,6 +278,8 @@ class RulesGenerator(object):
         for job in self.request.jobs:
             if job.kind == JobType.install:
                 self._add_install_job_rules(job)
+            elif job.kind == JobType.remove:
+                self._add_remove_job_rules(job)
             else:
                 msg = "Job kind {0!} not supported".format(job.kind)
                 raise NotImplementedError(msg)

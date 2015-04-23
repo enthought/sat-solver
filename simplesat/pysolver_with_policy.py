@@ -1,3 +1,5 @@
+import collections
+
 from enstaller.solver import JobType
 
 from simplesat.policy import InstalledFirstPolicy
@@ -51,8 +53,10 @@ class Solver(object):
              for package in installed_repository.iter_packages()]
         )
 
-        rules_generator = RulesGenerator(pool, request)
-        for package in installed_repository.iter_packages():
-            rules_generator._add_installed_package_rules(package)
+        installed_map = collections.OrderedDict()
+        for package in installed_repository:
+            installed_map[pool.package_id(package)] = package
+
+        rules_generator = RulesGenerator(pool, request, installed_map)
 
         return list(rules_generator.iter_rules()), policy
