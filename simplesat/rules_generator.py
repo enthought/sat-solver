@@ -1,9 +1,19 @@
 import collections
 
 from enstaller.errors import EnstallerException
+from enstaller.vendor.enum import Enum
 
 from enstaller.new_solver.requirement import Requirement
 from enstaller.solver import JobType
+
+
+class RuleType(Enum):
+    internal_allow_update = 1
+    job_install = 2
+    job_remove = 3
+    package_requires = 7
+    package_same_name = 10
+    package_implicit_obsoletes = 11
 
 
 class PackageRule(object):
@@ -42,16 +52,41 @@ class PackageRule(object):
                     package_literals.append(-_id)
         return cls(package_literals)
 
-    def __init__(self, literals):
+    def __init__(self, literals, reason):
         self.literals = tuple(sorted(literals))
+        self._reason = RuleType(reason)
 
     @property
     def is_assertion(self):
         return len(self.literals) == 1
 
+    @property
+    def reason(self):
+        return self._reason
+
     def to_string(self, pool):
         parts = [pool.id_to_string(literal) for literal in self.literals]
-        return " | ".join(parts)
+        s = " | ".join(parts)
+
+        if self._reason == RuleType.job_install:
+            return "Install command rule ({})".format(s)
+        elif self._reason == RuleType.job_remove:
+            return "Remove command rule ({})".format(s)
+        elif self._reason == RuleType.package_same_name:
+            parts = [pool.id_to_string(abs(literal))
+                     for literal in self.literals]
+            s = " | ".join(parts)
+            return "Can only install one of: ({})".format(s)
+        elif self._reason == RuleType.package_requires:
+            source_id = abs(self.literals[0])
+            source = pool._id_to_package[source_id]
+            parts = [pool.id_to_string(literal)
+                     for literal in self.literals[1:]]
+            s = " | ".join(parts)
+
+            return "{} {} requires ({})".format(source.name, source.version, s)
+        else:
+            return s
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
@@ -115,7 +150,7 @@ class RulesGenerator(object):
             if dependency != package:
                 literals.append(self._pool.package_id(dependency))
 
-        return PackageRule(literals)
+        return PackageRule(literals, reason)
 
     def _create_conflicts_rule(self, issuer, provider, reason, reason_details=""):
         """
@@ -140,7 +175,7 @@ class RulesGenerator(object):
         """
         if issuer != provider:
             return PackageRule([-self._pool.package_id(issuer),
-                                -self._pool.package_id(provider)])
+                                -self._pool.package_id(provider)], reason)
 
     def _create_install_one_of_rule(self, packages, reason, job):
         """
@@ -162,9 +197,9 @@ class RulesGenerator(object):
         rule: PackageRule
         """
         literals = [self._pool.package_id(p) for p in packages]
-        return PackageRule(literals)
+        return PackageRule(literals, reason)
 
-    def _create_remove_rule(self, package):
+    def _create_remove_rule(self, package, reason):
         """
         Create the rule to remove a package.
 
@@ -179,7 +214,7 @@ class RulesGenerator(object):
         -------
         rule: PackageRule or None
         """
-        return PackageRule((-self._pool.package_id(package),))
+        return PackageRule((-self._pool.package_id(package),), reason)
 
     # -------------------------------------------------
     # API to assemble individual rules from requirement
@@ -204,11 +239,13 @@ class RulesGenerator(object):
         for dependency in package.dependencies:
             requirement = Requirement.from_legacy_requirement_string(dependency)
             dependency_candidates = self._pool.what_provides(requirement)
+
             assert len(dependency_candidates) > 0, \
                 ("No candidates found for requirement {0!r}, needed for "
                  "dependency {1!r}".format(requirement.name, package))
+
             rule = self._create_dependency_rule(package, dependency_candidates,
-                                                "package_requires",
+                                                RuleType.package_requires,
                                                 str(dependency))
             self._add_rule(rule, "package")
 
@@ -236,9 +273,9 @@ class RulesGenerator(object):
                 for provider in obsolete_providers:
                     if provider != p:
                         if provider.name == p.name:
-                            reason = "rule_package_same_name"
+                            reason = RuleType.package_same_name
                         else:
-                            reason = "rule_package_implicit_obsoletes"
+                            reason = RuleType.package_implicit_obsoletes
                         rule = self._create_conflicts_rule(p, provider,
                                                            reason, str(p))
                         self._add_rule(rule, "package")
@@ -257,13 +294,14 @@ class RulesGenerator(object):
                 if package not in self.installed_map:
                     self._add_package_rules(package)
 
-            rule = self._create_install_one_of_rule(packages, "job_install", job)
+            rule = self._create_install_one_of_rule(packages,
+                                                    RuleType.job_install, job)
             self._add_rule(rule, "job")
 
     def _add_remove_job_rules(self, job):
         packages = self._pool.what_provides(job.requirement)
         for package in packages:
-            rule = self._create_remove_rule(package)
+            rule = self._create_remove_rule(package, RuleType.job_remove)
             self._add_rule(rule, "job")
 
     def _add_installed_package_rules(self, package):
