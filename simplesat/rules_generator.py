@@ -15,6 +15,8 @@ class RuleType(Enum):
     package_same_name = 10
     package_implicit_obsoletes = 11
 
+    internal = 256
+
 
 class PackageRule(object):
     @classmethod

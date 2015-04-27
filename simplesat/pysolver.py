@@ -1,7 +1,7 @@
 import operator
 
 from simplesat.pysolver_helpers import is_satisfiable
-from simplesat.rules_generator import PackageRule, RulesGenerator
+from simplesat.rules_generator import PackageRule, RulesGenerator, RuleType
 
 from enstaller.new_solver.pool import Pool
 from enstaller.new_solver.requirement import Requirement
@@ -23,7 +23,7 @@ def find_best_candidate(pool, requirement, rules):
 
     for candidate in candidates:
         id = pool.package_id(candidate)
-        new_rules = rules[:] + [PackageRule((id,))]
+        new_rules = rules[:] + [PackageRule((id, ), RuleType.internal)]
         if is_satisfiable(new_rules):
             break
     else:
@@ -43,7 +43,7 @@ def optimize_at_level(pool, parent_package, rules, solution):
         best_candidate = find_best_candidate(pool, requirement, new_rules)
 
         id = pool.package_id(best_candidate)
-        new_rules.append(PackageRule((id,)))
+        new_rules.append(PackageRule((id,), RuleType.internal))
         best_dependencies.append(best_candidate)
 
     solution.extend(best_dependencies)
