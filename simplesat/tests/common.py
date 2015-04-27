@@ -22,7 +22,7 @@ from simplesat.transaction import (InstallOperation, RemoveOperation,
 HERE = os.path.dirname(__file__)
 
 
-def generate_rules_for_requirement(pool, requirement):
+def generate_rules_for_requirement(pool, requirement, installed_map=None):
     """Generate CNF rules for a requirement.
 
     Parameters
@@ -40,7 +40,7 @@ def generate_rules_for_requirement(pool, requirement):
     request = Request()
     request.install(requirement)
 
-    rules_generator = RulesGenerator(pool, request)
+    rules_generator = RulesGenerator(pool, request, installed_map)
     rules = list(rules_generator.iter_rules())
     return rules
 

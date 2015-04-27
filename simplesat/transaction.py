@@ -149,7 +149,7 @@ class Transaction(object):
                 visited_ids.add(package_id)
 
         for operation in remove_map.values():
-            self.remove(operation)
+            self.remove(operation.package)
 
     def _compute_root_packages(self, pool, install_map, update_map):
         """ Look at the root packages in the given maps.
