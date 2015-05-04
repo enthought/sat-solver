@@ -7,6 +7,24 @@ from simplesat.examples.van_der_waerden import van_der_waerden
 class TestMinisatProblems(unittest.TestCase):
     """Run the Minisat solver on a range of test problems.
     """
+    def test_unit_assignments_are_remembered(self):
+        # Regression test for #31 (calling _setup_assignments() after enqueueing unit
+        # clauses caused unit assignments to be erased).
+
+        # Given
+        s = Solver()
+        s.add_clause([1, 2, 3])
+        s.add_clause([-1, 2, 3])
+        s.add_clause([-2])
+        s.add_clause([-3])
+        s._setup_assignments()
+
+        # When
+        solution =  s.search()
+
+        # Then
+        self.assertFalse(solution)
+
     def test_no_assumptions(self):
         # A simple problem with only unit propagation, no assumptions (except
         # for the initial one), no backtracking, and no conflicts.
