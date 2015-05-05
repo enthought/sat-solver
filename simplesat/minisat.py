@@ -153,9 +153,11 @@ class Solver(object):
     def _setup_assignments(self):
         """Initialize assignments table.
         """
-        self.assignments = OrderedDict(
-            (abs(lit), None) for clause in self.clauses for lit in clause
-        )
+        variables = {abs(lit) for clause in self.clauses for lit in clause}
+        assignments = self.assignments
+        for variable in variables:
+            if variable not in assignments:
+                assignments[variable] = None
 
     def propagate(self):
         while len(self.prop_queue) > 0:

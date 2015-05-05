@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import unittest
 
 import mock
@@ -224,6 +225,19 @@ class TestSolver(unittest.TestCase):
         self.assertItemsEqual(s.watches[-3], [cl2])
         self.assertItemsEqual(s.watches[-2], [cl1])
         self.assertItemsEqual(s.watches[1], [cl1, cl2])
+
+    def test_setup_does_not_overwrite_assignments(self):
+        # Given
+        s = Solver()
+        s.add_clause([-1])
+        s.add_clause([1, 2, 3])
+        expected_assignments = OrderedDict([(1, False), (2, None), (3, None)])
+
+        # When
+        s._setup_assignments()
+
+        # Then
+        self.assertEqual(s.assignments, expected_assignments)
 
     def _assertWatchesNotTrue(self, watches, assignments):
         for watch, clauses in watches.items():
