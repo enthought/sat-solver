@@ -1,3 +1,3 @@
 [submodule "dependencies/enstaller"]
 	path = dependencies/enstaller
-	url = git@github.com:enthought/enstaller_private
+	url = git@github.com:enthought/enstaller
