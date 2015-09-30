@@ -2,7 +2,7 @@ import collections
 
 from enstaller.solver import JobType
 
-from simplesat.policy import InstalledFirstPolicy
+from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.pysolver_helpers import solver_from_rules_set, solve_sat
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import Transaction
