@@ -1,4 +1,4 @@
-from simplesat.api import Solver
+from simplesat.sat import MiniSATSolver
 
 
 def solver_from_rules_set(rules, policy=None):
@@ -15,7 +15,7 @@ def solver_from_rules_set(rules, policy=None):
     solver: Solver.
 
     """
-    s = Solver(policy)
+    s = MiniSATSolver(policy)
     for rule in rules:
         s.add_clause(rule.literals)
     s._setup_assignments()
