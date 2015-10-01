@@ -2,7 +2,7 @@ import os.path
 
 from unittest import TestCase
 
-from enstaller.new_solver import Pool, Requirement
+from enstaller.new_solver import Pool
 from enstaller.solver import JobType
 
 from simplesat.pysolver import optimize

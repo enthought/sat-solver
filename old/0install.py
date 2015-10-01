@@ -1,3 +1,7 @@
+"""
+Simple algorithme based on 0installer algorithm, as described in
+http://0install.net/solver.html
+"""
 import operator
 
 from simplesat.pysolver_helpers import is_satisfiable

@@ -2,100 +2,16 @@
 A SAT solver which follows the Minisat approach.
 
 """
+from __future__ import absolute_import
+
 from collections import defaultdict, deque, OrderedDict
 
+from .clause import Clause
+from .policy import DefaultPolicy
 from .utils import value
 
 
-class Constraint(object):
-    pass
-
-
-class DefaultPolicy(object):
-    def get_next_package_id(self, assignments, _):
-        # Given a dictionary of partial assignments, get an undecided variable
-        # to be decided next.
-        undecided = [
-            package_id for package_id, status in assignments.iteritems()
-            if status is None
-        ]
-        return undecided[0]
-
-
-class Clause(Constraint):
-
-    def __init__(self, lits, learned=False):
-        self.learned = learned
-        self.lits = OrderedDict.fromkeys(lits).keys()
-
-    def rewatch(self, assignments, lit):
-        """Find a new literal to watch.
-
-        The running assumption is that watched literals should either be True
-        or not assigned (None). If a watched literal becomes False, a new watch
-        must be found. When this is not possible, the other watched literal
-        is necessarily True (unit information).
-
-        Returns
-        -------
-        unit_information: Literal or None
-            A literal which has become true under the current assignments.
-
-        Note that this method does not check whether unit propagation leads to
-        a conflict.
-
-        """
-        # Internal assumption: the watched literals are the first elements of
-        # lits. If necessary, this method will re-order some of the literals to
-        # keep this assumption.
-        lits = self.lits
-        assert -lit in lits[:2]
-
-        if lits[0] == -lit:
-            lits[0], lits[1] = lits[1], -lit
-
-        if value(lits[0], assignments) is True:
-            # This clause has been satisfied, add it back to the watch list. No
-            # unit information can be deduced.
-            return None
-
-        # Look for another literal to watch, and switch it with lit[1] to keep
-        # the assumption on the watched literals in place.
-        for n, other in enumerate(lits[2:]):
-            if value(other, assignments) is not False:
-                # Found a new literal that could serve as a watch.
-                lits[1], lits[n + 2] = other, -lit
-                return None
-
-        # Clause is unit under assignment. Return the literal that can be
-        # propagated.
-        return lits[0]
-
-    def calculate_reason(self, p=None):
-        """For a conflicting clause, return the reason for propagating p.
-
-        For example, if the clause is x \/ y \/ z, then the reason for
-        propagating x is -y /\ -z. By convention, f the literal p does not
-        occur in the clause, the negative of the whole clause is returned.
-
-        """
-        # TODO: We can speed this up if we can guarantee that we'll only ask
-        # for the reason of the first literal, as is the case in the Minisat
-        # paper.
-        return [-lit for lit in self.lits if lit != p]
-
-    def __len__(self):
-        return len(self.lits)
-
-    def __getitem__(self, s):
-        return self.lits[s]
-
-    def __repr__(self):
-        return "Clause({}, learned={})".format(self.lits, self.learned)
-
-
-class Solver(object):
-
+class MiniSATSolver(object):
     def __init__(self, policy=None):
 
         self.clauses = []
@@ -304,7 +220,7 @@ class Solver(object):
 
         # Index of the literal with the highest decision level.
         max_i = max(enumerate([self.levels.get(abs(lit), 0) for lit in lits]),
-                    key=lambda (n, level): level)[0]
+                    key=lambda n, level: level)[0]
         if len(lits) >= 2:
             lits[1], lits[max_i] = lits[max_i], lits[1]
 

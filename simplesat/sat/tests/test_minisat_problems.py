@@ -1,7 +1,10 @@
 import unittest
 
-from simplesat.api import Clause, Solver, value
 from simplesat.examples.van_der_waerden import van_der_waerden
+
+from ..utils import value
+from ..clause import Clause
+from ..minisat import MiniSATSolver
 
 
 class TestMinisatProblems(unittest.TestCase):
@@ -12,7 +15,7 @@ class TestMinisatProblems(unittest.TestCase):
         # clauses caused unit assignments to be erased).
 
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.add_clause([1, 2, 3])
         s.add_clause([-1, 2, 3])
         s.add_clause([-2])
@@ -20,7 +23,7 @@ class TestMinisatProblems(unittest.TestCase):
         s._setup_assignments()
 
         # When
-        solution =  s.search()
+        solution = s.search()
 
         # Then
         self.assertFalse(solution)
@@ -30,7 +33,7 @@ class TestMinisatProblems(unittest.TestCase):
         # for the initial one), no backtracking, and no conflicts.
 
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([1, -2])
         cl2 = Clause([1,  2, -3])
         cl3 = Clause([1,  2,  3, -4])
@@ -50,7 +53,7 @@ class TestMinisatProblems(unittest.TestCase):
         # assumption needs to be made.
 
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([1, -2])
         cl3 = Clause([-1,  -2,  3, -4])
         s.add_clause(cl1)
@@ -81,7 +84,7 @@ class TestMinisatVanDerWaerden(unittest.TestCase):
     def test_van_der_waerden_solvable(self):
         # Given
         j, k, n = 3, 3, 8
-        s = Solver()
+        s = MiniSATSolver()
         clauses = van_der_waerden(j, k, n)
         for clause in clauses:
             s.add_clause(clause)
@@ -97,7 +100,7 @@ class TestMinisatVanDerWaerden(unittest.TestCase):
     def test_van_der_waerden_not_solvable(self):
         # Given
         j, k, n = 3, 3, 9
-        s = Solver()
+        s = MiniSATSolver()
         clauses = van_der_waerden(j, k, n)
         for clause in clauses:
             s.add_clause(clause)

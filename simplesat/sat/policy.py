@@ -1,12 +1,30 @@
-from __future__ import absolute_import
+import abc
 
-from collections import defaultdict, OrderedDict
+import six
 
 from enstaller.collections import DefaultOrderedDict
 
 
-class InstalledFirstPolicy(object):
+class IPolicy(six.with_metaclass(abc.ABCMeta)):
+    @abc.abstractmethod
+    def get_next_package_id(self, assignments, clauses):
+        """ Returns a undecided variable (i.e. integer > 0) for the given sets
+        of assignements and clauses.
+        """
 
+
+class DefaultPolicy(IPolicy):
+    def get_next_package_id(self, assignments, _):
+        # Given a dictionary of partial assignments, get an undecided variable
+        # to be decided next.
+        undecided = [
+            package_id for package_id, status in assignments.iteritems()
+            if status is None
+        ]
+        return undecided[0]
+
+
+class InstalledFirstPolicy(IPolicy):
     def __init__(self, pool, installed_repository):
         self._pool = pool
         self._decision_set = set()
