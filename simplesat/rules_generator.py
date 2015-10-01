@@ -14,6 +14,7 @@ class RuleType(Enum):
     package_requires = 7
     package_same_name = 10
     package_implicit_obsoletes = 11
+    package_installed = 12
 
     internal = 256
 
@@ -79,6 +80,11 @@ class PackageRule(object):
                      for literal in self.literals]
             s = " | ".join(parts)
             return "Can only install one of: ({})".format(s)
+        elif self._reason == RuleType.package_installed:
+            parts = [pool.id_to_string(abs(literal))
+                     for literal in self.literals]
+            s = " | ".join(parts)
+            return "Should install one of: ({})".format(s)
         elif self._reason == RuleType.package_requires:
             source_id = abs(self.literals[0])
             source = pool._id_to_package[source_id]
@@ -116,6 +122,7 @@ class RulesGenerator(object):
         """
         self.added_package_ids = set()
         for package in self.installed_map.values():
+            self._add_installed_package_rules(package)
             self._add_package_rules(package)
         self._add_job_rules()
         return self._rules_set
@@ -179,7 +186,7 @@ class RulesGenerator(object):
             return PackageRule([-self._pool.package_id(issuer),
                                 -self._pool.package_id(provider)], reason)
 
-    def _create_install_one_of_rule(self, packages, reason, job):
+    def _create_install_one_of_rule(self, packages, reason):
         """
         Creates a rule to Install one of the given packages.
 
@@ -191,8 +198,6 @@ class RulesGenerator(object):
             List of packages to choose from
         reason: str
             One of PackageRule.reason
-        job: _Job
-            The job this rule was created from
 
         Returns
         -------
@@ -297,7 +302,7 @@ class RulesGenerator(object):
                     self._add_package_rules(package)
 
             rule = self._create_install_one_of_rule(packages,
-                                                    RuleType.job_install, job)
+                                                    RuleType.job_install)
             self._add_rule(rule, "job")
 
     def _add_remove_job_rules(self, job):
@@ -311,7 +316,7 @@ class RulesGenerator(object):
         for other in packages_all_versions:
             self._add_package_rules(other)
         rule = self._create_install_one_of_rule(
-            packages_all_versions, "installed_pkgs", None)
+            packages_all_versions, RuleType.package_installed)
         self._add_rule(rule, "installed")
 
     def _add_job_rules(self):
