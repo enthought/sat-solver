@@ -3,7 +3,10 @@ import unittest
 
 import mock
 
-from simplesat.api import Clause, Solver, value
+from ..utils import value
+from ..clause import Clause
+from ..minisat import MiniSATSolver
+
 
 # TODO: Move all ZM01 related tests to a separate module.
 
@@ -16,7 +19,7 @@ def zm01_solver(add_conflict=False):
     (2001).
 
     """
-    s = Solver()
+    s = MiniSATSolver()
     s.add_clause(Clause([-12, 6, -11]))
     s.add_clause(Clause([16, -11, 13]))
     s.add_clause(Clause([-2, 12, -16]))
@@ -91,12 +94,12 @@ class TestClause(unittest.TestCase):
         self.assertItemsEqual(reason, [-1, 2, -5])
 
 
-class TestSolver(unittest.TestCase):
+class TestMiniSATSolver(unittest.TestCase):
 
-    @mock.patch.object(Solver, 'enqueue')
+    @mock.patch.object(MiniSATSolver, 'enqueue')
     def test_add_empty_clause(self, mock_enqueue):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
 
         # When
         s.add_clause([])
@@ -107,10 +110,10 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(len(s.clauses), 0)
         self.assertFalse(mock_enqueue.called)
 
-    @mock.patch.object(Solver, 'enqueue')
+    @mock.patch.object(MiniSATSolver, 'enqueue')
     def test_add_unit_clause(self, mock_enqueue):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
 
         # When
         s.add_clause([-1])
@@ -121,10 +124,10 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(len(s.clauses), 0)
         self.assertTrue(mock_enqueue.called)
 
-    @mock.patch.object(Solver, 'enqueue')
+    @mock.patch.object(MiniSATSolver, 'enqueue')
     def test_add_clause(self, mock_enqueue):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         lits = [-1, 2, 4]
 
         # When
@@ -142,14 +145,14 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(len(s.clauses), 1)
         self.assertFalse(mock_enqueue.called)
 
-    @mock.patch.object(Solver, 'enqueue')
+    @mock.patch.object(MiniSATSolver, 'enqueue')
     def test_propagate_one_level(self, mock_enqueue):
         # Make one literal true, and check that the watch lists are updated
         # appropriately. We do only one assignment and all the clauses have
         # length 3, so there is no unit information.
 
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([1, 2, -5])
         cl2 = Clause([2, -4, 7])
         cl3 = Clause([-2, -5, 7])
@@ -174,13 +177,13 @@ class TestSolver(unittest.TestCase):
         self.assertItemsEqual(s.watches[4], [cl2])
         self.assertItemsEqual(s.watches[5], [cl1, cl3])
 
-    @mock.patch.object(Solver, 'enqueue')
+    @mock.patch.object(MiniSATSolver, 'enqueue')
     def test_propagate_with_unit_info(self, mock_enqueue):
         # Make one literal true. Since there is one length-2 clause, this will
         # propagate one literal.
 
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([1, 2, -5])
         cl2 = Clause([2, -4])
         s.add_clause(cl1)
@@ -206,7 +209,7 @@ class TestSolver(unittest.TestCase):
         # Make one literal true, and cause a conflict in the unit propagation.
 
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([-1, 2])
         cl2 = Clause([-1, 2, 3, 4])
         s.add_clause(cl1)
@@ -228,7 +231,7 @@ class TestSolver(unittest.TestCase):
 
     def test_setup_does_not_overwrite_assignments(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.add_clause([-1])
         s.add_clause([1, 2, 3])
         expected_assignments = OrderedDict([(1, False), (2, None), (3, None)])
@@ -247,7 +250,7 @@ class TestSolver(unittest.TestCase):
 
     def test_enqueue(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.assignments = {1: True, 2: None}
 
         # When / then
@@ -261,7 +264,7 @@ class TestSolver(unittest.TestCase):
 
     def test_propagation_with_queue(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([1, 2])
         cl2 = Clause([1, 3, 4])
         s.add_clause(cl1)
@@ -282,7 +285,7 @@ class TestSolver(unittest.TestCase):
 
     def test_propagation_with_queue_multiple_implications(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([1, -2])
         cl2 = Clause([1,  2, -3])
         cl3 = Clause([1,  2,  3, -4])
@@ -307,7 +310,7 @@ class TestSolver(unittest.TestCase):
         # return the appropriate conflict clause).
 
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([1, -2])
         cl2 = Clause([1,  2, -3])
         cl3 = Clause([1,  2,  3, -4])
@@ -364,7 +367,7 @@ class TestSolver(unittest.TestCase):
 
     def test_undo_one(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.trail = [1, 2, -3]
         s.assignments = {1: None, 2: None, 3: True}
 
@@ -377,7 +380,7 @@ class TestSolver(unittest.TestCase):
 
     def test_cancel(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.trail = [1, 2, -3, 4, 5, 6, -9, 10, 13]
         s.trail_lim = [0, 2, 4, 6]
 
@@ -391,7 +394,7 @@ class TestSolver(unittest.TestCase):
 
     def test_cancel_until(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.trail = [1, 2, -3, 4, 5, 6, -9, 10, 13]
         s.trail_lim = [0, 2, 4, 6]
 
@@ -405,7 +408,7 @@ class TestSolver(unittest.TestCase):
 
     def test_assume_cancel_roundtrip(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.assignments = {1: None}
 
         # When / then
@@ -452,7 +455,7 @@ class TestSolver(unittest.TestCase):
 
     def test_analyze_same_level(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.add_clause(Clause([1, 2]))
         s.add_clause(Clause([1, -2]))
         s.assume(-1)
@@ -467,7 +470,7 @@ class TestSolver(unittest.TestCase):
 
     def test_analyze_lower_level(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.add_clause(Clause([1, -2, 3]))
         s.add_clause(Clause([1, 2]))
         s.assume(-3)
@@ -496,7 +499,7 @@ class TestSolver(unittest.TestCase):
 
     def test_record_learned_clause(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         s.levels = {1: 0, 2: 0, 3: 5, 4: 25}
         clause = Clause([2, 3, -4, 5])
 
@@ -509,7 +512,7 @@ class TestSolver(unittest.TestCase):
 
     def test_validation(self):
         # Given
-        s = Solver()
+        s = MiniSATSolver()
         cl1 = Clause([1, -2])
         cl2 = Clause([1,  2, -3])
         cl3 = Clause([1,  2,  3, -4])

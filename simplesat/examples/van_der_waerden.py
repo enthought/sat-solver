@@ -4,10 +4,6 @@ This problem asks for the smallest number n so that a binary number of n digits
 that contains either j digits 0 or k digits 1, for given integers j and k.
 
 """
-import sys
-import time
-
-from simplesat.api import SimpleSATSolver
 
 
 def _van_der_waerden_helper(j, n, sign):
@@ -27,24 +23,3 @@ def van_der_waerden(j, k, n):
         _van_der_waerden_helper(j, n, +1) +
         _van_der_waerden_helper(k, n, -1)
     )
-
-
-if __name__ == '__main__':
-    j, k = map(int, sys.argv[1:])
-    for n in range(5, 100):
-        clauses = van_der_waerden(j, k, n)
-        solver = SimpleSATSolver(clauses)
-        solutions = solver.solve()
-        print 'Solving van der waerden %d, %d, %d.' % (j, k, n)
-        print 'Number of clauses: %d.' % len(clauses)
-        print 'Solvable?',
-        start = time.time()
-        try:
-            next(solutions)
-            print 'Yes'
-        except StopIteration:
-            print 'No'
-            break
-        finally:
-            stop = time.time()
-            print 'Running time: %f' % (stop - start)
