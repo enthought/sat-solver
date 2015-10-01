@@ -1,3 +1,4 @@
+from enstaller.egg_meta import split_eggname
 from enstaller.new_solver.tests.common import repository_from_index
 from enstaller.new_solver.requirement import Requirement
 from enstaller.new_solver.constraint_types import (
@@ -30,8 +31,9 @@ def requirements_string(package):
         template += "; depends ({dependencies})"
     dependencies = ', '.join(
         dependency_to_string(dep) for dep in package.dependencies)
+    raw_name, _, _ = split_eggname(package.key)
     return template.format(
-        name=package.name, version=package.version, dependencies=dependencies)
+        name=raw_name, version=package.version, dependencies=dependencies)
 
 
 repository = repository_from_index('filtered_full_index.json')

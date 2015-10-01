@@ -13,7 +13,7 @@ class Clause(Constraint):
 
     def __init__(self, lits, learned=False):
         self.learned = learned
-        self.lits = OrderedDict.fromkeys(lits).keys()
+        self.lits = tuple(OrderedDict.fromkeys(lits).keys())
 
     def rewatch(self, assignments, lit):
         """Find a new literal to watch.
