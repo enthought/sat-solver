@@ -4,11 +4,12 @@ This problem asks for the smallest number n so that a binary number of n digits
 that contains either j digits 0 or k digits 1, for given integers j and k.
 
 """
+from __future__ import division
 
 
 def _van_der_waerden_helper(j, n, sign):
     clause_data = []
-    max_d = (n - 1) / (j - 1) + 1
+    max_d = (n - 1) // (j - 1) + 1
     for d in range(1, max_d + 1):
         for i in range(1, n - (j - 1) * d + 1):
             clause = [sign * (i + p * d) for p in range(0, j)]

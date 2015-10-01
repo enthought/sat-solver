@@ -18,7 +18,7 @@ class DefaultPolicy(IPolicy):
         # Given a dictionary of partial assignments, get an undecided variable
         # to be decided next.
         undecided = [
-            package_id for package_id, status in assignments.iteritems()
+            package_id for package_id, status in six.iteritems(assignments)
             if status is None
         ]
         return undecided[0]
@@ -54,7 +54,7 @@ class InstalledFirstPolicy(IPolicy):
         if len(installed_packages) > 0:
             candidate = installed_packages[0]
         else:
-            candidate_name = new_package_map.keys()[0]
+            candidate_name = six.next(six.iterkeys(new_package_map))
             candidates = new_package_map[candidate_name]
             candidate = max(candidates, key=lambda package: package.version)
 
@@ -83,7 +83,7 @@ class InstalledFirstPolicy(IPolicy):
     def _handle_empty_decision_set(self, assignments, clauses):
         # TODO inefficient and verbose
         unassigned_ids = set(
-            literal for literal, status in assignments.iteritems()
+            literal for literal, status in six.iteritems(assignments)
             if status is None
         )
         assigned_ids = set(assignments.keys()) - unassigned_ids
