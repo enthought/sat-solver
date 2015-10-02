@@ -6,6 +6,8 @@ from __future__ import absolute_import
 
 from collections import defaultdict, deque, OrderedDict
 
+from six.moves import range
+
 from .clause import Clause
 from .policy import DefaultPolicy
 from .utils import value
@@ -219,8 +221,11 @@ class MiniSATSolver(object):
         lits[0], lits[-1] = lits[-1], lits[0]
 
         # Index of the literal with the highest decision level.
+        def key(arg):
+            n, level = arg
+            return level
         max_i = max(enumerate([self.levels.get(abs(lit), 0) for lit in lits]),
-                    key=lambda (n, level): level)[0]
+                    key=key)[0]
         if len(lits) >= 2:
             lits[1], lits[max_i] = lits[max_i], lits[1]
 
@@ -247,7 +252,7 @@ class MiniSATSolver(object):
         """
         # Taken verbatim from Minisat paper.
         c = len(self.trail) - self.trail_lim.pop()
-        for _ in xrange(c):
+        for _ in range(c):
             self.undo_one()
 
     def assume(self, lit):

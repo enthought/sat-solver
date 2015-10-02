@@ -1,7 +1,9 @@
-from collections import OrderedDict
 import unittest
 
+from collections import OrderedDict
+
 import mock
+import six
 
 from ..utils import value
 from ..clause import Clause
@@ -46,7 +48,6 @@ def zm01_solver(add_conflict=False):
 
 
 class TestClause(unittest.TestCase):
-
     def test_rewatch(self):
         # Given
         c = Clause([1, -2, 5])
@@ -57,7 +58,7 @@ class TestClause(unittest.TestCase):
 
         # Then
         self.assertIsNone(unit)
-        self.assertItemsEqual(c.lits, [5, -2, 1])
+        six.assertCountEqual(self, c.lits, [5, -2, 1])
 
     def test_rewatch_true(self):
         # Given
@@ -69,7 +70,7 @@ class TestClause(unittest.TestCase):
 
         # Then
         self.assertIsNone(unit)
-        self.assertItemsEqual(c.lits, [1, -2, 5])
+        six.assertCountEqual(self, c.lits, [1, -2, 5])
 
     def test_rewatch_unit(self):
         # Given
@@ -81,7 +82,7 @@ class TestClause(unittest.TestCase):
 
         # Then
         self.assertEqual(unit, 1)
-        self.assertItemsEqual(c.lits, [1, -2, 5])
+        six.assertCountEqual(self, c.lits, [1, -2, 5])
 
     def test_calculate_reason(self):
         # Given
@@ -89,9 +90,9 @@ class TestClause(unittest.TestCase):
 
         # When / then
         reason = c.calculate_reason(1)
-        self.assertItemsEqual(reason, [2, -5])
+        six.assertCountEqual(self, reason, [2, -5])
         reason = c.calculate_reason(9)
-        self.assertItemsEqual(reason, [-1, 2, -5])
+        six.assertCountEqual(self, reason, [-1, 2, -5])
 
 
 class TestMiniSATSolver(unittest.TestCase):
@@ -139,8 +140,8 @@ class TestMiniSATSolver(unittest.TestCase):
         self.assertEqual(len(s.clauses), 1)
         clause = s.clauses[0]
         self.assertEqual(len(s.watches), 2)
-        self.assertItemsEqual(s.watches[1], [clause])
-        self.assertItemsEqual(s.watches[-2], [clause])
+        six.assertCountEqual(self, s.watches[1], [clause])
+        six.assertCountEqual(self, s.watches[-2], [clause])
 
         self.assertEqual(len(s.clauses), 1)
         self.assertFalse(mock_enqueue.called)
@@ -171,11 +172,11 @@ class TestMiniSATSolver(unittest.TestCase):
         self._assertWatchesNotTrue(s.watches, s.assignments)
         self.assertFalse(mock_enqueue.called)
         self.assertIsNone(conflict)
-        self.assertItemsEqual(s.watches[-7], [cl2])
-        self.assertItemsEqual(s.watches[-1], [cl1])
-        self.assertItemsEqual(s.watches[2], [cl3])
-        self.assertItemsEqual(s.watches[4], [cl2])
-        self.assertItemsEqual(s.watches[5], [cl1, cl3])
+        six.assertCountEqual(self, s.watches[-7], [cl2])
+        six.assertCountEqual(self, s.watches[-1], [cl1])
+        six.assertCountEqual(self, s.watches[2], [cl3])
+        six.assertCountEqual(self, s.watches[4], [cl2])
+        six.assertCountEqual(self, s.watches[5], [cl1, cl3])
 
     @mock.patch.object(MiniSATSolver, 'enqueue')
     def test_propagate_with_unit_info(self, mock_enqueue):
@@ -200,10 +201,10 @@ class TestMiniSATSolver(unittest.TestCase):
         self._assertWatchesNotTrue(s.watches, s.assignments)
         self.assertEqual(mock_enqueue.call_count, 1)
         self.assertIsNone(conflict)
-        self.assertItemsEqual(s.watches[-2], [cl2])
-        self.assertItemsEqual(s.watches[-1], [cl1])
-        self.assertItemsEqual(s.watches[4], [cl2])
-        self.assertItemsEqual(s.watches[5], [cl1])
+        six.assertCountEqual(self, s.watches[-2], [cl2])
+        six.assertCountEqual(self, s.watches[-1], [cl1])
+        six.assertCountEqual(self, s.watches[4], [cl2])
+        six.assertCountEqual(self, s.watches[5], [cl1])
 
     def test_propagate_conflict(self):
         # Make one literal true, and cause a conflict in the unit propagation.
@@ -225,9 +226,9 @@ class TestMiniSATSolver(unittest.TestCase):
         # Then
         self.assertEqual(conflict, cl1)
         # Assert that all clauses are still watched.
-        self.assertItemsEqual(s.watches[-3], [cl2])
-        self.assertItemsEqual(s.watches[-2], [cl1])
-        self.assertItemsEqual(s.watches[1], [cl1, cl2])
+        six.assertCountEqual(self, s.watches[-3], [cl2])
+        six.assertCountEqual(self, s.watches[-2], [cl1])
+        six.assertCountEqual(self, s.watches[1], [cl1, cl2])
 
     def test_setup_does_not_overwrite_assignments(self):
         # Given
@@ -260,7 +261,7 @@ class TestMiniSATSolver(unittest.TestCase):
         self.assertFalse(status)
         status = s.enqueue(2)
         self.assertTrue(status)
-        self.assertItemsEqual(s.prop_queue, [2])
+        six.assertCountEqual(self, s.prop_queue, [2])
 
     def test_propagation_with_queue(self):
         # Given
@@ -279,9 +280,9 @@ class TestMiniSATSolver(unittest.TestCase):
         self.assertIsNone(conflict)
         self.assertEqual(s.assignments, {1: True, 2: False, 3: None, 4: None})
         self.assertEqual(s.trail, [-2, 1])
-        self.assertItemsEqual(s.watches[-1], [cl1, cl2])
-        self.assertItemsEqual(s.watches[-2], [cl1])
-        self.assertItemsEqual(s.watches[-3], [cl2])
+        six.assertCountEqual(self, s.watches[-1], [cl1, cl2])
+        six.assertCountEqual(self, s.watches[-2], [cl1])
+        six.assertCountEqual(self, s.watches[-3], [cl2])
 
     def test_propagation_with_queue_multiple_implications(self):
         # Given
@@ -326,11 +327,11 @@ class TestMiniSATSolver(unittest.TestCase):
         # Then
         self.assertIsNotNone(conflict)
         self.assertEqual(s.trail, [-1, -2, 3])
-        self.assertItemsEqual(s.watches[-3], [cl3])
-        self.assertItemsEqual(s.watches[-2], [cl2, cl3])
-        self.assertItemsEqual(s.watches[-1], [cl1])
-        self.assertItemsEqual(s.watches[2], [cl1])
-        self.assertItemsEqual(s.watches[3], [cl2])
+        six.assertCountEqual(self, s.watches[-3], [cl3])
+        six.assertCountEqual(self, s.watches[-2], [cl2, cl3])
+        six.assertCountEqual(self, s.watches[-1], [cl1])
+        six.assertCountEqual(self, s.watches[2], [cl1])
+        six.assertCountEqual(self, s.watches[3], [cl2])
 
     def test_propagate_zm01(self):
         # Test that the solver can replicate the implication graph of ZM01. For
@@ -348,7 +349,7 @@ class TestMiniSATSolver(unittest.TestCase):
         self.assertEqual(s.trail_lim, [0, 2, 4, 6])
 
         last = s.trail_lim[-1]
-        self.assertItemsEqual(s.trail[last:],
+        six.assertCountEqual(self, s.trail[last:],
                               [11, -12, 16, -2, -10, 1, 3, -5, 18])
 
         expected_assignments = {
@@ -465,7 +466,7 @@ class TestMiniSATSolver(unittest.TestCase):
         learned_clause, bt_level = s.analyze(conflict)
 
         # Then
-        self.assertItemsEqual(learned_clause.lits, [1])
+        six.assertCountEqual(self, learned_clause.lits, [1])
         self.assertEqual(bt_level, 0)
 
     def test_analyze_lower_level(self):
@@ -481,7 +482,7 @@ class TestMiniSATSolver(unittest.TestCase):
         learned_clause, bt_level = s.analyze(conflict)
 
         # Then
-        self.assertItemsEqual(learned_clause.lits, [1, 3])
+        six.assertCountEqual(self, learned_clause.lits, [1, 3])
         self.assertEqual(bt_level, 1)
 
     def test_analyze_conflict_zm01(self):
@@ -494,7 +495,7 @@ class TestMiniSATSolver(unittest.TestCase):
         learned_clause, bt_level = s.analyze(conflict)
 
         # Then
-        self.assertItemsEqual(learned_clause.lits, [-8, 10, 17, -19])
+        six.assertCountEqual(self, learned_clause.lits, [-8, 10, 17, -19])
         self.assertEqual(bt_level, 3)
 
     def test_record_learned_clause(self):
@@ -508,7 +509,7 @@ class TestMiniSATSolver(unittest.TestCase):
 
         # Then
         self.assertEqual(clause.lits, [5, -4, 3, 2])
-        self.assertItemsEqual(s.prop_queue, [5])
+        six.assertCountEqual(self, s.prop_queue, [5])
 
     def test_validation(self):
         # Given
