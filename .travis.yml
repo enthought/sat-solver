@@ -16,4 +16,4 @@ install:
   - popd
 
 script:
-  - python -m unittest discover -v
+  - haas simplesat
