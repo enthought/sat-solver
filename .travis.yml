@@ -9,9 +9,9 @@ python:
 
 install:
   - pip install -r dev_requirements.txt
-  - python install .
+  - pip install .
   - pushd dependencies/enstaller
-  - python install .
+  - pip install .
   - popd
 
 script:
