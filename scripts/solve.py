@@ -4,7 +4,7 @@ import sys
 from enstaller.new_solver import Pool
 from enstaller.new_solver.yaml_utils import Scenario
 
-from simplesat.pysolver_with_policy import Solver
+from simplesat.dependency_solver import DependencySolver
 
 
 def solve_and_print(request, remote_repositories, installed_repository,
@@ -12,7 +12,7 @@ def solve_and_print(request, remote_repositories, installed_repository,
     pool = Pool(remote_repositories)
     pool.add_repository(installed_repository)
 
-    solver = Solver(pool, remote_repositories, installed_repository)
+    solver = DependencySolver(pool, remote_repositories, installed_repository)
     transaction = solver.solve(request)
     print(transaction)
 

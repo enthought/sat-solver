@@ -4,16 +4,15 @@ import sys
 from enstaller.new_solver import Pool
 from enstaller.new_solver.yaml_utils import Scenario
 
-from simplesat.pysolver_with_policy import Solver
-from simplesat.rules_generator import PackageRule
+from simplesat.dependency_solver import DependencySolver
 
 
 def print_rules(request, remote_repositories, installed_repository):
     pool = Pool(remote_repositories)
     pool.add_repository(installed_repository)
 
-    solver = Solver(pool, remote_repositories, installed_repository)
-    rules, _ = solver._create_rules_and_policy(request)
+    solver = DependencySolver(pool, remote_repositories, installed_repository)
+    rules = solver._create_rules(request)
     for rule in rules:
         print(rule.to_string(pool))
 
