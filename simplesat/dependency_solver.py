@@ -3,7 +3,7 @@ import collections
 from enstaller.solver import JobType
 
 from simplesat.sat.policy import InstalledFirstPolicy
-from simplesat.pysolver_helpers import solver_from_rules_set
+from simplesat.sat import MiniSATSolver
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import Transaction
 
@@ -24,7 +24,7 @@ class DependencySolver(object):
         resolve it, or None if no resolution could be found.
         """
         rules = self._create_rules(request)
-        sat_solver = solver_from_rules_set(rules, self._policy)
+        sat_solver = MiniSATSolver.from_rules(rules, self._policy)
         solution = sat_solver.search()
 
         if solution is False:

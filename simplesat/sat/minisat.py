@@ -14,6 +14,28 @@ from .utils import value
 
 
 class MiniSATSolver(object):
+    @classmethod
+    def from_rules(cls, rules, policy=None):
+        """
+        Construct a SAT solver from a rules generator.
+
+        Parameters
+        ----------
+        rules: RulesGenerator
+        policy: IPolicy
+            The policy to use for this SAT solver.
+
+        Returns
+        -------
+        solver: MiniSATSolver.
+
+        """
+        solver = cls(policy)
+        for rule in rules:
+            solver.add_clause(rule.literals)
+        solver._setup_assignments()
+        return solver
+
     def __init__(self, policy=None):
 
         self.clauses = []
