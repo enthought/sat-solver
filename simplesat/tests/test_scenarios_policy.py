@@ -4,7 +4,7 @@ from unittest import TestCase, expectedFailure
 
 from enstaller.new_solver import Pool
 
-from simplesat.pysolver_with_policy import Solver
+from simplesat.dependency_solver import DependencySolver
 from .common import Scenario
 
 
@@ -15,15 +15,17 @@ class ScenarioTestAssistant(object):
         # what the SAT solver computes.
 
         # Given
-        scenario = Scenario.from_yaml(os.path.join(os.path.dirname(__file__), 
-                                      filename))
+        scenario = Scenario.from_yaml(
+            os.path.join(os.path.dirname(__file__), filename)
+        )
         request = scenario.request
 
         # When
         pool = Pool(scenario.remote_repositories)
         pool.add_repository(scenario.installed_repository)
-        solver = Solver(pool, scenario.remote_repositories,
-                        scenario.installed_repository)
+        solver = DependencySolver(
+            pool, scenario.remote_repositories, scenario.installed_repository
+        )
         transaction = solver.solve(request)
 
         # Then
