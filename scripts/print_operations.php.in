@@ -20,6 +20,7 @@ use Composer\Repository\FilesystemRepository;
 use Composer\Repository\InstalledFilesystemRepository;
 use Composer\Repository\PackageRepository;
 use Composer\Repository\WritableArrayRepository;
+use Composer\Semver\VersionParser;
 
 $loader = new ArrayLoader();
 
@@ -48,13 +49,10 @@ $pool = new Pool("dev");
 $pool->addRepository($remote_repo);
 $pool->addRepository($installed_repo);
 
+$parser = new VersionParser();
 $request = new Request($pool);
 {% for operation, requirement_name, constraints in request_parts %}
-$constraints = array();
-{% for constraint in constraints %}
-$constraints[] = new {{constraint}};
-{% endfor %}
-$request_constraints = new MultiConstraint($constraints);
+$request_constraints = $parser->parseConstraints("{{constraints}}");
 $request->{{operation}}("{{requirement_name}}", $request_constraints);
 {% endfor %}
 
