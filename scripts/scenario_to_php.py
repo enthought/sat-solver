@@ -6,9 +6,7 @@ import jinja2
 
 from enstaller.new_solver.yaml_utils import Scenario
 
-from enstaller.new_solver._composer_utils import (
-    scenario_to_php_template_variables,
-)
+from simplesat.utils._composer_utils import scenario_to_php_template_variables
 
 
 def main(argv=None):
