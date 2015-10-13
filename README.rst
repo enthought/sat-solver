@@ -17,7 +17,7 @@ To print the rules::
 
 To print the operations::
 
-    python scripts/pysolver_policy.py simplesat/tests/simple_numpy.yaml
+    python scripts/solve.py simplesat/tests/simple_numpy.yaml
 
 What is known to work:
 
