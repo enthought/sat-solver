@@ -46,6 +46,7 @@ Bibliography:
 
 On the use of SAT solvers for managing packages:
 
+- The `0install project <http://0install.net>`_.
 - Chris Tucker, David Shuffelton, Ranjit Jhala, Sorin Lerner: `OPIUM: Optimal
   Package Install/Uninstall Manager
   <https://cseweb.ucsd.edu/~lerner/papers/opium.pdf>`_. Proc. ICSE 2007,
