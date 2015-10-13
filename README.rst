@@ -34,7 +34,7 @@ Known not to work:
 
 Bibliography:
 
-- Niklas Een, Niklas Sorensson: `An Extensible SAT-solver
+- Niklas Eén, Niklas Sörensson: `An Extensible SAT-solver
   <http://minisat.se/downloads/MiniSat.pdf>`_. SAT 2003
 - Lintao Zhang, Conor F. Madigan, Matthew H. Moskewicz, Sharad Malik:
   `Efficient Conflict Driven Learning in a Boolean Satisfiability Solver
