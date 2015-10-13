@@ -31,3 +31,25 @@ Known not to work:
   packages are already installed
 * remove/upgrade: not handled yet
 * update: slow and solution often subobtimal.
+
+Bibliography:
+
+- Niklas Een, Niklas Sorensson: `An Extensible SAT-solver
+  <http://minisat.se/downloads/MiniSat.pdf>`_. SAT 2003
+- Lintao Zhang, Conor F. Madigan, Matthew H. Moskewicz, Sharad Malik:
+  `Efficient Conflict Driven Learning in a Boolean Satisfiability Solver
+  <https://www.princeton.edu/~chaff/publication/iccad2001_final.pdf>`_.
+  Proc. ICCAD 2001, pp. 279-285.
+- Donald Knuth: `The art of computer programming
+  <http://www-cs-faculty.stanford.edu/~knuth/fasc6a.ps.gz>`_. Vol. 4,
+  Pre-fascicle 6A, Par. 7.2.2.2. (Satisfiability).
+
+On the use of SAT solvers for managing packages:
+
+- Chris Tucker, David Shuffelton, Ranjit Jhala, Sorin Lerner: `OPIUM: Optimal
+  Package Install/Uninstall Manager
+  <https://cseweb.ucsd.edu/~lerner/papers/opium.pdf>`_. Proc. ICSE 2007,
+  pp. 178-188
+  
+
+  
