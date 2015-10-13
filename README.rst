@@ -46,7 +46,7 @@ Bibliography:
 
 On the use of SAT solvers for managing packages:
 
-- Fossdem 2008 presentation: `Using SAT for solving package dependencies
+- Fosdem 2008 presentation: `Using SAT for solving package dependencies
   <https://files.opensuse.org/opensuse/en/b/b9/Fosdem2008-solver.pdf>`_. More
   details on the `SUSE wiki
   <https://en.opensuse.org/openSUSE:Libzypp_satsolver>`_.
