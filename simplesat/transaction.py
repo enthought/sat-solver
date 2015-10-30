@@ -99,8 +99,9 @@ class Transaction(object):
 
     def _find_updates(self, pool, package):
         requirement = Requirement._from_string(package.name)
-        return [p for p in pool.what_provides(requirement)
-                if p.version > package.version]
+        return [
+            p for p in pool.what_provides(requirement) if p != package
+        ]
 
     def _compute_means_update_map(self, pool, decisions, installed_map):
         means_update_map = OrderedDict()
