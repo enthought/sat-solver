@@ -5,10 +5,20 @@ from collections import Counter
 import six
 
 from enstaller.collections import DefaultOrderedDict
+
 from .assignment_set import PriorityQueue
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
+
+    def __init__(self, pool, installed_repository):
+        pass
+
+    @abc.abstractmethod
+    def add_requirements(self, package_ids):
+        """ Submit packages to the policy for consideration.
+        """
+
     @abc.abstractmethod
     def get_next_package_id(self, assignments, clauses):
         """ Returns a undecided variable (i.e. integer > 0) for the given sets
@@ -17,6 +27,13 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
 
 class DefaultPolicy(IPolicy):
+
+    def __init__(self, *args):
+        pass
+
+    def add_requirements(self, assignments):
+        pass
+
     def get_next_package_id(self, assignments, _):
         # Given a dictionary of partial assignments, get an undecided variable
         # to be decided next.
@@ -109,13 +126,13 @@ class OldInstalledFirstPolicy(IPolicy):
 
     def __init__(self, pool, installed_repository):
         self._pool = pool
-        self._decision_set = set()
         self._installed_map = set(
             pool.package_id(package) for package in
             installed_repository.iter_packages()
         )
+        self._decision_set = self._installed_map.copy()
 
-    def add_packages_by_id(self, package_ids):
+    def add_requirements(self, package_ids):
         # TODO Just make this add_requirement.
         for package_id in package_ids:
             self._decision_set.add(package_id)

@@ -98,7 +98,6 @@ class MiniSATSolver(object):
         for variable in variables:
             if variable not in assignments:
                 assignments[variable] = None
-        self._policy.add_packages_by_id(variables)
 
     def propagate(self):
         while len(self.prop_queue) > 0:
