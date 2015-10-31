@@ -1,7 +1,5 @@
 import unittest
 
-from collections import OrderedDict
-
 import mock
 import six
 
@@ -241,7 +239,7 @@ class TestMiniSATSolver(unittest.TestCase):
         s._setup_assignments()
 
         # Then
-        self.assertEqual(s.assignments.items(), expected_assignments)
+        self.assertEqual(list(s.assignments.items()), expected_assignments)
 
     def _assertWatchesNotTrue(self, watches, assignments):
         for watch, clauses in watches.items():
