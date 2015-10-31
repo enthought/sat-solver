@@ -1,6 +1,6 @@
 import os.path
 
-from unittest import TestCase, expectedFailure
+from unittest import TestCase
 
 from enstaller.new_solver import Pool
 
@@ -63,8 +63,8 @@ class ScenarioTestAssistant(object):
             self.fail("Length of operations differ")
 
 
-class TestNoInstallSet(TestCase, ScenarioTestAssistant):
-    @expectedFailure
+class TestNoInstallSet(ScenarioTestAssistant, TestCase):
+
     def test_crash(self):
         self._check_solution("crash.yaml")
 
