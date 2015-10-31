@@ -8,6 +8,7 @@ from collections import defaultdict, deque, OrderedDict
 
 from six.moves import range
 
+from .assignment_set import AssignmentSet
 from .clause import Clause
 from .policy import DefaultPolicy
 from .utils import value
@@ -41,7 +42,7 @@ class MiniSATSolver(object):
         self.clauses = []
         self.watches = defaultdict(list)
 
-        self.assignments = OrderedDict()
+        self.assignments = AssignmentSet()
 
         # A list of literals which become successively true (because of direct
         # assignment, or by unit propagation).
@@ -64,7 +65,6 @@ class MiniSATSolver(object):
         # Whether the system is satisfiable.
         self.status = None
 
-        #
         self._policy = policy or DefaultPolicy()
 
     def add_clause(self, clause):
@@ -98,6 +98,7 @@ class MiniSATSolver(object):
         for variable in variables:
             if variable not in assignments:
                 assignments[variable] = None
+        self._policy.add_packages_by_id(variables)
 
     def propagate(self):
         while len(self.prop_queue) > 0:
@@ -176,7 +177,7 @@ class MiniSATSolver(object):
     def validate(self, solution_map):
         """Check whether a given set of assignments solves this SAT problem.
         """
-        solution_literals = {(+1 if status else -1) * variable
+        solution_literals = {variable if status else -variable
                              for variable, status in solution_map.items()}
         for clause in self.clauses:
             if len(set(clause.lits) & solution_literals) == 0:
@@ -285,8 +286,7 @@ class MiniSATSolver(object):
     def number_assigned(self):
         """ Return the number of currently assigned variables.
         """
-        return len([value for value in self.assignments.values()
-                    if value is not None])
+        return self.assignments.num_assigned
 
     @property
     def number_variables(self):
