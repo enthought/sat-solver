@@ -161,7 +161,9 @@ class PriorityQueue(object):
     def peek(self):
         if not self._pq:
             raise KeyError('peek from an empty priority queue')
-        entry = self._pop()
+        entry = self._pq[0]
+        if entry[-1] is REMOVED_TASK:
+            entry = self._pop()
         self._push(*entry)
         return entry[-1]
 
