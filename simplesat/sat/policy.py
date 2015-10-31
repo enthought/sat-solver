@@ -263,4 +263,4 @@ class OldInstalledFirstPolicy(IPolicy):
             return self._decision_set, None
 
 
-InstalledFirstPolicy = OldInstalledFirstPolicy
+InstalledFirstPolicy = partial(LoggedPolicy, NewInstalledFirstPolicy)
