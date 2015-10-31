@@ -124,12 +124,8 @@ class NewInstalledFirstPolicy(IPolicy):
             else:
                 new = priority
 
-            # If necessary, update it in the queue
-            orig = self._pkg_id_priority.get(pkg_id)
-            if new != orig:
-                self._pkg_id_priority[pkg_id] = new
-                if assignments.get(pkg_id) is None:
-                    self._unassigned_pkg_ids.push(pkg_id, priority=new)
+            if pkg_id in self._unassigned_pkg_ids:
+                self._unassigned_pkg_ids.push(pkg_id, priority=new)
 
             pkg_id_priority[pkg_id] = new
         self._pkg_id_priority = pkg_id_priority
@@ -156,8 +152,9 @@ class NewInstalledFirstPolicy(IPolicy):
             elif old is None:
                 # No longer unassigned (because new is not None)
                 self._unassigned_pkg_ids.remove(key)
-        # The remaining case is True -> False or False -> True, which is
-        # probably not possible and we don't care about anyway.
+        # The remaining case is either True -> False or False -> True, which is
+        # probably not possible and we don't care about anyway, or
+        # MISSING -> (True|False)
 
         # A very cheap sanity check
         ours = len(self._unassigned_pkg_ids)
