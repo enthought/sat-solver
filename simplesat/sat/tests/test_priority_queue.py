@@ -4,7 +4,7 @@
 import random
 import unittest
 
-from ..assignment_set import PriorityQueue, REMOVED_TASK
+from ..priority_queue import PriorityQueue, REMOVED_TASK
 
 
 def assert_raises(exception, f, *args, **kwargs):

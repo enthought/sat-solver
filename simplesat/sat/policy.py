@@ -6,7 +6,7 @@ import six
 
 from enstaller.collections import DefaultOrderedDict
 
-from .assignment_set import PriorityQueue
+from .priority_queue import PriorityQueue
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
