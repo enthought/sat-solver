@@ -47,7 +47,8 @@ class ScenarioTestAssistant(object):
         return pkg_delta
 
     def assertEqualOperations(self, operations, scenario_operations):
-        for i, (left, right) in enumerate(zip(operations, scenario_operations)):
+        pairs = zip(operations, scenario_operations)
+        for i, (left, right) in enumerate(pairs):
             if not type(left) == type(right):
                 msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}"
                 self.fail(msg.format(i, type(left), type(right)))
