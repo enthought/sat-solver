@@ -1,8 +1,11 @@
 import abc
+from functools import partial
+from collections import Counter
 
 import six
 
 from enstaller.collections import DefaultOrderedDict
+from .assignment_set import PriorityQueue
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
@@ -24,7 +27,86 @@ class DefaultPolicy(IPolicy):
         return undecided[0]
 
 
-class InstalledFirstPolicy(IPolicy):
+class NewInstalledFirstPolicy(IPolicy):
+
+    REQUIRED = -100
+    CURRENT = -175
+
+    def __init__(self, pool, installed_repository):
+        self._pool = pool
+        self._installed_pkg_ids = set(
+            pool.package_id(package) for package in
+            installed_repository.iter_packages()
+        )
+        self._seen_pkg_ids = set()
+        self._required_pkg_ids = set()
+        self._pkg_id_priority = {}
+        self._unassigned_pkg_ids = PriorityQueue()
+
+    def _update_pkg_id_priority(self, assignments=None):
+        assignments = assignments or {}
+        pkg_id_priority = {}
+        self._seen_pkg_ids.update(assignments.keys())
+
+        ordered_pkg_ids = sorted(
+            self._seen_pkg_ids,
+            key=lambda p: self._pool._id_to_package[p].version,
+            reverse=True,
+        )
+
+        for priority, pkg_id in enumerate(ordered_pkg_ids):
+
+            # Determine the new priority of this pkg
+            if pkg_id in self._required_pkg_ids:
+                new = self.REQUIRED
+            elif pkg_id in self._installed_pkg_ids:
+                new = self.CURRENT
+            else:
+                new = priority
+
+            # If necessary, update it in the queue
+            orig = self._pkg_id_priority.get(pkg_id)
+            if new != orig:
+                self._pkg_id_priority[pkg_id] = new
+                if assignments.get(pkg_id) is None:
+                    self._unassigned_pkg_ids.push(pkg_id, priority=new)
+
+            pkg_id_priority[pkg_id] = new
+        self._pkg_id_priority = pkg_id_priority
+
+    def add_requirements(self, package_ids):
+        self._required_pkg_ids.update(package_ids)
+        self._seen_pkg_ids.update(package_ids)
+        self._update_pkg_id_priority()
+
+    def get_next_package_id(self, assignments, clauses):
+        self._update_cache_from_assignments(assignments)
+
+        # Grab the most interesting looking currently unassigned id
+        return self._unassigned_pkg_ids.peek()
+
+    def _update_cache_from_assignments(self, assignments):
+        for key, (old, new) in six.iteritems(assignments.get_changelog()):
+            if key not in self._seen_pkg_ids:
+                self._update_pkg_id_priority(assignments)
+            if new is None:
+                # Newly unassigned
+                priority = self._pkg_id_priority[key]
+                self._unassigned_pkg_ids.push(key, priority=priority)
+            elif old is None:
+                # No longer unassigned (because new is not None)
+                self._unassigned_pkg_ids.remove(key)
+        # The remaining case is True -> False or False -> True, which is
+        # probably not possible and we don't care about anyway.
+
+        # A very cheap sanity check
+        ours = len(self._unassigned_pkg_ids)
+        theirs = len(assignments) - assignments.num_assigned
+        assert ours == theirs, "We failed to track variable assignments"
+
+
+class OldInstalledFirstPolicy(IPolicy):
+
     def __init__(self, pool, installed_repository):
         self._pool = pool
         self._decision_set = set()
@@ -115,3 +197,6 @@ class InstalledFirstPolicy(IPolicy):
             return self._decision_set, -min(unassigned_ids)
         else:
             return self._decision_set, None
+
+
+InstalledFirstPolicy = OldInstalledFirstPolicy
