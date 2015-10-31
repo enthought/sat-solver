@@ -32,6 +32,20 @@ class ScenarioTestAssistant(object):
         self.assertEqualOperations(transaction.operations,
                                    scenario.operations)
 
+    def _pkg_delta(self, operations, scenario_operations):
+        pkg_delta = {}
+        for p in scenario_operations:
+            name, version = p.package.split()
+            pkg_delta.setdefault(name, [None, None])[0] = version
+        for p in operations:
+            name = p.package.name
+            version = str(p.package.version)
+            pkg_delta.setdefault(name, [None, None])[1] = version
+        for n, v in pkg_delta.items():
+            if v[0] == v[1]:
+                pkg_delta.pop(n)
+        return pkg_delta
+
     def assertEqualOperations(self, operations, scenario_operations):
         for i, (left, right) in enumerate(zip(operations, scenario_operations)):
             if not type(left) == type(right):
