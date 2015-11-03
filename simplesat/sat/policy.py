@@ -140,7 +140,7 @@ class _InstalledFirstPolicy(IPolicy):
         return self._unassigned_pkg_ids.peek()
 
     def _update_cache_from_assignments(self, assignments):
-        for key, (old, new) in six.iteritems(assignments.get_changelog()):
+        for key, (old, new) in six.iteritems(assignments.consume_changelog()):
             if key not in self._seen_pkg_ids:
                 self._update_pkg_id_priority(assignments)
             if new is None:

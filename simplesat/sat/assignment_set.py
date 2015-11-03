@@ -78,6 +78,9 @@ class AssignmentSet(object):
             self._changelog[key] = (orig, value)
 
     def get_changelog(self):
+        return self._changelog.copy()
+
+    def consume_changelog(self):
         old = self._changelog
         self._changelog = {}
         return old
