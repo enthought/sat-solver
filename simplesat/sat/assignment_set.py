@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division, print_function
 
-from toolbox import auto_debugger
-
-from collections import OrderedDict
-from heapq import heappush, heappop
-import itertools
 from functools import partial
+from heapq import heappush, heappop
+from itertools import count
+
+import six
 
 
 INF = float('inf')
@@ -24,15 +22,15 @@ class _MISSING(object):
 MISSING = _MISSING()
 
 
-class AssignmentSet(OrderedDict):
+class AssignmentSet(object):
 
     """A collection of literals and their assignments."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self._nassigned = 0
         # Changelog is a dict of id -> (original value, new value)
+        self._data = {}
         self._changelog = {}
-        super(AssignmentSet, self).__init__(*args, **kwargs)
 
     def __setitem__(self, key, value):
         assert key >= 0
@@ -46,20 +44,41 @@ class AssignmentSet(OrderedDict):
             self._nassigned += 1
 
         self._update_changelog(key, value)
-        super(AssignmentSet, self).__setitem__(key, value)
+        self._data[key] = value
 
     def __delitem__(self, key):
         self._update_changelog(key, MISSING)
-        super(AssignmentSet, self).__del__(key)
+        del self._data[key]
 
-    def __str__(self):
-        return object.__str__(self)
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def get(self, key, default=None):
+        return self._data.get(key, default)
+
+    def __len__(self):
+        return len(self._data)
+
+    def __contains__(self, key):
+        return key in self._data
+
+    def items(self):
+        return self._data.items()
+
+    def iteritems(self):
+        return six.iteritems(self._data)
+
+    def keys(self):
+        return self._data.keys()
+
+    def values(self):
+        return self._data.values()
 
     def _update_changelog(self, key, value):
         if key in self._changelog:
             orig = self._changelog[key][0]
-        elif key in self:
-            orig = self[key]
+        elif key in self._data:
+            orig = self._data[key]
         else:
             orig = MISSING
 
@@ -74,9 +93,10 @@ class AssignmentSet(OrderedDict):
         return old
 
     def copy(self):
-        new = super(AssignmentSet, self).copy()
-        new._nassigned = self._nassigned
+        new = AssignmentSet()
+        new._data = self._data.copy()
         new._changelog = self._changelog.copy()
+        new._nassigned = self._nassigned
         return new
 
     @property
@@ -97,7 +117,7 @@ class PriorityQueue(object):
         # mapping of tasks to entries
         self._entry_finder = {}
         # unique id genrator for tie-breaking
-        self._next_id = partial(next, itertools.count())
+        self._next_id = partial(next, count())
 
     def push(self, task, priority=0):
         "Add a new task or update the priority of an existing task"

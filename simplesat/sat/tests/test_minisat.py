@@ -235,13 +235,13 @@ class TestMiniSATSolver(unittest.TestCase):
         s = MiniSATSolver()
         s.add_clause([-1])
         s.add_clause([1, 2, 3])
-        expected_assignments = OrderedDict([(1, False), (2, None), (3, None)])
+        expected_assignments = [(1, False), (2, None), (3, None)]
 
         # When
         s._setup_assignments()
 
         # Then
-        self.assertEqual(s.assignments, expected_assignments)
+        self.assertEqual(s.assignments.items(), expected_assignments)
 
     def _assertWatchesNotTrue(self, watches, assignments):
         for watch, clauses in watches.items():
