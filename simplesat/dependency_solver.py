@@ -34,11 +34,9 @@ class DependencySolver(object):
             solution_ids = _solution_to_ids(solution)
 
             if self.use_pruning:
-                disconnected = _disconnected_packages(
+                connected = _connected_packages(
                     solution_ids, requirement_ids, self._pool)
-
-                solution_ids = [i for i in solution_ids
-                                if i not in disconnected]
+                solution_ids = [i for i in solution_ids if i in connected]
 
             installed_map = set(
                 self._pool.package_id(p)
@@ -76,8 +74,8 @@ class DependencySolver(object):
         return requirement_ids, list(rules_generator.iter_rules())
 
 
-def _disconnected_packages(solution, requirement_ids, pool):
-    """ Return packages which are not associated with a requirement. """
+def _connected_packages(solution, requirement_ids, pool):
+    """ Return packages which are associated with a requirement. """
 
     # Our strategy is as follows:
     # ... -> pkg.dependencies -> pkg strings -> ids -> _id_to_package -> ...
@@ -107,9 +105,7 @@ def _disconnected_packages(solution, requirement_ids, pool):
         # We pass in `connected` to avoid re-walking a graph we've seen before
         connected.update(_connected_nodes(pkg_id, neighborfunc, connected))
 
-    disconnected = sol_set - connected
-
-    return disconnected
+    return connected
 
 
 def _connected_nodes(node, neighborfunc, visited):
