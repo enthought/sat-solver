@@ -101,9 +101,9 @@ class _InstalledFirstPolicy(IPolicy):
         self._unassigned_pkg_ids = PriorityQueue()
 
     def _update_pkg_id_priority(self, assignments=None):
-        assignments = assignments or {}
         pkg_id_priority = {}
-        self._seen_pkg_ids.update(assignments.keys())
+        if assignments is not None:
+            self._seen_pkg_ids.update(assignments.keys())
 
         ordered_pkg_ids = sorted(
             self._seen_pkg_ids,
