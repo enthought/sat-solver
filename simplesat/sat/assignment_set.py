@@ -36,7 +36,9 @@ class AssignmentSet(object):
 
     def __delitem__(self, key):
         self._update_changelog(key, MISSING)
-        del self._data[key]
+        prev = self._data.pop(key)
+        if prev is not None:
+            self._nassigned -= 1
 
     def __getitem__(self, key):
         return self._data[key]
