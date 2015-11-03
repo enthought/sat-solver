@@ -53,16 +53,16 @@ class AssignmentSet(object):
         return key in self._data
 
     def items(self):
-        return self._data.items()
+        return list(self._data.items())
 
     def iteritems(self):
         return six.iteritems(self._data)
 
     def keys(self):
-        return self._data.keys()
+        return list(self._data.keys())
 
     def values(self):
-        return self._data.values()
+        return list(self._data.values())
 
     def _update_changelog(self, key, value):
         if key in self._changelog:
