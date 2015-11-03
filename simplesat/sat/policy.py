@@ -2,7 +2,6 @@ import abc
 
 from collections import Counter
 from functools import partial
-from itertools import count
 
 import six
 
@@ -87,8 +86,8 @@ class PolicyLogger(IPolicy):
 
 class _InstalledFirstPolicy(IPolicy):
 
-    CURRENT = count(-2e10)
-    REQUIRED = count(-1e10)
+    CURRENT = int(-2e7)
+    REQUIRED = int(-1e7)
 
     def __init__(self, pool, installed_repository):
         self._pool = pool
@@ -116,16 +115,14 @@ class _InstalledFirstPolicy(IPolicy):
 
             # Determine the new priority of this pkg
             if pkg_id in self._required_pkg_ids:
-                new = next(self.REQUIRED)
+                priority += self.REQUIRED
             elif pkg_id in self._installed_pkg_ids:
-                new = next(self.CURRENT)
-            else:
-                new = priority
+                priority += self.CURRENT
 
             if pkg_id in self._unassigned_pkg_ids:
-                self._unassigned_pkg_ids.push(pkg_id, priority=new)
+                self._unassigned_pkg_ids.push(pkg_id, priority=priority)
 
-            pkg_id_priority[pkg_id] = new
+            pkg_id_priority[pkg_id] = priority
         self._pkg_id_priority = pkg_id_priority
 
     def add_requirements(self, package_ids):
