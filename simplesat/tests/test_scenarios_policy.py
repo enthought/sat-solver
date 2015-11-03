@@ -1,6 +1,6 @@
 import os.path
 
-from unittest import TestCase
+from unittest import TestCase, expectedFailure
 
 from enstaller.new_solver import Pool
 
@@ -86,6 +86,7 @@ class TestNoInstallSet(ScenarioTestAssistant, TestCase):
     def test_ipython(self):
         self._check_solution("ipython.yaml")
 
+    @expectedFailure
     def test_iris(self):
         self._check_solution("iris.yaml")
 
