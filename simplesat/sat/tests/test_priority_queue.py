@@ -87,7 +87,21 @@ class TestPriorityQueue(unittest.TestCase):
 
     def test_tasks_are_unique(self):
         pq = PriorityQueue()
+
         pq.push(0)
+        self.assertEqual(1, len(pq))
+
+        pq.push(0)
+        self.assertEqual(1, len(pq))
+
+        pq.push(1)
+        self.assertEqual(2, len(pq))
+
+        pq.push(0)
+        self.assertEqual(2, len(pq))
+
+        pq.remove(0)
+        self.assertEqual(1, len(pq))
 
     def test_peek(self):
         pq = PriorityQueue()
