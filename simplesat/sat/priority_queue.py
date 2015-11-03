@@ -40,7 +40,10 @@ class PriorityQueue(object):
         return self._push(priority, self._next_id(), task)
 
     def peek(self):
-        """ Return the next task, without popping it. """
+        """ Return the task with the lowest priority.
+
+        This will pop and repush if a REMOVED task is found.
+        """
         if not self._pq:
             raise KeyError('peek from an empty priority queue')
         entry = self._pq[0]
