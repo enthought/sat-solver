@@ -66,7 +66,7 @@ class TestAssignmentSet(unittest.TestCase):
         del AS[4]
         self.assertNotIn(4, AS)
 
-        expected = [(0, True), (1, False), (2, True), (3, None)]
+        expected = [(0, True), (1, False), (3, None), (2, True)]
 
         manual_result = list(zip(AS.keys(), AS.values()))
         self.assertEqual(AS.items(), expected)

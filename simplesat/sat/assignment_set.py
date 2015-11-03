@@ -4,6 +4,8 @@
 
 import six
 
+from collections import OrderedDict
+
 
 class _MISSING(object):
     pass
@@ -17,7 +19,8 @@ class AssignmentSet(object):
     def __init__(self):
         self._nassigned = 0
         # Changelog is a dict of id -> (original value, new value)
-        self._data = {}
+        # FIXME: Verify that we really need ordering here
+        self._data = OrderedDict()
         self._changelog = {}
 
     def __setitem__(self, key, value):
