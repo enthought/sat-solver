@@ -1,4 +1,5 @@
 import abc
+
 from collections import Counter
 from functools import partial
 from itertools import count
@@ -11,9 +12,6 @@ from .priority_queue import PriorityQueue
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
-
-    def __init__(self, pool, installed_repository):
-        pass
 
     @abc.abstractmethod
     def add_requirements(self, package_ids):
@@ -53,7 +51,7 @@ class DefaultPolicy(IPolicy):
         return next(undecided)
 
 
-class LoggedPolicy(object):
+class PolicyLogger(IPolicy):
 
     def __init__(self, PolicyFactory, pool, installed_repository):
         self._policy = PolicyFactory(pool, installed_repository)
@@ -87,7 +85,7 @@ class LoggedPolicy(object):
         return '{} {}'.format(p.name, p.version)
 
 
-class NewInstalledFirstPolicy(IPolicy):
+class _InstalledFirstPolicy(IPolicy):
 
     CURRENT = count(-2e10)
     REQUIRED = count(-1e10)
@@ -160,6 +158,9 @@ class NewInstalledFirstPolicy(IPolicy):
         ours = len(self._unassigned_pkg_ids)
         theirs = len(assignments) - assignments.num_assigned
         assert ours == theirs, "We failed to track variable assignments"
+
+
+InstalledFirstPolicy = partial(PolicyLogger, _InstalledFirstPolicy)
 
 
 class OldInstalledFirstPolicy(IPolicy):
@@ -259,6 +260,3 @@ class OldInstalledFirstPolicy(IPolicy):
             return self._decision_set, -min(unassigned_ids)
         else:
             return self._decision_set, None
-
-
-InstalledFirstPolicy = partial(LoggedPolicy, NewInstalledFirstPolicy)
