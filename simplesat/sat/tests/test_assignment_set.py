@@ -66,10 +66,10 @@ class TestAssignmentSet(unittest.TestCase):
         del AS[4]
         self.assertNotIn(4, AS)
 
-        expected = dict(zip(range(4), [True, False, True, None]))
+        expected = [(0, True), (1, False), (2, True), (3, None)]
 
-        manual_result = dict(zip(AS.keys(), AS.values()))
-        self.assertEqual(AS.items(), list(expected.items()))
+        manual_result = list(zip(AS.keys(), AS.values()))
+        self.assertEqual(AS.items(), expected)
         self.assertEqual(manual_result, expected)
         self.assertEqual(len(AS), len(expected))
 
