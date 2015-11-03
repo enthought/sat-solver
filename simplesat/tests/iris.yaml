@@ -487,8 +487,6 @@ transaction:
     - kind: "install"
       package: "OWSLib 0.8.8-4"
     - kind: "install"
-      package: "zlib 1.2.6-1"
-    - kind: "install"
       package: "cartopy 0.11.0-5"
     - kind: "install"
       package: "libgdal 1.11.0-7"
