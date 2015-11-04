@@ -30,3 +30,16 @@ packages:
 request:
     - operation: "install"
       requirement: "numpy >= 1.9.2"
+
+decisions:
+  0: libgfortran 3.0.0-2
+  1: MKL 10.3-1
+  2: numpy 1.9.2-1
+
+transaction:
+  - kind: "install"
+    package: "libgfortran 3.0.0-2"
+  - kind: "install"
+    package: "MKL 10.3-1"
+  - kind: "install"
+    package: "numpy 1.9.2-1"
