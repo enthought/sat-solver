@@ -11,7 +11,6 @@ from six.moves import range
 from .assignment_set import AssignmentSet
 from .clause import Clause
 from .policy import DefaultPolicy
-from .utils import value
 
 
 class MiniSATSolver(object):
@@ -116,7 +115,7 @@ class MiniSATSolver(object):
                 if unit is not None:
                     # TODO Refactor this to take into account the return value
                     # of enqueue().
-                    if value(unit, self.assignments) is False:
+                    if self.assignments.value(unit) is False:
                         # Conflict. Clear the queue and re-insert the remaining
                         # unwatched clauses into the watch list.
                         self.prop_queue.clear()
@@ -130,7 +129,7 @@ class MiniSATSolver(object):
     def enqueue(self, lit, cause=None):
         """ Enqueue a new true literal.
         """
-        status = value(lit, self.assignments)
+        status = self.assignments.value(lit)
         if status is not None:
             # Known fact. Don't enqueue, but return whether this fact
             # contradicts the earlier assignment.

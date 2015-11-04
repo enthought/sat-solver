@@ -106,6 +106,22 @@ class TestAssignmentSet(unittest.TestCase):
         del AS[2]
         self.assertIn(2, copied)
 
+    def test_value(self):
+        AS = AssignmentSet()
+
+        AS[1] = False
+        AS[2] = True
+        AS[3] = None
+
+        self.assertTrue(AS.value(-1))
+        self.assertTrue(AS.value(2))
+
+        self.assertFalse(AS.value(1))
+        self.assertFalse(AS.value(-2))
+
+        self.assertIs(AS.value(3), None)
+        self.assertIs(AS.value(-3), None)
+
     def test_changelog(self):
 
         AS = AssignmentSet()

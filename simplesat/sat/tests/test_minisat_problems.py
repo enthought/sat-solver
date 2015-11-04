@@ -2,7 +2,6 @@ import unittest
 
 from simplesat.examples.van_der_waerden import van_der_waerden
 
-from ..utils import value
 from ..clause import Clause
 from ..minisat import MiniSATSolver
 
@@ -72,7 +71,7 @@ class TestMinisatProblems(unittest.TestCase):
 def check_solution(clauses, solution):
     for clause in clauses:
         for lit in clause:
-            if value(lit, solution):
+            if solution.value(lit):
                 # Clause is satisfied.
                 break
         else:

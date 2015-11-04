@@ -23,6 +23,7 @@ class AssignmentSet(object):
         self._data = OrderedDict()
         self._orig = {}
         self._cached_changelog = None
+        self._flat = set()
         for k, v in (assignments or {}).items():
             self[k] = v
 
@@ -31,10 +32,12 @@ class AssignmentSet(object):
 
         prev_value = self.get(key)
 
+        self._flat.difference_update((key, -key))
         if prev_value is not None:
             self._nassigned -= 1
 
         if value is not None:
+            self._flat.add(key if value else -key)
             self._nassigned += 1
 
         self._update_diff(key, value)
@@ -44,6 +47,7 @@ class AssignmentSet(object):
         self._update_diff(key, MISSING)
         prev = self._data.pop(key)
         if prev is not None:
+            self._flat.difference_update((key, -key))
             self._nassigned -= 1
 
     def __getitem__(self, key):
@@ -97,7 +101,17 @@ class AssignmentSet(object):
         new._data = self._data.copy()
         new._orig = self._orig.copy()
         new._nassigned = self._nassigned
+        new._flat = self._flat.copy()
         return new
+
+    def value(self, lit):
+        """ Return the value of literal in terms of the positive. """
+        if lit in self._flat:
+            return True
+        elif -lit in self._flat:
+            return False
+        else:
+            return None
 
     @property
     def num_assigned(self):

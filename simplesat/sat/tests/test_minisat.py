@@ -3,7 +3,7 @@ import unittest
 import mock
 import six
 
-from ..utils import value
+from ..assignment_set import AssignmentSet
 from ..clause import Clause
 from ..minisat import MiniSATSolver
 
@@ -31,7 +31,7 @@ def zm01_solver(add_conflict=False):
     if add_conflict:
         s.add_clause(Clause([-18, -3, -19]))
 
-    s.assignments = {k: None for k in range(20)}
+    s.assignments = AssignmentSet({k: None for k in range(1, 20)})
 
     # Load up the assignments from lower decision levels. The call to
     # assume() will enter a new decision level and enqueue.
@@ -49,7 +49,7 @@ class TestClause(unittest.TestCase):
     def test_rewatch(self):
         # Given
         c = Clause([1, -2, 5])
-        assignments = {1: False, 2: None, 5: None}
+        assignments = AssignmentSet({1: False, 2: None, 5: None})
 
         # When
         unit = c.rewatch(assignments, -1)
@@ -61,7 +61,7 @@ class TestClause(unittest.TestCase):
     def test_rewatch_true(self):
         # Given
         c = Clause([1, -2, 5])
-        assignments = {1: True, 2: None, 5: None}
+        assignments = AssignmentSet({1: True, 2: None, 5: None})
 
         # When
         unit = c.rewatch(assignments, -1)
@@ -73,7 +73,7 @@ class TestClause(unittest.TestCase):
     def test_rewatch_unit(self):
         # Given
         c = Clause([1, -2, 5])
-        assignments = {1: False, 2: True, 5: False}
+        assignments = AssignmentSet({1: False, 2: True, 5: False})
 
         # When
         unit = c.rewatch(assignments, 2)
@@ -159,7 +159,9 @@ class TestMiniSATSolver(unittest.TestCase):
         s.add_clause(cl2)
         s.add_clause(cl3)
 
-        s.assignments = {1: None, 2: None, 4: None, 5: None, 7: None}
+        s.assignments = AssignmentSet(
+            {1: None, 2: None, 4: None, 5: None, 7: None}
+        )
 
         # When
         s.assignments[2] = False  # Force 2 to be false.
@@ -188,7 +190,7 @@ class TestMiniSATSolver(unittest.TestCase):
         s.add_clause(cl1)
         s.add_clause(cl2)
 
-        s.assignments = {1: None, 2: None, 4: None, 5: None}
+        s.assignments = AssignmentSet({1: None, 2: None, 4: None, 5: None})
 
         # When
         s.assignments[2] = False  # Force 2 to be false.
@@ -214,7 +216,7 @@ class TestMiniSATSolver(unittest.TestCase):
         s.add_clause(cl1)
         s.add_clause(cl2)
 
-        s.assignments = {1: True, 2: None, 3: None, 4: None}
+        s.assignments = AssignmentSet({1: True, 2: None, 3: None, 4: None})
 
         # When
         s.assignments[2] = False  # Force 2 to be false.
@@ -250,7 +252,7 @@ class TestMiniSATSolver(unittest.TestCase):
     def test_enqueue(self):
         # Given
         s = MiniSATSolver()
-        s.assignments = {1: True, 2: None}
+        s.assignments = AssignmentSet({1: True, 2: None})
 
         # When / then
         status = s.enqueue(1)
@@ -268,7 +270,7 @@ class TestMiniSATSolver(unittest.TestCase):
         cl2 = Clause([1, 3, 4])
         s.add_clause(cl1)
         s.add_clause(cl2)
-        s.assignments = {1: None, 2: None, 3: None, 4: None}
+        s.assignments = AssignmentSet({1: None, 2: None, 3: None, 4: None})
 
         # When
         s.enqueue(-2)
@@ -276,7 +278,8 @@ class TestMiniSATSolver(unittest.TestCase):
 
         # Then
         self.assertIsNone(conflict)
-        self.assertEqual(s.assignments, {1: True, 2: False, 3: None, 4: None})
+        self.assertEqual(s.assignments._data,
+                         {1: True, 2: False, 3: None, 4: None})
         self.assertEqual(s.trail, [-2, 1])
         six.assertCountEqual(self, s.watches[-1], [cl1, cl2])
         six.assertCountEqual(self, s.watches[-2], [cl1])
@@ -291,7 +294,7 @@ class TestMiniSATSolver(unittest.TestCase):
         s.add_clause(cl1)
         s.add_clause(cl2)
         s.add_clause(cl3)
-        s.assignments = {1: None, 2: None, 3: None, 4: None}
+        s.assignments = AssignmentSet({1: None, 2: None, 3: None, 4: None})
 
         # When
         s.enqueue(-1)
@@ -299,7 +302,7 @@ class TestMiniSATSolver(unittest.TestCase):
 
         # Then
         self.assertIsNone(conflict)
-        self.assertEqual(s.assignments,
+        self.assertEqual(s.assignments._data,
                          {1: False, 2: False, 3: False, 4: False})
         self.assertEqual(s.trail, [-1, -2, -3, -4])
 
@@ -316,7 +319,7 @@ class TestMiniSATSolver(unittest.TestCase):
         s.add_clause(cl1)
         s.add_clause(cl2)
         s.add_clause(cl3)
-        s.assignments = {1: None, 2: None, 3: None, 4: True}
+        s.assignments = AssignmentSet({1: None, 2: None, 3: None, 4: True})
 
         # When
         s.enqueue(-1)
@@ -348,9 +351,9 @@ class TestMiniSATSolver(unittest.TestCase):
 
         last = s.trail_lim[-1]
         six.assertCountEqual(self, s.trail[last:],
-                              [11, -12, 16, -2, -10, 1, 3, -5, 18])
+                             [11, -12, 16, -2, -10, 1, 3, -5, 18])
 
-        expected_assignments = {
+        expected = {
             1: True,
             2: False,
             3: True,
@@ -361,20 +364,20 @@ class TestMiniSATSolver(unittest.TestCase):
             16: True,
             18: True
         }
-        for var, _value in expected_assignments.items():
-            self.assertEqual(s.assignments[var], _value)
+        for lit, val in expected.items():
+            self.assertEqual(s.assignments[lit], val)
 
     def test_undo_one(self):
         # Given
         s = MiniSATSolver()
         s.trail = [1, 2, -3]
-        s.assignments = {1: None, 2: None, 3: True}
+        s.assignments = AssignmentSet({1: None, 2: None, 3: True})
 
         # When
         s.undo_one()
 
         # Then
-        self.assertEqual(s.assignments, {1: None, 2: None, 3: None})
+        self.assertEqual(s.assignments._data, {1: None, 2: None, 3: None})
         self.assertEqual(s.trail, [1, 2])
 
     def test_cancel(self):
@@ -408,7 +411,7 @@ class TestMiniSATSolver(unittest.TestCase):
     def test_assume_cancel_roundtrip(self):
         # Given
         s = MiniSATSolver()
-        s.assignments = {1: None}
+        s.assignments = AssignmentSet({1: None})
 
         # When / then
         s.assume(-1)
@@ -450,7 +453,7 @@ class TestMiniSATSolver(unittest.TestCase):
             self.assertIsNone(s.reason[var])
         for lit, clauses in s.watches.items():
             if len(clauses) > 2:
-                self.assertNotEqual(value(-lit, s.assignments), False)
+                self.assertNotEqual(s.assignments.value(-lit), False)
 
     def test_analyze_same_level(self):
         # Given
