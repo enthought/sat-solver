@@ -11,6 +11,7 @@ class Clause(Constraint):
 
     def __init__(self, lits, learned=False):
         self.learned = learned
+        # This maintains the ordering while removing duplicate values
         self.lits = list(OrderedDict.fromkeys(lits).keys())
 
     def rewatch(self, assignments, lit):
