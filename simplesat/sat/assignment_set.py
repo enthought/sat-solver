@@ -17,13 +17,12 @@ class AssignmentSet(object):
     """A collection of literals and their assignments."""
 
     def __init__(self, assignments=None):
-        self._nassigned = 0
         # Changelog is a dict of id -> (original value, new value)
         # FIXME: Verify that we really need ordering here
         self._data = OrderedDict()
         self._orig = {}
         self._cached_changelog = None
-        self._flat = set()
+        self._assigned_literals = set()
         for k, v in (assignments or {}).items():
             self[k] = v
 
@@ -32,13 +31,11 @@ class AssignmentSet(object):
 
         prev_value = self.get(key)
 
-        self._flat.difference_update((key, -key))
         if prev_value is not None:
-            self._nassigned -= 1
+            self._assigned_literals.difference_update((key, -key))
 
         if value is not None:
-            self._flat.add(key if value else -key)
-            self._nassigned += 1
+            self._assigned_literals.add(key if value else -key)
 
         self._update_diff(key, value)
         self._data[key] = value
@@ -47,8 +44,7 @@ class AssignmentSet(object):
         self._update_diff(key, MISSING)
         prev = self._data.pop(key)
         if prev is not None:
-            self._flat.difference_update((key, -key))
-            self._nassigned -= 1
+            self._assigned_literals.difference_update((key, -key))
 
     def __getitem__(self, key):
         return self._data[key]
@@ -100,19 +96,18 @@ class AssignmentSet(object):
         new = AssignmentSet()
         new._data = self._data.copy()
         new._orig = self._orig.copy()
-        new._nassigned = self._nassigned
-        new._flat = self._flat.copy()
+        new._assigned_literals = self._assigned_literals.copy()
         return new
 
     def value(self, lit):
         """ Return the value of literal in terms of the positive. """
-        if lit in self._flat:
+        if lit in self._assigned_literals:
             return True
-        elif -lit in self._flat:
+        elif -lit in self._assigned_literals:
             return False
         else:
             return None
 
     @property
     def num_assigned(self):
-        return self._nassigned
+        return len(self._assigned_literals)
