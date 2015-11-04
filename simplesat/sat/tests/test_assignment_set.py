@@ -96,10 +96,10 @@ class TestAssignmentSet(unittest.TestCase):
         self.assertIsNot(copied._data, AS._data)
         self.assertEqual(copied._data, expected)
 
-        expected = {k: (MISSING, v) for k, v in expected.items()}
+        expected = {k: MISSING for k in expected}
 
-        self.assertIsNot(copied._changelog, AS._changelog)
-        self.assertEqual(copied._changelog, expected)
+        self.assertIsNot(copied._orig, AS._orig)
+        self.assertEqual(copied._orig, expected)
 
         self.assertEqual(copied.num_assigned, AS.num_assigned)
 
@@ -113,19 +113,19 @@ class TestAssignmentSet(unittest.TestCase):
         AS[0] = None
 
         expected = {0: (MISSING, None)}
-        self.assertEqual(AS._changelog, expected)
+        self.assertEqual(AS.get_changelog(), expected)
 
         AS[1] = True
         expected[1] = (MISSING, True)
-        self.assertEqual(AS._changelog, expected)
+        self.assertEqual(AS.get_changelog(), expected)
 
         AS[1] = False
         expected[1] = (MISSING, False)
-        self.assertEqual(AS._changelog, expected)
+        self.assertEqual(AS.get_changelog(), expected)
 
         del AS[1]
         del expected[1]
-        self.assertEqual(AS._changelog, expected)
+        self.assertEqual(AS.get_changelog(), expected)
 
         # Keep should preserve the log
         self.assertEqual(AS.get_changelog(), expected)

@@ -16,12 +16,15 @@ class AssignmentSet(object):
 
     """A collection of literals and their assignments."""
 
-    def __init__(self):
+    def __init__(self, assignments=None):
         self._nassigned = 0
         # Changelog is a dict of id -> (original value, new value)
         # FIXME: Verify that we really need ordering here
         self._data = OrderedDict()
-        self._changelog = {}
+        self._orig = {}
+        self._cached_changelog = None
+        for k, v in (assignments or {}).items():
+            self[k] = v
 
     def __setitem__(self, key, value):
         assert key >= 0
@@ -34,11 +37,11 @@ class AssignmentSet(object):
         if value is not None:
             self._nassigned += 1
 
-        self._update_changelog(key, value)
+        self._update_diff(key, value)
         self._data[key] = value
 
     def __delitem__(self, key):
-        self._update_changelog(key, MISSING)
+        self._update_diff(key, MISSING)
         prev = self._data.pop(key)
         if prev is not None:
             self._nassigned -= 1
@@ -67,31 +70,32 @@ class AssignmentSet(object):
     def values(self):
         return list(self._data.values())
 
-    def _update_changelog(self, key, value):
-        if key in self._changelog:
-            orig = self._changelog[key][0]
-        elif key in self._data:
-            orig = self._data[key]
-        else:
-            orig = MISSING
-
-        if orig == value:
-            self._changelog.pop(key, None)
-        else:
-            self._changelog[key] = (orig, value)
+    def _update_diff(self, key, value):
+        prev = self._data.get(key, MISSING)
+        self._orig.setdefault(key, prev)
+        # If a value changes, dump the cached changelog
+        self._cached_changelog = None
 
     def get_changelog(self):
-        return self._changelog.copy()
+        if self._cached_changelog is None:
+            self._cached_changelog = {
+                key: (old, new)
+                for key, old in six.iteritems(self._orig)
+                for new in [self._data.get(key, MISSING)]
+                if new != old
+            }
+        return self._cached_changelog
 
     def consume_changelog(self):
-        old = self._changelog
-        self._changelog = {}
+        old = self.get_changelog()
+        self._orig = {}
+        self._cached_changelog = {}
         return old
 
     def copy(self):
         new = AssignmentSet()
         new._data = self._data.copy()
-        new._changelog = self._changelog.copy()
+        new._orig = self._orig.copy()
         new._nassigned = self._nassigned
         return new
 

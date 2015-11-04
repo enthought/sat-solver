@@ -61,7 +61,7 @@ class PolicyLogger(IPolicy):
         self._log_assignment_changes = []
 
     def get_next_package_id(self, assignments, clauses):
-        self._log_assignment_changes.append(assignments._changelog.copy())
+        self._log_assignment_changes.append(assignments.get_changelog())
         pkg_id = self._policy.get_next_package_id(assignments, clauses)
         self._log_suggestions.append(pkg_id)
         return pkg_id
