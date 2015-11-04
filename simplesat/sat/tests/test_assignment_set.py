@@ -20,53 +20,53 @@ class TestAssignmentSet(unittest.TestCase):
     def test_num_assigned(self):
         AS = AssignmentSet()
 
-        AS[0] = None
+        AS[1] = None
         self.assertEqual(AS.num_assigned, 0)
 
-        AS[1] = True
-        self.assertEqual(AS.num_assigned, 1)
-
-        AS[0] = False
-        self.assertEqual(AS.num_assigned, 2)
-
-        AS[1] = None
-        self.assertEqual(AS.num_assigned, 1)
-
-        AS[1] = True
-        self.assertEqual(AS.num_assigned, 2)
-
-        del AS[0]
+        AS[2] = True
         self.assertEqual(AS.num_assigned, 1)
 
         AS[1] = False
+        self.assertEqual(AS.num_assigned, 2)
+
+        AS[2] = None
         self.assertEqual(AS.num_assigned, 1)
 
-        AS[1] = None
-        self.assertEqual(AS.num_assigned, 0)
+        AS[2] = True
+        self.assertEqual(AS.num_assigned, 2)
 
         del AS[1]
+        self.assertEqual(AS.num_assigned, 1)
+
+        AS[2] = False
+        self.assertEqual(AS.num_assigned, 1)
+
+        AS[2] = None
+        self.assertEqual(AS.num_assigned, 0)
+
+        del AS[2]
         self.assertEqual(AS.num_assigned, 0)
 
     def test_container(self):
         AS = AssignmentSet()
 
-        AS[0] = True
-        AS[1] = False
+        AS[1] = True
+        AS[2] = False
 
-        self.assertIn(0, AS)
-        self.assertNotIn(2, AS)
+        self.assertIn(1, AS)
+        self.assertNotIn(3, AS)
 
-        AS[3] = None
-        AS[2] = True
         AS[4] = None
+        AS[3] = True
+        AS[5] = None
 
-        self.assertIn(2, AS)
-        self.assertIn(4, AS)
+        self.assertIn(3, AS)
+        self.assertIn(5, AS)
 
-        del AS[4]
-        self.assertNotIn(4, AS)
+        del AS[5]
+        self.assertNotIn(5, AS)
 
-        expected = [(0, True), (1, False), (3, None), (2, True)]
+        expected = [(1, True), (2, False), (4, None), (3, True)]
 
         manual_result = list(zip(AS.keys(), AS.values()))
         self.assertEqual(AS.items(), expected)
@@ -77,18 +77,18 @@ class TestAssignmentSet(unittest.TestCase):
 
         AS = AssignmentSet()
 
-        AS[0] = None
-        AS[1] = True
-        AS[2] = None
-        AS[3] = False
-        AS[4] = True
+        AS[1] = None
+        AS[2] = True
+        AS[3] = None
+        AS[4] = False
+        AS[5] = True
 
         expected = {
-            0: None,
-            1: True,
-            2: None,
-            3: False,
-            4: True,
+            1: None,
+            2: True,
+            3: None,
+            4: False,
+            5: True,
         }
 
         copied = AS.copy()
@@ -103,28 +103,28 @@ class TestAssignmentSet(unittest.TestCase):
 
         self.assertEqual(copied.num_assigned, AS.num_assigned)
 
-        del AS[1]
-        self.assertIn(1, copied)
+        del AS[2]
+        self.assertIn(2, copied)
 
     def test_changelog(self):
 
         AS = AssignmentSet()
 
-        AS[0] = None
+        AS[1] = None
 
-        expected = {0: (MISSING, None)}
+        expected = {1: (MISSING, None)}
         self.assertEqual(AS.get_changelog(), expected)
 
-        AS[1] = True
-        expected[1] = (MISSING, True)
+        AS[2] = True
+        expected[2] = (MISSING, True)
         self.assertEqual(AS.get_changelog(), expected)
 
-        AS[1] = False
-        expected[1] = (MISSING, False)
+        AS[2] = False
+        expected[2] = (MISSING, False)
         self.assertEqual(AS.get_changelog(), expected)
 
-        del AS[1]
-        del expected[1]
+        del AS[2]
+        del expected[2]
         self.assertEqual(AS.get_changelog(), expected)
 
         # Keep should preserve the log
@@ -137,10 +137,10 @@ class TestAssignmentSet(unittest.TestCase):
         self.assertEqual(AS.get_changelog(), {})
 
         # Test when something is already present
-        AS[0] = False
-        expected = {0: (None, False)}
+        AS[1] = False
+        expected = {1: (None, False)}
         self.assertEqual(AS.get_changelog(), expected)
 
-        del AS[0]
-        expected = {0: (None, MISSING)}
+        del AS[1]
+        expected = {1: (None, MISSING)}
         self.assertEqual(AS.get_changelog(), expected)

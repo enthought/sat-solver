@@ -27,7 +27,7 @@ class AssignmentSet(object):
             self[k] = v
 
     def __setitem__(self, key, value):
-        assert key >= 0
+        assert key > 0
 
         prev_value = self.get(key)
 
