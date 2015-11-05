@@ -75,8 +75,8 @@ class DependencySolver(object):
         return requirement_ids, list(rules_generator.iter_rules())
 
 
-def _connected_packages(solution, requirement_ids, pool):
-    """ Return packages which are associated with a requirement. """
+def _connected_packages(solution, pkg_ids, pool):
+    """ Return packages in `solution` which are associated with `pkg_ids`. """
 
     # Our strategy is as follows:
     # ... -> pkg.dependencies -> pkg strings -> ids -> _id_to_package -> ...
@@ -102,10 +102,10 @@ def _connected_packages(solution, requirement_ids, pool):
         neighbors = set(package_string_to_id[key] for key in pkg_keys)
         return neighbors
 
-    # A requirement can root its own independent graph, so we must start at
+    # Each package can root its own independent graph, so we must start at
     # each one individually
     connected = set()
-    for pkg_id in requirement_ids:
+    for pkg_id in pkg_ids:
         # We pass in `connected` to avoid re-walking a graph we've seen before
         connected.update(_connected_nodes(pkg_id, neighborfunc, connected))
 
