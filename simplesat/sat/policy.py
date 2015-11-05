@@ -3,6 +3,7 @@ import abc
 import six
 
 from enstaller.collections import DefaultOrderedDict
+from .priority_queue import PriorityQueue
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
@@ -45,7 +46,11 @@ class DefaultPolicy(IPolicy):
         return next(undecided)
 
 
-class InstalledFirstPolicy(IPolicy):
+class UndeterminedClausePolicy(IPolicy):
+
+    """ An IPolicy that gathers all undetermined packages from clauses whose
+    truth value is not yet known and suggests them in descending order by
+    package version number. """
 
     def __init__(self, pool, installed_repository):
         self._pool = pool
@@ -141,3 +146,96 @@ class InstalledFirstPolicy(IPolicy):
             return self._decision_set, -min(unassigned_ids)
         else:
             return self._decision_set, None
+
+
+class PriorityQueuePolicy(IPolicy):
+
+    """ An IPolicy that uses a priority queue to determine which package id
+    should be suggested next.
+
+    Packages are split into groups:
+
+        1. currently installed,
+        2. explicitly specified as a requirement,
+        3. everything else,
+
+    where each group is arranged in descending order by version number.
+    The groups are searched in order and the first unassigned package id is
+    suggested.
+    """
+
+    CURRENT = int(-2e7)
+    REQUIRED = int(-1e7)
+
+    def __init__(self, pool, installed_repository):
+        self._pool = pool
+        self._installed_pkg_ids = set(
+            pool.package_id(package) for package in
+            installed_repository.iter_packages()
+        )
+        self._seen_pkg_ids = set()
+        self._required_pkg_ids = set()
+        self._pkg_id_priority = {}
+        self._unassigned_pkg_ids = PriorityQueue()
+
+    def _update_pkg_id_priority(self, assignments=None):
+        pkg_id_priority = {}
+        if assignments is not None:
+            self._seen_pkg_ids.update(assignments.keys())
+
+        ordered_pkg_ids = sorted(
+            self._seen_pkg_ids,
+            key=lambda p: self._pool._id_to_package[p].version,
+            reverse=True,
+        )
+
+        for priority, pkg_id in enumerate(ordered_pkg_ids):
+
+            # Determine the new priority of this pkg
+            if pkg_id in self._required_pkg_ids:
+                priority += self.REQUIRED
+            elif pkg_id in self._installed_pkg_ids:
+                priority += self.CURRENT
+
+            if pkg_id in self._unassigned_pkg_ids:
+                self._unassigned_pkg_ids.push(pkg_id, priority=priority)
+
+            pkg_id_priority[pkg_id] = priority
+        self._pkg_id_priority = pkg_id_priority
+
+    def add_requirements(self, package_ids):
+        self._required_pkg_ids.update(package_ids)
+        self._seen_pkg_ids.update(package_ids)
+        self._update_pkg_id_priority()
+
+    def get_next_package_id(self, assignments, clauses):
+        self._update_cache_from_assignments(assignments)
+
+        # Grab the most interesting looking currently unassigned id
+        return self._unassigned_pkg_ids.peek()
+
+    def _update_cache_from_assignments(self, assignments):
+        changelog = assignments.consume_changelog()
+
+        if not self._seen_pkg_ids.issuperset(changelog):
+            self._update_pkg_id_priority(assignments)
+
+        for key, (old, new) in six.iteritems(changelog):
+            if new is None:
+                # Newly unassigned
+                priority = self._pkg_id_priority[key]
+                self._unassigned_pkg_ids.push(key, priority=priority)
+            elif old is None:
+                # No longer unassigned (because new is not None)
+                self._unassigned_pkg_ids.remove(key)
+        # The remaining case is either True -> False or False -> True, which is
+        # probably not possible and we don't care about anyway, or
+        # MISSING -> (True|False)
+
+        # A very cheap sanity check
+        ours = len(self._unassigned_pkg_ids)
+        theirs = len(assignments) - assignments.num_assigned
+        assert ours == theirs, "We failed to track variable assignments"
+
+
+InstalledFirstPolicy = UndeterminedClausePolicy
