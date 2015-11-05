@@ -1,5 +1,6 @@
 import collections
 
+from egginst.errors import NoPackageFound
 from enstaller.solver import JobType
 
 from simplesat.sat.policy import InstalledFirstPolicy
@@ -52,6 +53,8 @@ class DependencySolver(object):
             pool.package_id(package)
             for package in pool.what_provides(requirement)
         ]
+        if len(requirement_ids) == 0:
+            raise NoPackageFound(str(requirement), requirement)
         self._policy.add_packages_by_id(requirement_ids)
 
         # Add installed packages.

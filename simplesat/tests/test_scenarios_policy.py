@@ -2,6 +2,7 @@ import os.path
 
 from unittest import TestCase, expectedFailure
 
+from egginst.errors import NoPackageFound
 from enstaller.new_solver import Pool
 
 from simplesat.dependency_solver import DependencySolver
@@ -61,6 +62,13 @@ class TestNoInstallSet(TestCase, ScenarioTestAssistant):
 
     def test_iris(self):
         self._check_solution("iris.yaml")
+
+    def test_no_candidate(self):
+        self.assertRaises(
+            NoPackageFound,
+            self._check_solution,
+            "no_candidate.yaml",
+        )
 
 
 class TestInstallSet(TestCase, ScenarioTestAssistant):
