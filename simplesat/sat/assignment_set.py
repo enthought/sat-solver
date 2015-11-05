@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
 
 import six
-
-from collections import OrderedDict
 
 
 class _MISSING(object):
