@@ -33,13 +33,14 @@ class DefaultPolicy(IPolicy):
 
 
 class InstalledFirstPolicy(IPolicy):
+
     def __init__(self, pool, installed_repository):
         self._pool = pool
-        self._decision_set = set()
         self._installed_map = set(
             pool.package_id(package) for package in
             installed_repository.iter_packages()
         )
+        self._decision_set = self._installed_map.copy()
 
     def add_packages_by_id(self, package_ids):
         # TODO Just make this add_requirement.
