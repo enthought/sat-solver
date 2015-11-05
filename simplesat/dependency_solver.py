@@ -1,6 +1,7 @@
 import collections
 
 from enstaller.solver import JobType
+from enstaller.new_solver import Requirement
 
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
@@ -94,7 +95,10 @@ def _connected_packages(solution, requirement_ids, pool):
         """ Given a pkg id, return the pkg ids of the dependencies that
         appeared in our solution. """
         dep_strings = pool._id_to_package[pkg_id].dependencies
-        pkg_keys = (d.split()[0] for d in dep_strings)
+        pkg_keys = (
+            Requirement.from_legacy_requirement_string(d).name
+            for d in dep_strings
+        )
         neighbors = set(package_string_to_id[key] for key in pkg_keys)
         return neighbors
 
