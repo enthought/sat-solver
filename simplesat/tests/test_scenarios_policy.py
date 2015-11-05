@@ -64,11 +64,8 @@ class TestNoInstallSet(TestCase, ScenarioTestAssistant):
         self._check_solution("iris.yaml")
 
     def test_no_candidate(self):
-        self.assertRaises(
-            NoPackageFound,
-            self._check_solution,
-            "no_candidate.yaml",
-        )
+        with self.assertRaises(NoPackageFound):
+            self._check_solution("no_candidate.yaml")
 
 
 class TestInstallSet(TestCase, ScenarioTestAssistant):
