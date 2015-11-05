@@ -274,4 +274,4 @@ class PriorityQueuePolicy(IPolicy):
         assert ours == theirs, "We failed to track variable assignments"
 
 
-InstalledFirstPolicy = partial(PolicyLogger, UndeterminedClausePolicy)
+InstalledFirstPolicy = partial(PolicyLogger, PriorityQueuePolicy)
