@@ -1,7 +1,5 @@
 import unittest
 
-from collections import OrderedDict
-
 import mock
 import six
 
@@ -393,7 +391,7 @@ class TestMiniSATSolver(unittest.TestCase):
 
         # Then
         self.assertEqual(s.decision_level, 3)
-        self.assertEqual(s.trail,  [1, 2, -3, 4, 5, 6])
+        self.assertEqual(s.trail, [1, 2, -3, 4, 5, 6])
         self.assertEqual(s.trail_lim, [0, 2, 4])
 
     def test_cancel_until(self):
