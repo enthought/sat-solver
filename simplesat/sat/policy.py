@@ -1,4 +1,6 @@
 import abc
+from collections import Counter
+from functools import partial
 
 import six
 
@@ -26,6 +28,40 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
         clauses : List of Clause
             The collection of Clause objects to satisfy.
         """
+
+
+class PolicyLogger(IPolicy):
+
+    def __init__(self, PolicyFactory, pool, installed_repository):
+        self._policy = PolicyFactory(pool, installed_repository)
+        self._log_installed = list(installed_repository.iter_packages())
+        self._log_suggestions = []
+        self._log_required = []
+        self._log_pool = pool
+        self._log_assignment_changes = []
+
+    def get_next_package_id(self, assignments, clauses):
+        self._log_assignment_changes.append(assignments.get_changelog())
+        pkg_id = self._policy.get_next_package_id(assignments, clauses)
+        self._log_suggestions.append(pkg_id)
+        return pkg_id
+
+    def add_requirements(self, package_ids):
+        self._log_required.extend(package_ids)
+        self._policy.add_requirements(package_ids)
+
+    def _log_histogram(self, pkg_ids):
+        c = Counter(pkg_ids)
+        lines = (
+            "{:>25} {}".format(self._log_pretty_pkg_id(k), v)
+            for k, v in sorted(c.items(), key=lambda p: p[1])
+        )
+        pretty = '\n'.join(lines)
+        return c, pretty
+
+    def _log_pretty_pkg_id(self, pkg_id):
+        p = self._log_pool._id_to_package[pkg_id]
+        return '{} {}'.format(p.name, p.version)
 
 
 class DefaultPolicy(IPolicy):
@@ -238,4 +274,4 @@ class PriorityQueuePolicy(IPolicy):
         assert ours == theirs, "We failed to track variable assignments"
 
 
-InstalledFirstPolicy = UndeterminedClausePolicy
+InstalledFirstPolicy = partial(PolicyLogger, UndeterminedClausePolicy)
