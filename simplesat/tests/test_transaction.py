@@ -48,3 +48,10 @@ class TestTransaction(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.t.update(None, None)
+
+    def test_construct_failure(self):
+        reason = "Fail"
+        failure = Transaction.failure(reason)
+        self.assertIsInstance(failure.operations[0], FailureOperation)
+        self.assertEqual(failure.operations[0].reason, reason)
+        self.assertTrue(failure.failed)

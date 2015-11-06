@@ -29,6 +29,15 @@ class FailureOperation(Operation):
 
 
 class Transaction(object):
+
+    @classmethod
+    def failure(self, reason, pool=None, decisions=None, installed_map=None):
+        decisions = [] if decisions is None else decisions
+        installed_map = set() if installed_map is None else installed_map
+        transaction = Transaction(pool, decisions, installed_map)
+        transaction.fail(reason)
+        return transaction
+
     def __init__(self, pool, decisions, installed_map):
         self.operations = []
 
