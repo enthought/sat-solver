@@ -43,7 +43,7 @@ class DependencySolver(object):
             if self.use_pruning:
                 packages_to_install = _connected_packages(
                     solution_ids, requirement_ids, self._pool)
-                relevant_packages = packages_to_install | installed_map
+                relevant_packages = packages_to_install.union(installed_map)
                 solution_ids = [
                     i for i in solution_ids if i in relevant_packages
                 ]
