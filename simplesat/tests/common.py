@@ -109,8 +109,8 @@ class Scenario(object):
             if operation["kind"] == "install":
                 operations.append(InstallOperation(operation["package"]))
             elif operation["kind"] == "update":
-                operations.append(UpdateOperation(operation["from"],
-                                                  operation["to"]))
+                operations.append(UpdateOperation(operation["to"],
+                                                  operation["from"]))
             elif operation["kind"] == "remove":
                 operations.append(RemoveOperation(operation["package"]))
             else:
