@@ -79,36 +79,50 @@ class DependencySolver(object):
 
 
 def _connected_packages(solution, pkg_ids, pool):
-    """ Return packages in `solution` which are associated with `pkg_ids`. """
+    """ Return all packages in solution that might be installed,
+    removed, or updated due to a change in any of the packages in `pkg_ids`.
+    """
 
     # Our strategy is as follows:
-    # ... -> pkg.dependencies -> pkg strings -> ids -> _id_to_package -> ...
+    # .. -> pkg deps + conflicts -> pkg strings -> ids -> _id_to_package -> ..
 
-    # We only need to identify packages which will be installed
-    sol_set = set(s for s in solution if s > 0)
-
-    # This dict can recover ids from the strings produced by pkg.dependencies
-    package_string_to_id = {}
-    for pkg_id in sol_set:
-        pkg = pool._id_to_package[pkg_id]
+    pkg_name_to_ids = collections.defaultdict(set)
+    # Signed literals as in `solution`, e.g. {'numpy': {-4, 5, 7, 22}}
+    for pkg_id in solution:
+        pkg = pool._id_to_package[abs(pkg_id)]
         pkg_key = pkg.name
-        package_string_to_id[pkg_key] = pkg_id
+        pkg_name_to_ids[pkg_key].add(pkg_id)
 
     def neighborfunc(pkg_id):
         """ Given a pkg id, return the pkg ids of the dependencies that
         appeared in our solution. """
-        dep_strings = pool._id_to_package[pkg_id].dependencies
-        pkg_keys = (
+
+        # Only installed packages can pull in other packages
+        if pkg_id < 0:
+            return set()
+
+        pkg = pool._id_to_package[pkg_id]
+
+        dep_pkg_strings = pkg.dependencies
+        dep_pkg_names = (
             Requirement.from_legacy_requirement_string(d).name
-            for d in dep_strings
+            for d in dep_pkg_strings
         )
-        neighbors = set(package_string_to_id[key] for key in pkg_keys)
+        neighbors = pkg_name_to_ids[pkg.name].copy()
+        neighbors.update(
+            neighbor
+            for name in dep_pkg_names
+            for neighbor in pkg_name_to_ids[name]
+        )
+        neighbors.remove(pkg_id)
         return neighbors
 
     # Each package can root its own independent graph, so we must start at
     # each one individually
     connected = set()
-    for pkg_id in pkg_ids:
+    for pkg_id in set(pkg_ids).intersection(solution):
+        if pkg_id < 0:
+            continue
         # We pass in `connected` to avoid re-walking a graph we've seen before
         connected.update(_connected_nodes(pkg_id, neighborfunc, connected))
 
