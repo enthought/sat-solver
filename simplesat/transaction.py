@@ -42,7 +42,7 @@ class Transaction(object):
                                                    operation.package)
                 )
             elif isinstance(operation, RemoveOperation):
-                lines.append("Removing {}".format(operation.package))
+                lines.append("Removing\n\t{}".format(operation.package))
             else:
                 msg = "Unknown operation: {!r}".format(operation)
                 raise ValueError(msg)
