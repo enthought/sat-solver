@@ -35,15 +35,18 @@ class DependencySolver(object):
         else:
             solution_ids = _solution_to_ids(solution)
 
-            if self.use_pruning:
-                connected = _connected_packages(
-                    solution_ids, requirement_ids, self._pool)
-                solution_ids = [i for i in solution_ids if i in connected]
-
             installed_map = set(
                 self._pool.package_id(p)
                 for p in self._installed_repository.iter_packages()
             )
+
+            if self.use_pruning:
+                packages_to_install = _connected_packages(
+                    solution_ids, requirement_ids, self._pool)
+                relevant_packages = packages_to_install | installed_map
+                solution_ids = [
+                    i for i in solution_ids if i in relevant_packages
+                ]
 
             return Transaction(self._pool, solution_ids, installed_map)
 
