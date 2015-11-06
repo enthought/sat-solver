@@ -14,8 +14,8 @@ from enstaller.utils import PY_VER
 from enstaller.versions.enpkg import EnpkgVersion
 
 from simplesat.rules_generator import RulesGenerator
-from simplesat.transaction import (InstallOperation, RemoveOperation,
-    UpdateOperation
+from simplesat.transaction import (
+    FailureOperation, InstallOperation, RemoveOperation, UpdateOperation
 )
 
 
@@ -113,6 +113,8 @@ class Scenario(object):
                                                   operation["to"]))
             elif operation["kind"] == "remove":
                 operations.append(RemoveOperation(operation["package"]))
+            elif operation["kind"] == "fail":
+                operations.append(FailureOperation(operation['reason']))
             else:
                 msg = "invalid operation kind {!r}".format(operation["kind"])
                 raise ValueError(msg)

@@ -22,6 +22,12 @@ class RemoveOperation(Operation):
     pass
 
 
+class FailureOperation(Operation):
+    def __init__(self, reason):
+        super(FailureOperation, self).__init__(None)
+        self.reason = reason
+
+
 class Transaction(object):
     def __init__(self, pool, decisions, installed_map):
         self.operations = []
@@ -43,6 +49,8 @@ class Transaction(object):
                 )
             elif isinstance(operation, RemoveOperation):
                 lines.append("Removing {}".format(operation.package))
+            elif isinstance(operation, FailureOperation):
+                lines.append("Failure: {}".format(operation.reason))
             else:
                 msg = "Unknown operation: {!r}".format(operation)
                 raise ValueError(msg)
@@ -89,13 +97,32 @@ class Transaction(object):
                                                    update_map, remove_map)
 
     def install(self, package):
+        self._check_failed()
         self.operations.append(InstallOperation(package))
 
     def remove(self, package):
+        self._check_failed()
         self.operations.append(RemoveOperation(package))
 
     def update(self, from_package, to_package):
+        self._check_failed()
         self.operations.append(UpdateOperation(to_package, from_package))
+
+    def fail(self, reason):
+        if self.operations:
+            msg = "Failure not permitted after other operations"
+            raise ValueError(msg)
+        self.operations.append(FailureOperation(reason))
+
+    @property
+    def failed(self):
+        ops = self.operations
+        return len(ops) > 0 and isinstance(ops[0], FailureOperation)
+
+    def _check_failed(self):
+        if self.failed:
+            msg = "Operations not permitted after failure"
+            raise ValueError(msg)
 
     def _find_updates(self, pool, package):
         requirement = Requirement._from_string(package.name)
