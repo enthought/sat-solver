@@ -45,7 +45,7 @@ class DependencySolver(object):
                     solution_ids, requirement_ids, self._pool)
                 relevant_packages = packages_to_install.union(installed_map)
                 solution_ids = [
-                    i for i in solution_ids if i in relevant_packages
+                    i for i in solution_ids if abs(i) in relevant_packages
                 ]
 
             return Transaction(self._pool, solution_ids, installed_map)
