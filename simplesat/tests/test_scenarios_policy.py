@@ -29,6 +29,11 @@ class ScenarioTestAssistant(object):
         )
         transaction = solver.solve(request)
 
+        if transaction is None:
+            if len(scenario.operations) > 0:
+                self.fail("No solution found for scenario")
+            return
+
         # Then
         self.assertEqualOperations(transaction.operations,
                                    scenario.operations)
