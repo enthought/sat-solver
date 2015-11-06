@@ -8,9 +8,9 @@ from collections import defaultdict, deque, OrderedDict
 
 from six.moves import range
 
+from .assignment_set import AssignmentSet
 from .clause import Clause
 from .policy import DefaultPolicy
-from .utils import value
 
 
 class MiniSATSolver(object):
@@ -41,7 +41,7 @@ class MiniSATSolver(object):
         self.clauses = []
         self.watches = defaultdict(list)
 
-        self.assignments = OrderedDict()
+        self.assignments = AssignmentSet()
 
         # A list of literals which become successively true (because of direct
         # assignment, or by unit propagation).
@@ -64,7 +64,6 @@ class MiniSATSolver(object):
         # Whether the system is satisfiable.
         self.status = None
 
-        #
         self._policy = policy or DefaultPolicy()
 
     def add_clause(self, clause):
@@ -116,7 +115,7 @@ class MiniSATSolver(object):
                 if unit is not None:
                     # TODO Refactor this to take into account the return value
                     # of enqueue().
-                    if value(unit, self.assignments) is False:
+                    if self.assignments.value(unit) is False:
                         # Conflict. Clear the queue and re-insert the remaining
                         # unwatched clauses into the watch list.
                         self.prop_queue.clear()
@@ -130,7 +129,7 @@ class MiniSATSolver(object):
     def enqueue(self, lit, cause=None):
         """ Enqueue a new true literal.
         """
-        status = value(lit, self.assignments)
+        status = self.assignments.value(lit)
         if status is not None:
             # Known fact. Don't enqueue, but return whether this fact
             # contradicts the earlier assignment.
@@ -176,7 +175,7 @@ class MiniSATSolver(object):
     def validate(self, solution_map):
         """Check whether a given set of assignments solves this SAT problem.
         """
-        solution_literals = {(+1 if status else -1) * variable
+        solution_literals = {variable if status else -variable
                              for variable, status in solution_map.items()}
         for clause in self.clauses:
             if len(set(clause.lits) & solution_literals) == 0:
@@ -285,8 +284,7 @@ class MiniSATSolver(object):
     def number_assigned(self):
         """ Return the number of currently assigned variables.
         """
-        return len([value for value in self.assignments.values()
-                    if value is not None])
+        return self.assignments.num_assigned
 
     @property
     def number_variables(self):
