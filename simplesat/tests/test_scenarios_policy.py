@@ -103,3 +103,9 @@ class TestInstallSet(TestCase, ScenarioTestAssistant):
 
     def test_ipython(self):
         self._check_solution("ipython_with_installed.yaml")
+
+    def test_blocked_upgrade(self):
+        self._check_solution("simple_numpy_installed_blocking.yaml")
+
+    def test_blocked_downgrade(self):
+        self._check_solution("simple_numpy_installed_blocking_downgrade.yaml")
