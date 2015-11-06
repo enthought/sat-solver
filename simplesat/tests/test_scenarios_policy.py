@@ -7,6 +7,7 @@ from enstaller.new_solver import Pool
 
 from simplesat.dependency_solver import DependencySolver
 from .common import Scenario
+from simplesat.transaction import FailureOperation
 
 
 class ScenarioTestAssistant(object):
@@ -29,20 +30,42 @@ class ScenarioTestAssistant(object):
         )
         transaction = solver.solve(request)
 
-        if transaction is None:
-            if len(scenario.operations) > 0:
-                self.fail("No solution found for scenario")
-            return
-
         # Then
-        self.assertEqualOperations(transaction.operations,
-                                   scenario.operations)
+        self.assertEqualFailures(transaction.operations, scenario.operations)
+        self.assertEqualOperations(transaction.operations, scenario.operations)
+
+    def assertEqualFailures(self, operations, scenario_operations):
+        solver_fail = (
+            len(operations) > 0 and
+            issubclass(type(operations[0]), FailureOperation)
+        )
+        scenario_fail = (
+            len(scenario_operations) > 0 and
+            issubclass(type(scenario_operations[0]), FailureOperation)
+        )
+
+        if solver_fail and scenario_fail:
+            # Expected failures are OK, we're done!
+            operations.pop(0)
+            scenario_operations.pop(0)
+            return
+        elif solver_fail and not scenario_fail:
+            msg = "Solver unexpectedly failed"
+            failed_op = operations[0]
+            if failed_op.reason:
+                msg += " because {}".format(failed_op.reason)
+            self.fail(msg)
+        elif scenario_fail and not solver_fail:
+            failed_op = scenario_operations[0]
+            msg = "Solver unexpectedly succeeded, but {}."
+            self.fail(msg.format(failed_op.reason))
 
     def assertEqualOperations(self, operations, scenario_operations):
         for i, (left, right) in enumerate(zip(operations, scenario_operations)):
             if not type(left) == type(right):
                 msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}"
                 self.fail(msg.format(i, type(left), type(right)))
+
             left_s = "{0} {1}".format(left.package.name,
                                       left.package.version)
             right_s = right.package

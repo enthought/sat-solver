@@ -31,7 +31,7 @@ class DependencySolver(object):
         solution = sat_solver.search()
 
         if solution is False:
-            return None
+            return Transaction.failure("No solution found")
         else:
             solution_ids = _solution_to_ids(solution)
 
