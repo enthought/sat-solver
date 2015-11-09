@@ -5,9 +5,9 @@ from unittest import TestCase, expectedFailure
 from egginst.errors import NoPackageFound
 from enstaller.new_solver import Pool
 
+from simplesat.sat import SatisifiabilityError
 from simplesat.dependency_solver import DependencySolver
 from .common import Scenario
-from simplesat.transaction import FailureOperation
 
 
 class ScenarioTestAssistant(object):
@@ -28,37 +28,22 @@ class ScenarioTestAssistant(object):
         solver = DependencySolver(
             pool, scenario.remote_repositories, scenario.installed_repository
         )
-        transaction = solver.solve(request)
 
         # Then
-        self.assertEqualFailures(transaction.operations, scenario.operations)
-        self.assertEqualOperations(transaction.operations, scenario.operations)
-
-    def assertEqualFailures(self, operations, scenario_operations):
-        solver_fail = (
-            len(operations) > 0 and
-            issubclass(type(operations[0]), FailureOperation)
-        )
-        scenario_fail = (
-            len(scenario_operations) > 0 and
-            issubclass(type(scenario_operations[0]), FailureOperation)
-        )
-
-        if solver_fail and scenario_fail:
-            # Expected failures are OK, we're done!
-            operations.pop(0)
-            scenario_operations.pop(0)
-            return
-        elif solver_fail and not scenario_fail:
-            msg = "Solver unexpectedly failed"
-            failed_op = operations[0]
-            if failed_op.reason:
-                msg += " because {}".format(failed_op.reason)
-            self.fail(msg)
-        elif scenario_fail and not solver_fail:
-            failed_op = scenario_operations[0]
-            msg = "Solver unexpectedly succeeded, but {}."
-            self.fail(msg.format(failed_op.reason))
+        try:
+            transaction = solver.solve(request)
+        except SatisifiabilityError as failure:
+            if not scenario.failed:
+                msg = "Solver unexpectedly failed"
+                if failure.reason:
+                    msg += " because {}".format(failure.reason)
+                self.fail(msg)
+        else:
+            if scenario.failed:
+                msg = "Solver unexpectedly succeeded, but {}."
+                self.fail(msg.format(scenario.failure))
+            self.assertEqualOperations(transaction.operations,
+                                       scenario.operations)
 
     def assertEqualOperations(self, operations, scenario_operations):
         for i, (left, right) in enumerate(zip(operations, scenario_operations)):

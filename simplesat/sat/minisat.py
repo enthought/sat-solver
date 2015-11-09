@@ -8,9 +8,16 @@ from collections import defaultdict, deque, OrderedDict
 
 from six.moves import range
 
+from egginst.errors import SolverException
 from .assignment_set import AssignmentSet
 from .clause import Clause
 from .policy import DefaultPolicy
+
+
+class SatisifiabilityError(SolverException):
+    def __init__(self, reason):
+        super(SatisifiabilityError, self).__init__(None)
+        self.reason = reason
 
 
 class MiniSATSolver(object):
@@ -166,7 +173,7 @@ class MiniSATSolver(object):
             else:
                 # Conflict!
                 if root_level == self.decision_level:
-                    return False
+                    raise SatisifiabilityError("unknown conflict")
 
                 learned_clause, bt_level = self.analyze(conflict)
                 self.cancel_until(max(bt_level, root_level))

@@ -15,6 +15,5 @@ installed:
     - MKL 10.2-1
     - numpy 1.7.1-1
 
-transaction:
-    - kind: "fail"
-      reason: "EPD_free 7.3-1 conflicts with numpy > 1.8"
+failure:
+    - "EPD_free 7.3-1 conflicts with numpy > 1.8"

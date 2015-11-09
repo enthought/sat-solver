@@ -15,7 +15,7 @@ from enstaller.versions.enpkg import EnpkgVersion
 
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import (
-    FailureOperation, InstallOperation, RemoveOperation, UpdateOperation
+    InstallOperation, RemoveOperation, UpdateOperation
 )
 
 
@@ -113,24 +113,29 @@ class Scenario(object):
                                                   operation["to"]))
             elif operation["kind"] == "remove":
                 operations.append(RemoveOperation(operation["package"]))
-            elif operation["kind"] == "fail":
-                operations.append(FailureOperation(operation['reason']))
             else:
                 msg = "invalid operation kind {!r}".format(operation["kind"])
                 raise ValueError(msg)
 
+        failure = data.get('failure')
+
         return cls(packages, [remote_repository(data, packages)],
                    installed_repository(data, packages), request,
-                   decisions, operations)
+                   decisions, operations, failure)
 
     def __init__(self, packages, remote_repositories, installed_repository,
-                 request, decisions, operations):
+                 request, decisions, operations, failure=None):
         self.packages = packages
         self.remote_repositories = remote_repositories
         self.installed_repository = installed_repository
         self.request = request
         self.decisions = decisions
         self.operations = operations
+        self.failure = failure
+
+    @property
+    def failed(self):
+        return self.failure is not None
 
     def print_solution(self, pool, positive_decisions):
         for package_id in sorted(positive_decisions):

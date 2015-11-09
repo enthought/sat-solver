@@ -23,29 +23,27 @@ class DependencySolver(object):
         )
 
     def solve(self, request):
-        """Given a request, computes the set of operations to apply to
-        resolve it, or None if no resolution could be found.
+        """Given a request, return a Transaction contianing the set of
+        operations to apply to resolve it, or raise SatisifiabilityError
+        if no resolution could be found.
         """
         requirement_ids, rules = self._create_rules(request)
         sat_solver = MiniSATSolver.from_rules(rules, self._policy)
         solution = sat_solver.search()
 
-        if solution is False:
-            return Transaction.failure("No solution found")
-        else:
-            solution_ids = _solution_to_ids(solution)
+        solution_ids = _solution_to_ids(solution)
 
-            if self.use_pruning:
-                connected = _connected_packages(
-                    solution_ids, requirement_ids, self._pool)
-                solution_ids = [i for i in solution_ids if i in connected]
+        if self.use_pruning:
+            connected = _connected_packages(
+                solution_ids, requirement_ids, self._pool)
+            solution_ids = [i for i in solution_ids if i in connected]
 
-            installed_map = set(
-                self._pool.package_id(p)
-                for p in self._installed_repository.iter_packages()
-            )
+        installed_map = set(
+            self._pool.package_id(p)
+            for p in self._installed_repository.iter_packages()
+        )
 
-            return Transaction(self._pool, solution_ids, installed_map)
+        return Transaction(self._pool, solution_ids, installed_map)
 
     def _create_rules(self, request):
         pool = self._pool
