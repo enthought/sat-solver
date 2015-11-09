@@ -177,10 +177,10 @@ class MiniSATSolver(object):
         """
         solution_literals = {variable if status else -variable
                              for variable, status in solution_map.items()}
-        for clause in self.clauses:
-            if len(set(clause.lits) & solution_literals) == 0:
-                return False
-        return True
+        # True if any clause has no assigned literals and thus is undetermined
+        has_unknown_clause = any(solution_literals.isdisjoint(clause.lits)
+                                 for clause in self.clauses)
+        return not has_unknown_clause
 
     def analyze(self, conflict):
         """ Produce a reason clause for a conflict.
