@@ -37,7 +37,7 @@ class DependencySolver(object):
 
         installed_map = set(
             self._pool.package_id(p)
-            for p in self._installed_repository.iter_packages()
+            for p in self._installed_repository
         )
 
         if self.use_pruning:
