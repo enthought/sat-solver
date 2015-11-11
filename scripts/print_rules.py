@@ -12,7 +12,7 @@ def print_rules(request, remote_repositories, installed_repository):
     pool.add_repository(installed_repository)
 
     solver = DependencySolver(pool, remote_repositories, installed_repository)
-    rules = solver._create_rules(request)
+    _, rules = solver._create_rules(request)
     for rule in rules:
         print(rule.to_string(pool))
 
