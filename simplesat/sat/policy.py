@@ -6,6 +6,12 @@ from enstaller.collections import DefaultOrderedDict
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
+
+    @abc.abstractmethod
+    def add_requirements(self, package_ids):
+        """ Submit packages to the policy for consideration.
+        """
+
     @abc.abstractmethod
     def get_next_package_id(self, assignments, clauses):
         """ Returns a undecided variable (i.e. integer > 0) for the given sets
@@ -22,6 +28,13 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
 
 class DefaultPolicy(IPolicy):
+
+    def __init__(self, *args):
+        pass
+
+    def add_requirements(self, assignments):
+        pass
+
     def get_next_package_id(self, assignments, _):
         # Given a dictionary of partial assignments, get an undecided variable
         # to be decided next.
@@ -42,8 +55,7 @@ class InstalledFirstPolicy(IPolicy):
         )
         self._decision_set = self._installed_map.copy()
 
-    def add_packages_by_id(self, package_ids):
-        # TODO Just make this add_requirement.
+    def add_requirements(self, package_ids):
         for package_id in package_ids:
             self._decision_set.add(package_id)
 
