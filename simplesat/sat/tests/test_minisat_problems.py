@@ -1,7 +1,7 @@
 import unittest
 
 from simplesat.examples.van_der_waerden import van_der_waerden
-from simplesat.sat import SatisifiabilityError
+from simplesat.errors import SatisfiabilityError
 from ..clause import Clause
 from ..minisat import MiniSATSolver
 
@@ -22,7 +22,7 @@ class TestMinisatProblems(unittest.TestCase):
         s._setup_assignments()
 
         # Then
-        with self.assertRaises(SatisifiabilityError):
+        with self.assertRaises(SatisfiabilityError):
             s.search()
 
     def test_no_assumptions(self):
@@ -106,5 +106,5 @@ class TestMinisatVanDerWaerden(unittest.TestCase):
         s._setup_assignments()
 
         # Then
-        with self.assertRaises(SatisifiabilityError):
+        with self.assertRaises(SatisfiabilityError):
             s.search()

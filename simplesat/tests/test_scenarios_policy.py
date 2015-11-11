@@ -5,7 +5,7 @@ from unittest import TestCase, expectedFailure
 from egginst.errors import NoPackageFound
 from enstaller.new_solver import Pool
 
-from simplesat.sat import SatisifiabilityError
+from simplesat.errors import SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
 from .common import Scenario
 
@@ -32,7 +32,7 @@ class ScenarioTestAssistant(object):
         # Then
         try:
             transaction = solver.solve(request)
-        except SatisifiabilityError as failure:
+        except SatisfiabilityError as failure:
             if not scenario.failed:
                 msg = "Solver unexpectedly failed"
                 if failure.reason:

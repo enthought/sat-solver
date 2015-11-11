@@ -1,4 +1,5 @@
-from .minisat import MiniSATSolver, SatisifiabilityError  # noqa
+from simplesat.errors import SatisfiabilityError  # noqa
+from .minisat import MiniSATSolver  # noqa
 
 
 def is_satisfiable(rules):
@@ -6,5 +7,5 @@ def is_satisfiable(rules):
     try:
         s.search()
         return True
-    except SatisifiabilityError:
+    except SatisfiabilityError:
         return False
