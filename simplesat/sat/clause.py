@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 from collections import OrderedDict
 
-from .utils import value
-
 
 class Constraint(object):
     pass
@@ -41,7 +39,7 @@ class Clause(Constraint):
         if lits[0] == -lit:
             lits[0], lits[1] = lits[1], -lit
 
-        if value(lits[0], assignments) is True:
+        if assignments.value(lits[0]) is True:
             # This clause has been satisfied, add it back to the watch list. No
             # unit information can be deduced.
             return None
@@ -49,7 +47,7 @@ class Clause(Constraint):
         # Look for another literal to watch, and switch it with lit[1] to keep
         # the assumption on the watched literals in place.
         for n, other in enumerate(lits[2:]):
-            if value(other, assignments) is not False:
+            if assignments.value(other) is not False:
                 # Found a new literal that could serve as a watch.
                 lits[1], lits[n + 2] = other, -lit
                 return None
