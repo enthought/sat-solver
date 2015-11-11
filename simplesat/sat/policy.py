@@ -97,7 +97,7 @@ class InstalledFirstPolicy(IPolicy):
 
         for clause in clauses:
             # TODO Need clause.undecided_literals property
-            if signed_assignments.intersection(clause.lits):
+            if not signed_assignments.isdisjoint(clause.lits):
                 # Clause is true
                 continue
 
