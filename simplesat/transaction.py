@@ -23,6 +23,7 @@ class RemoveOperation(Operation):
 
 
 class Transaction(object):
+
     def __init__(self, pool, decisions, installed_map):
         self.operations = []
 

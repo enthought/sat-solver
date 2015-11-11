@@ -5,6 +5,7 @@ from unittest import TestCase, expectedFailure
 from egginst.errors import NoPackageFound
 from enstaller.new_solver import Pool
 
+from simplesat.errors import SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
 from .common import Scenario
 
@@ -27,17 +28,29 @@ class ScenarioTestAssistant(object):
         solver = DependencySolver(
             pool, scenario.remote_repositories, scenario.installed_repository
         )
-        transaction = solver.solve(request)
 
         # Then
-        self.assertEqualOperations(transaction.operations,
-                                   scenario.operations)
+        try:
+            transaction = solver.solve(request)
+        except SatisfiabilityError as failure:
+            if not scenario.failed:
+                msg = "Solver unexpectedly failed"
+                if failure.reason:
+                    msg += " because {}".format(failure.reason)
+                self.fail(msg)
+        else:
+            if scenario.failed:
+                msg = "Solver unexpectedly succeeded, but {}."
+                self.fail(msg.format(scenario.failure))
+            self.assertEqualOperations(transaction.operations,
+                                       scenario.operations)
 
     def assertEqualOperations(self, operations, scenario_operations):
         for i, (left, right) in enumerate(zip(operations, scenario_operations)):
             if not type(left) == type(right):
                 msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}"
                 self.fail(msg.format(i, type(left), type(right)))
+
             left_s = "{0} {1}".format(left.package.name,
                                       left.package.version)
             right_s = right.package
@@ -75,3 +88,9 @@ class TestInstallSet(TestCase, ScenarioTestAssistant):
 
     def test_ipython(self):
         self._check_solution("ipython_with_installed.yaml")
+
+    def test_blocked_upgrade(self):
+        self._check_solution("simple_numpy_installed_blocking.yaml")
+
+    def test_blocked_downgrade(self):
+        self._check_solution("simple_numpy_installed_blocking_downgrade.yaml")

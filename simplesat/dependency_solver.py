@@ -23,15 +23,13 @@ class DependencySolver(object):
         )
 
     def solve(self, request):
-        """Given a request, computes the set of operations to apply to
-        resolve it, or None if no resolution could be found.
+        """Given a request, return a Transaction contianing the set of
+        operations to apply to resolve it, or raise SatisfiabilityError
+        if no resolution could be found.
         """
         requirement_ids, rules = self._create_rules(request)
         sat_solver = MiniSATSolver.from_rules(rules, self._policy)
         solution = sat_solver.search()
-
-        if solution is False:
-            return None
 
         solution_ids = _solution_to_ids(solution)
 
