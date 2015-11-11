@@ -32,23 +32,21 @@ class DependencySolver(object):
 
         if solution is False:
             return None
-        else:
-            solution_ids = _solution_to_ids(solution)
 
-            installed_map = set(
-                self._pool.package_id(p)
-                for p in self._installed_repository.iter_packages()
+        solution_ids = _solution_to_ids(solution)
+
+        installed_map = set(
+            self._pool.package_id(p)
+            for p in self._installed_repository.iter_packages()
+        )
+
+        if self.use_pruning:
+            root_ids = installed_map.union(requirement_ids)
+            solution_ids = _connected_packages(
+                solution_ids, root_ids, self._pool
             )
 
-            if self.use_pruning:
-                packages_to_install = _connected_packages(
-                    solution_ids, requirement_ids, self._pool)
-                relevant_packages = packages_to_install.union(installed_map)
-                solution_ids = [
-                    i for i in solution_ids if abs(i) in relevant_packages
-                ]
-
-            return Transaction(self._pool, solution_ids, installed_map)
+        return Transaction(self._pool, solution_ids, installed_map)
 
     def _create_rules(self, request):
         pool = self._pool
@@ -81,40 +79,50 @@ class DependencySolver(object):
         return requirement_ids, list(rules_generator.iter_rules())
 
 
-def _connected_packages(solution, pkg_ids, pool):
-    """ Return packages in `solution` which are associated with `pkg_ids`. """
+def _connected_packages(solution, root_ids, pool):
+    """ Return packages in `solution` which are associated with `root_ids`. """
 
     # Our strategy is as follows:
     # ... -> pkg.dependencies -> pkg strings -> ids -> _id_to_package -> ...
 
-    # We only need to identify packages which will be installed
-    sol_set = set(s for s in solution if s > 0)
+    def get_name(pkg_id):
+        return pool._id_to_package[abs(pkg_id)].name
 
-    # This dict can recover ids from the strings produced by pkg.dependencies
-    package_string_to_id = {}
-    for pkg_id in sol_set:
-        pkg = pool._id_to_package[pkg_id]
-        pkg_key = pkg.name
-        package_string_to_id[pkg_key] = pkg_id
+    root_names = {get_name(pkg_id) for pkg_id in root_ids}
+
+    solution_name_to_id = {
+        get_name(pkg_id): pkg_id for pkg_id in solution
+        if pkg_id > 0
+    }
+
+    solution_root_ids = set(
+        pkg_id for name, pkg_id in solution_name_to_id.items()
+        if name in root_names
+    )
 
     def neighborfunc(pkg_id):
-        """ Given a pkg id, return the pkg ids of the dependencies that
-        appeared in our solution. """
+        """ Given a pkg id, return the pkg ids of the immediate dependencies
+        that appeared in our solution. """
         dep_strings = pool._id_to_package[pkg_id].dependencies
-        pkg_keys = (
+        pkg_names = (
             Requirement.from_legacy_requirement_string(d).name
             for d in dep_strings
         )
-        neighbors = set(package_string_to_id[key] for key in pkg_keys)
+        neighbors = set(solution_name_to_id[name] for name in pkg_names)
         return neighbors
 
     # Each package can root its own independent graph, so we must start at
     # each one individually
-    connected = set()
-    for pkg_id in pkg_ids:
-        # We pass in `connected` to avoid re-walking a graph we've seen before
-        connected.update(_connected_nodes(pkg_id, neighborfunc, connected))
+    should_include = set()
+    for pkg_id in solution_root_ids:
+        # We pass in `should_keep` to avoid re-walking a subgraph
+        nodes = _connected_nodes(pkg_id, neighborfunc, should_include)
+        should_include.update(nodes)
+    assert should_include.issuperset(solution_root_ids)
 
+    # In addition to all updates and additions to root ids, we must also keep
+    # all packages newly *excluded* from root_ids
+    connected = should_include.union(s for s in solution if abs(s) in root_ids)
     return connected
 
 
