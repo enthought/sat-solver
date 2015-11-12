@@ -1,5 +1,4 @@
 import collections
-from timeit import default_timer
 
 from egginst.errors import NoPackageFound
 from enstaller.solver import JobType
@@ -9,6 +8,7 @@ from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import Transaction
+from simplesat.utils import timed_context
 
 
 class DependencySolver(object):
@@ -18,7 +18,7 @@ class DependencySolver(object):
         self._installed_repository = installed_repository
         self._remote_repositories = remote_repositories
         self.use_pruning = use_pruning
-        self._last_solve_time = float('nan')
+        self._last_solve_time = None
 
         self._policy = policy or InstalledFirstPolicy(
             pool, installed_repository
@@ -29,12 +29,10 @@ class DependencySolver(object):
         operations to apply to resolve it, or raise SatisfiabilityError
         if no resolution could be found.
         """
-        start = default_timer()
-        requirement_ids, rules = self._create_rules(request)
-        sat_solver = MiniSATSolver.from_rules(rules, self._policy)
-        solution = sat_solver.search()
-        self._last_solve_time = default_timer() - start
-
+        with timed_context("sat solver") as self._last_solve_time:
+            requirement_ids, rules = self._create_rules(request)
+            sat_solver = MiniSATSolver.from_rules(rules, self._policy)
+            solution = sat_solver.search()
         solution_ids = _solution_to_ids(solution)
 
         installed_map = set(
