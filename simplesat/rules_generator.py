@@ -315,9 +315,6 @@ class RulesGenerator(object):
         packages_all_versions = self._pool._packages_by_name[package.name]
         for other in packages_all_versions:
             self._add_package_rules(other)
-        rule = self._create_install_one_of_rule(
-            packages_all_versions, RuleType.package_installed)
-        self._add_rule(rule, "installed")
 
     def _add_job_rules(self):
         for job in self.request.jobs:

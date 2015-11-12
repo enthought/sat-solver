@@ -94,3 +94,6 @@ class TestInstallSet(TestCase, ScenarioTestAssistant):
 
     def test_blocked_downgrade(self):
         self._check_solution("simple_numpy_installed_blocking_downgrade.yaml")
+
+    def test_remove_no_reverse_dependencies(self):
+        self._check_solution("simple_numpy_removed.yaml")

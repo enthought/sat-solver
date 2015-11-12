@@ -11,4 +11,8 @@ installed:
 
 request:
     - operation: "remove"
-      requirement: "MKL"
+      requirement: "numpy"
+
+transaction:
+  - kind: "remove"
+    package: "numpy 1.6.1-1"
