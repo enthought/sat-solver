@@ -142,7 +142,5 @@ def _connected_nodes(node, neighborfunc, visited):
 
 def _solution_to_ids(solution):
     # Return solution as list of signed integers.
-    return sorted(
-        ((+1 if value else -1) * _id for _id, value in solution.items()),
-        key=lambda lit: abs(lit)
-    )
+    ids = (pkg_id if value else -pkg_id for pkg_id, value in solution.items())
+    return sorted(ids, key=lambda lit: abs(lit))
