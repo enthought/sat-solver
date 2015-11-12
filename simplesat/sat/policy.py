@@ -22,7 +22,7 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
         Parameters
         ----------
-        assignments : OrderedDict
+        assignments : AssignmentSet
             The current assignments of each literal. Keys are variables
             (integer > 0) and values are one of (True, False, None).
         clauses : List of Clause
