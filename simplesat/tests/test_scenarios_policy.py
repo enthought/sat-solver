@@ -89,7 +89,7 @@ class ScenarioTestAssistant(object):
             self.fail("Length of operations differ")
 
 
-class TestNoInstallSet(TestCase, ScenarioTestAssistant):
+class TestNoInstallSet(ScenarioTestAssistant, TestCase):
     @expectedFailure
     def test_crash(self):
         self._check_solution("crash.yaml")
@@ -108,7 +108,7 @@ class TestNoInstallSet(TestCase, ScenarioTestAssistant):
             self._check_solution("no_candidate.yaml")
 
 
-class TestInstallSet(TestCase, ScenarioTestAssistant):
+class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_simple_numpy(self):
         self._check_solution("simple_numpy_installed.yaml")
