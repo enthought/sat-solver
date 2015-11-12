@@ -24,11 +24,11 @@ def _pretty_operations(ops):
 
 def _pkg_delta(operations, scenario_operations):
     pkg_delta = {}
-    for p in scenario_operations:
-        name, version = _pretty_operations([p])
-        pkg_delta.setdefault(name, [None, None])[0] = version
     for p in operations:
-        name, version = _pretty_operations([p])
+        name, version = _pretty_operations([p])[0]
+        pkg_delta.setdefault(name, [None, None])[0] = version
+    for p in scenario_operations:
+        name, version = _pretty_operations([p])[0]
         pkg_delta.setdefault(name, [None, None])[1] = version
     for n, v in pkg_delta.items():
         if v[0] == v[1]:
