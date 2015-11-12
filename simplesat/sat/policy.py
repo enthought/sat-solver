@@ -5,7 +5,7 @@ from functools import partial
 import six
 
 from enstaller.collections import DefaultOrderedDict
-from .priority_queue import PriorityQueue
+from .priority_queue import PriorityQueue, GroupPrioritizer
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
@@ -200,49 +200,33 @@ class PriorityQueuePolicy(IPolicy):
     suggested.
     """
 
-    CURRENT = int(-2e7)
-    REQUIRED = int(-1e7)
+    def __init__(self, pool, installed_repository, prefer_installed=True):
+        def key_func(p):
+            return pool._id_to_package[p].version
 
-    def __init__(self, pool, installed_repository):
-        self._pool = pool
-        self._installed_pkg_ids = set(
-            pool.package_id(package) for package in
-            installed_repository.iter_packages()
-        )
-        self._seen_pkg_ids = set()
-        self._required_pkg_ids = set()
-        self._pkg_id_priority = {}
         self._unassigned_pkg_ids = PriorityQueue()
 
-    def _update_pkg_id_priority(self, assignments=None):
-        pkg_id_priority = {}
-        if assignments is not None:
-            self._seen_pkg_ids.update(assignments.keys())
+        self.DEFAULT = 0
+        if prefer_installed:
+            self.INSTALLED = -2
+            self.REQUIRED = -1
+        else:
+            self.INSTALLED = -1
+            self.REQUIRED = -2
 
-        ordered_pkg_ids = sorted(
-            self._seen_pkg_ids,
-            key=lambda p: self._pool._id_to_package[p].version,
-            reverse=True,
-        )
-
-        for priority, pkg_id in enumerate(ordered_pkg_ids):
-
-            # Determine the new priority of this pkg
-            if pkg_id in self._required_pkg_ids:
-                priority += self.REQUIRED
-            elif pkg_id in self._installed_pkg_ids:
-                priority += self.CURRENT
-
-            if pkg_id in self._unassigned_pkg_ids:
-                self._unassigned_pkg_ids.push(pkg_id, priority=priority)
-
-            pkg_id_priority[pkg_id] = priority
-        self._pkg_id_priority = pkg_id_priority
+        self._prioritizer = GroupPrioritizer(key_func)
+        installed_ids = list(map(pool.package_id, installed_repository))
+        self._prioritizer.update(installed_ids, self.INSTALLED)
 
     def add_requirements(self, package_ids):
-        self._required_pkg_ids.update(package_ids)
-        self._seen_pkg_ids.update(package_ids)
-        self._update_pkg_id_priority()
+        self._add_packages(package_ids, self.REQUIRED)
+
+    def _add_packages(self, package_ids, group):
+        prioritizer = self._prioritizer
+        prioritizer.update(package_ids, group=group)
+        for pkg_id in prioritizer.group(group):
+            if pkg_id in self._unassigned_pkg_ids:
+                self._unassigned_pkg_ids.push(pkg_id, prioritizer[pkg_id])
 
     def get_next_package_id(self, assignments, clauses):
         self._update_cache_from_assignments(assignments)
@@ -253,17 +237,22 @@ class PriorityQueuePolicy(IPolicy):
     def _update_cache_from_assignments(self, assignments):
         changelog = assignments.consume_changelog()
 
-        if not self._seen_pkg_ids.issuperset(changelog):
-            self._update_pkg_id_priority(assignments)
+        pkg_ids = set(changelog.keys())
+        unknown_ids = pkg_ids.difference(self._prioritizer.known)
+        if unknown_ids:
+            # We only want to update priorities, we'll decide who is unassigned
+            # and who isn't later
+            self._prioritizer.update(unknown_ids, group=self.DEFAULT)
 
         for key, (old, new) in six.iteritems(changelog):
             if new is None:
                 # Newly unassigned
-                priority = self._pkg_id_priority[key]
+                priority = self._prioritizer[key]
                 self._unassigned_pkg_ids.push(key, priority=priority)
             elif old is None:
                 # No longer unassigned (because new is not None)
                 self._unassigned_pkg_ids.remove(key)
+
         # The remaining case is either True -> False or False -> True, which is
         # probably not possible and we don't care about anyway, or
         # MISSING -> (True|False)
