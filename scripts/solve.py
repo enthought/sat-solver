@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import argparse
 import sys
 
@@ -16,6 +18,7 @@ def solve_and_print(request, remote_repositories, installed_repository,
         pool, remote_repositories, installed_repository, use_pruning=prune)
     transaction = solver.solve(request)
     print(transaction)
+    print("Solve time:", solver._last_solve_time, file=sys.stderr)
 
 
 def main(argv=None):

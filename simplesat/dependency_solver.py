@@ -1,4 +1,5 @@
 import collections
+from timeit import default_timer
 
 from egginst.errors import NoPackageFound
 from enstaller.solver import JobType
@@ -17,6 +18,7 @@ class DependencySolver(object):
         self._installed_repository = installed_repository
         self._remote_repositories = remote_repositories
         self.use_pruning = use_pruning
+        self._last_solve_time = float('nan')
 
         self._policy = policy or InstalledFirstPolicy(
             pool, installed_repository
@@ -27,9 +29,11 @@ class DependencySolver(object):
         operations to apply to resolve it, or raise SatisfiabilityError
         if no resolution could be found.
         """
+        start = default_timer()
         requirement_ids, rules = self._create_rules(request)
         sat_solver = MiniSATSolver.from_rules(rules, self._policy)
         solution = sat_solver.search()
+        self._last_solve_time = default_timer() - start
 
         solution_ids = _solution_to_ids(solution)
 
