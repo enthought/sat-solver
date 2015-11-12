@@ -90,9 +90,9 @@ class ScenarioTestAssistant(object):
 
 
 class TestNoInstallSet(ScenarioTestAssistant, TestCase):
-    @expectedFailure
+
     def test_crash(self):
-        self._check_solution("crash.yaml")
+        self._check_solution("directly_implied_solution.yaml")
 
     def test_simple_numpy(self):
         self._check_solution("simple_numpy.yaml")
