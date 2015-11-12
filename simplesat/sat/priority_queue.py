@@ -5,6 +5,8 @@ from functools import partial
 from heapq import heappush, heappop
 from itertools import count
 
+import six
+
 
 class _REMOVED_TASK(object):
     pass
@@ -100,3 +102,59 @@ class PriorityQueue(object):
         entry = [priority, task_id, task]
         self._entry_finder[task] = entry
         heappush(self._pq, entry)
+
+
+class GroupPrioritizer(object):
+
+    """ A helper for assigning hierarchical priorities to items
+    according to priority groups. """
+
+    def __init__(self, order_key_func=lambda x: x):
+        """
+        Parameters
+        ----------
+        `order_key_func` : callable
+            used to sort(reverse=True) items in each group.
+        """
+        self.key_func = order_key_func
+        self._priority_groups = {}
+        self._item_priority = {}
+        self.known = frozenset()
+        self.dirty = True
+
+    def __getitem__(self, item):
+        "Return the priority of an item."
+        if self.dirty:
+            self._prioritize()
+        return self._item_priority[item]
+
+    def items(self):
+        "Return an (item, priority) iterator for all items."
+        if self.dirty:
+            self._prioritize()
+        return six.iteritems(self._item_priority)
+
+    def update(self, items, group):
+        "Add `items` to the `group` and update all priority values."
+        self.known = self.known.union(items)
+        for g, pkg_set in self._priority_groups.items():
+            if g != group:
+                pkg_set.difference_update(items)
+        self._priority_groups.setdefault(group, set()).update(items)
+        self.dirty = True
+
+    def group(self, group):
+        "Return the set of items in `group`."
+        return self._priority_groups[group]
+
+    def _prioritize(self):
+        item_priority = {}
+
+        for group, items in six.iteritems(self._priority_groups):
+            ordered_items = sorted(items, key=self.key_func, reverse=True)
+            for rank, item in enumerate(ordered_items):
+                priority = (group, rank)
+                item_priority[item] = priority
+
+        self._item_priority = item_priority
+        self.dirty = False
