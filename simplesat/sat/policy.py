@@ -1,6 +1,5 @@
 import abc
 from collections import Counter
-from functools import partial
 
 import six
 
@@ -32,12 +31,10 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
 class PolicyLogger(IPolicy):
 
-    def __init__(self, PolicyFactory, pool, installed_repository):
-        self._policy = PolicyFactory(pool, installed_repository)
-        self._log_installed = list(installed_repository.iter_packages())
+    def __init__(self, policy):
+        self._policy = policy
         self._log_suggestions = []
         self._log_required = []
-        self._log_pool = pool
         self._log_assignment_changes = []
 
     def get_next_package_id(self, assignments, clauses):
@@ -59,15 +56,14 @@ class PolicyLogger(IPolicy):
         pretty = '\n'.join(lines)
         return c, pretty
 
-    def _log_pretty_pkg_id(self, pkg_id):
-        p = self._log_pool._id_to_package[pkg_id]
+    def _log_pretty_pkg_id(self, pkg_id, pool=None):
+        if pool is None:
+            pool = getattr(self._policy, 'pool', None)
+        p = pool._id_to_package[pkg_id]
         return '{} {}'.format(p.name, p.version)
 
 
 class DefaultPolicy(IPolicy):
-
-    def __init__(self, *args):
-        pass
 
     def add_requirements(self, assignments):
         pass
@@ -263,4 +259,8 @@ class PriorityQueuePolicy(IPolicy):
         assert ours == theirs, "We failed to track variable assignments"
 
 
-InstalledFirstPolicy = partial(PolicyLogger, PriorityQueuePolicy)
+def LoggedPriorityInstalledFirstPolicty(pool, installed_repository):
+    return PolicyLogger(PriorityQueuePolicy(pool, installed_repository))
+
+
+InstalledFirstPolicy = LoggedPriorityInstalledFirstPolicty
