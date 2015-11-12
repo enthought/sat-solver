@@ -51,7 +51,7 @@ class PolicyLogger(IPolicy):
         c = Counter(pkg_ids)
         lines = (
             "{:>25} {}".format(self._log_pretty_pkg_id(k), v)
-            for k, v in sorted(c.items(), key=lambda p: p[1])
+            for k, v in c.most_common()
         )
         pretty = '\n'.join(lines)
         return c, pretty
