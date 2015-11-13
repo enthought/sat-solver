@@ -1,3 +1,0 @@
-[submodule "dependencies/enstaller"]
-	path = dependencies/enstaller
-	url = https://github.com/enthought/enstaller
