@@ -1,13 +1,13 @@
 import collections
+import enum
 
 from enstaller.errors import EnstallerException
-from enstaller.vendor.enum import Enum
 
 from enstaller.new_solver.requirement import Requirement
 from enstaller.solver import JobType
 
 
-class RuleType(Enum):
+class RuleType(enum.Enum):
     internal_allow_update = 1
     job_install = 2
     job_remove = 3

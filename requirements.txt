@@ -1,1 +1,2 @@
 PyYAML
+git+ssh://git@github.com/enthought/enstaller_private@7506336dfaa0f44118d5ce5e17e2e998209abe82#egg=enstaller
