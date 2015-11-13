@@ -101,3 +101,6 @@ class TestInstallSet(TestCase, ScenarioTestAssistant):
 
     def test_remove_no_reverse_dependencies(self):
         self._check_solution("simple_numpy_removed.yaml")
+
+    def test_remove_reverse_dependencies(self):
+        self._check_solution("remove_reverse_dependencies.yaml")
