@@ -29,8 +29,7 @@ class InstalledFirstPolicy(IPolicy):
         self._pool = pool
         self._decision_set = set()
         self._installed_map = set(
-            pool.package_id(package) for package in
-            installed_repository.iter_packages()
+            pool.package_id(package) for package in installed_repository
         )
 
     def add_packages_by_id(self, package_ids):
