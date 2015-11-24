@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from collections import defaultdict
 from functools import partial
 from heapq import heappush, heappop
 from itertools import count
@@ -117,7 +118,7 @@ class GroupPrioritizer(object):
             used to sort(reverse=True) items in each group.
         """
         self.key_func = order_key_func
-        self._priority_groups = {}
+        self._priority_groups = defaultdict(set)
         self._item_priority = {}
         self.known = frozenset()
         self.dirty = True
@@ -140,11 +141,13 @@ class GroupPrioritizer(object):
         for g, pkg_set in self._priority_groups.items():
             if g != group:
                 pkg_set.difference_update(items)
-        self._priority_groups.setdefault(group, set()).update(items)
+        self._priority_groups[group].update(items)
         self.dirty = True
 
     def group(self, group):
         "Return the set of items in `group`."
+        if group not in self._priority_groups:
+            raise KeyError(repr(group))
         return self._priority_groups[group]
 
     def _prioritize(self):
