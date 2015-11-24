@@ -54,6 +54,9 @@ class AssignmentSet(object):
     def __len__(self):
         return len(self._data)
 
+    def __iter__(self):
+        return iter(self._data)
+
     def __contains__(self, key):
         return key in self._data
 
