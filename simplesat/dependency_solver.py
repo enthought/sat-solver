@@ -1,5 +1,7 @@
 import collections
 
+import six
+
 from egginst.errors import NoPackageFound
 from enstaller.solver import JobType
 from enstaller.new_solver import Requirement
@@ -96,7 +98,7 @@ def _connected_packages(solution, root_ids, pool):
     }
 
     solution_root_ids = set(
-        pkg_id for name, pkg_id in solution_name_to_id.items()
+        pkg_id for name, pkg_id in six.iteritems(solution_name_to_id)
         if name in root_names
     )
 
@@ -144,7 +146,6 @@ def _connected_nodes(node, neighborfunc, visited):
 
 def _solution_to_ids(solution):
     # Return solution as list of signed integers.
-    return sorted(
-        ((+1 if value else -1) * _id for _id, value in solution.items()),
-        key=lambda lit: abs(lit)
-    )
+    ids = (pkg_id if value else -pkg_id
+           for pkg_id, value in six.iteritems(solution))
+    return sorted(ids, key=lambda lit: abs(lit))
