@@ -1,6 +1,6 @@
 import os.path
 
-from unittest import TestCase
+from unittest import TestCase, expectedFailure
 
 from egginst.errors import NoPackageFound
 from enstaller.new_solver import Pool
@@ -128,16 +128,9 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     @expectedFailure
     def test_blocked_downgrade(self):
         self._check_solution("simple_numpy_installed_blocking_downgrade.yaml")
-<<<<<<< HEAD
-
-    def test_update_reverse_dependencies(self):
-        self._check_solution('update_reverse_dependencies.yaml')
-||||||| merged common ancestors
-=======
 
     def test_remove_no_reverse_dependencies(self):
         self._check_solution("simple_numpy_removed.yaml")
 
     def test_remove_reverse_dependencies(self):
         self._check_solution("remove_reverse_dependencies.yaml")
->>>>>>> origin/master
