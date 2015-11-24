@@ -92,8 +92,18 @@ class TestInstallSet(TestCase, ScenarioTestAssistant):
     def test_ipython(self):
         self._check_solution("ipython_with_installed.yaml")
 
+    # This is not actually blocked until we support pinning packages
+    @expectedFailure
     def test_blocked_upgrade(self):
         self._check_solution("simple_numpy_installed_blocking.yaml")
 
+    # This is not actually blocked until we support pinning packages
+    @expectedFailure
     def test_blocked_downgrade(self):
         self._check_solution("simple_numpy_installed_blocking_downgrade.yaml")
+
+    def test_remove_no_reverse_dependencies(self):
+        self._check_solution("simple_numpy_removed.yaml")
+
+    def test_remove_reverse_dependencies(self):
+        self._check_solution("remove_reverse_dependencies.yaml")
