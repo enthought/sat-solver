@@ -35,8 +35,8 @@ class PriorityQueue(object):
     def __bool__(self):
         return bool(len(self))
 
-    def __contains__(self, key):
-        return key in self._entry_finder
+    def __contains__(self, task):
+        return task in self._entry_finder
 
     def push(self, task, priority=0):
         "Add a new task or update the priority of an existing task"
@@ -138,9 +138,9 @@ class GroupPrioritizer(object):
     def update(self, items, group):
         "Add `items` to the `group` and update all priority values."
         self.known = self.known.union(items)
-        for g, pkg_set in self._priority_groups.items():
-            if g != group:
-                pkg_set.difference_update(items)
+        for _group, _items in self._priority_groups.items():
+            if _group != group:
+                _items.difference_update(items)
         self._priority_groups[group].update(items)
         self.dirty = True
 
