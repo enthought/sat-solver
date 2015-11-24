@@ -4,14 +4,14 @@ import os
 import yaml
 
 from enstaller import Repository
+from enstaller.new_solver import Pool, Requirement
 from enstaller.new_solver.package_parser import PrettyPackageStringParser
-from enstaller.new_solver.pool import Pool
-from enstaller.new_solver.requirement import Requirement
 from enstaller.package import RepositoryPackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo
 from enstaller.solver import Request
-from enstaller.utils import PY_VER
-from enstaller.versions.enpkg import EnpkgVersion
+
+from okonomiyaki.platforms import PythonImplementation
+from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import (
@@ -56,9 +56,10 @@ def parse_package_list(packages):
         'numpy 1.8.1-1; depends (MKL ~= 10.3)').
     """
     parser = PrettyPackageStringParser(EnpkgVersion.from_string)
+    python = PythonImplementation.from_running_python()
 
     for package_str in packages:
-        package = parser.parse_to_package(package_str, PY_VER)
+        package = parser.parse_to_package(package_str, python)
         full_name = "{0} {1}".format(package.name, package.full_version)
         yield full_name, package
 
