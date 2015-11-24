@@ -1,6 +1,6 @@
 import os.path
 
-from unittest import TestCase, expectedFailure
+from unittest import TestCase
 
 from egginst.errors import NoPackageFound
 from enstaller.new_solver import Pool
@@ -62,10 +62,10 @@ class ScenarioTestAssistant(object):
             self.fail("Length of operations differ")
 
 
-class TestNoInstallSet(TestCase, ScenarioTestAssistant):
-    @expectedFailure
-    def test_crash(self):
-        self._check_solution("crash.yaml")
+class TestNoInstallSet(ScenarioTestAssistant, TestCase):
+
+    def test_directly_implied_solution(self):
+        self._check_solution("directly_implied_solution.yaml")
 
     def test_simple_numpy(self):
         self._check_solution("simple_numpy.yaml")
