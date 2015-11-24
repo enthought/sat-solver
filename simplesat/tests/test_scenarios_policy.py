@@ -1,6 +1,6 @@
 import os.path
 
-from unittest import TestCase
+from unittest import TestCase, expectedFailure
 
 from egginst.errors import NoPackageFound
 from enstaller.new_solver import Pool
