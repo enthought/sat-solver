@@ -144,15 +144,12 @@ class UndeterminedClausePolicy(IPolicy):
     def _handle_empty_decision_set(self, assignments, clauses):
         # TODO inefficient and verbose
 
-        # The assignments with value None
         unassigned_ids = set(
             literal for literal, status in six.iteritems(assignments)
             if status is None
         )
-        # The rest (true and false)
         assigned_ids = set(assignments.keys()) - unassigned_ids
 
-        # Magnitude is literal, sign is Truthiness
         signed_assignments = set()
         for variable in assigned_ids:
             if assignments[variable]:
@@ -169,7 +166,6 @@ class UndeterminedClausePolicy(IPolicy):
             literals = clause.lits
             undecided = unassigned_ids.intersection(literals)
 
-            # The set of relevant literals still undecided
             self._decision_set.update(abs(lit) for lit in undecided)
 
         if len(self._decision_set) == 0:
