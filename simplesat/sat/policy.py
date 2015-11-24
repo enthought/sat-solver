@@ -41,6 +41,7 @@ class InstalledFirstPolicy(IPolicy):
         """Get the next unassigned package.
         """
 
+        self._decision_set.update(self._installed_map)
         decision_set = self._decision_set
         # Remove everything that is currently assigned
         if len(decision_set) > 0:
