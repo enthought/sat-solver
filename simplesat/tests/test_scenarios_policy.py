@@ -91,7 +91,7 @@ class ScenarioTestAssistant(object):
 
 class TestNoInstallSet(ScenarioTestAssistant, TestCase):
 
-    def test_crash(self):
+    def test_directly_implied_solution(self):
         self._check_solution("directly_implied_solution.yaml")
 
     def test_simple_numpy(self):
@@ -113,14 +113,31 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_simple_numpy(self):
         self._check_solution("simple_numpy_installed.yaml")
 
+    def test_numpy_downgrade(self):
+        self._check_solution("numpy_downgrade.yaml")
+
     def test_ipython(self):
         self._check_solution("ipython_with_installed.yaml")
 
+    # This is not actually blocked until we support pinning packages
+    @expectedFailure
     def test_blocked_upgrade(self):
         self._check_solution("simple_numpy_installed_blocking.yaml")
 
+    # This is not actually blocked until we support pinning packages
+    @expectedFailure
     def test_blocked_downgrade(self):
         self._check_solution("simple_numpy_installed_blocking_downgrade.yaml")
+<<<<<<< HEAD
 
     def test_update_reverse_dependencies(self):
         self._check_solution('update_reverse_dependencies.yaml')
+||||||| merged common ancestors
+=======
+
+    def test_remove_no_reverse_dependencies(self):
+        self._check_solution("simple_numpy_removed.yaml")
+
+    def test_remove_reverse_dependencies(self):
+        self._check_solution("remove_reverse_dependencies.yaml")
+>>>>>>> origin/master

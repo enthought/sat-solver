@@ -8,6 +8,7 @@ PACKAGES = [
     "simplesat.sat.tests",
     "simplesat.scripts",
     "simplesat.tests",
+    "simplesat.utils",
 ]
 
 PACKAGE_DATA = {

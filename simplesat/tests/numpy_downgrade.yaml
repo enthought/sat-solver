@@ -29,14 +29,18 @@ packages:
 
 request:
     - operation: "install"
-      requirement: "numpy < 1.9"
+      requirement: "numpy < 1.8"
 
 installed:
   - MKL 10.3-1
   - libgfortran 3.0.0-2
   - numpy 1.9.2-1
 
+decisions:
+  3: MKL 10.3-1
+  26: numpy 1.8.1-3
+
 transaction:
-    - kind: "dowgrade"
+    - kind: "update"
       from: "numpy 1.9.2-1"
-      to: "numpy 1.8.1-3"
+      to: "numpy 1.7.1-3"

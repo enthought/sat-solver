@@ -87,8 +87,7 @@ class UndeterminedClausePolicy(IPolicy):
     def __init__(self, pool, installed_repository):
         self._pool = pool
         self._installed_map = set(
-            pool.package_id(package) for package in
-            installed_repository.iter_packages()
+            pool.package_id(package) for package in installed_repository
         )
         self._decision_set = self._installed_map.copy()
 
@@ -101,6 +100,12 @@ class UndeterminedClausePolicy(IPolicy):
         """
 
         decision_set = self._decision_set
+        # Remove everything that is currently assigned
+        if len(decision_set) > 0:
+            decision_set.difference_update(
+                a for a, v in six.iteritems(assignments)
+                if v is not None
+            )
         if len(decision_set) == 0:
             decision_set, candidate_id = \
                 self._handle_empty_decision_set(assignments, clauses)
@@ -121,8 +126,6 @@ class UndeterminedClausePolicy(IPolicy):
         assert assignments[candidate_id] is None, \
             "Trying to assign to a variable which is already assigned."
 
-        # Clear out decision set.
-        self._decision_set = set()
         return candidate_id
 
     def _group_packages_by_name(self, decision_set):

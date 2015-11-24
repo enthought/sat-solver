@@ -1,5 +1,7 @@
 import collections
 
+import six
+
 from egginst.errors import NoPackageFound
 from enstaller.solver import JobType
 from enstaller.new_solver import Requirement
@@ -8,6 +10,7 @@ from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import Transaction
+from simplesat.utils import timed_context
 
 
 class DependencySolver(object):
@@ -17,6 +20,7 @@ class DependencySolver(object):
         self._installed_repository = installed_repository
         self._remote_repositories = remote_repositories
         self.use_pruning = use_pruning
+        self._last_solve_time = None
 
         self._policy = policy or InstalledFirstPolicy(
             pool, installed_repository
@@ -27,10 +31,10 @@ class DependencySolver(object):
         operations to apply to resolve it, or raise SatisfiabilityError
         if no resolution could be found.
         """
-        requirement_ids, rules = self._create_rules(request)
-        sat_solver = MiniSATSolver.from_rules(rules, self._policy)
-        solution = sat_solver.search()
-
+        with timed_context("sat solver") as self._last_solve_time:
+            requirement_ids, rules = self._create_rules(request)
+            sat_solver = MiniSATSolver.from_rules(rules, self._policy)
+            solution = sat_solver.search()
         solution_ids = _solution_to_ids(solution)
 
         installed_map = set(
@@ -89,7 +93,7 @@ def _connected_packages(solution, root_ids, pool):
     }
 
     solution_root_ids = set(
-        pkg_id for name, pkg_id in solution_name_to_id.items()
+        pkg_id for name, pkg_id in six.iteritems(solution_name_to_id)
         if name in root_names
     )
 
@@ -137,7 +141,6 @@ def _connected_nodes(node, neighborfunc, visited):
 
 def _solution_to_ids(solution):
     # Return solution as list of signed integers.
-    return sorted(
-        ((+1 if value else -1) * _id for _id, value in solution.items()),
-        key=lambda lit: abs(lit)
-    )
+    ids = (pkg_id if value else -pkg_id
+           for pkg_id, value in six.iteritems(solution))
+    return sorted(ids, key=lambda lit: abs(lit))
