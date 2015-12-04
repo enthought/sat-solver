@@ -54,18 +54,17 @@ class DependencySolver(object):
         pool = self._pool
         installed_repository = self._installed_repository
 
-        assert len(request.jobs) == 1
-        job = request.jobs[0]
-        assert job.kind in (JobType.install, JobType.remove)
-        requirement = job.requirement
+        for job in request.jobs:
+            assert job.kind in (JobType.install, JobType.remove)
+            requirement = job.requirement
 
-        requirement_ids = [
-            pool.package_id(package)
-            for package in pool.what_provides(requirement)
-        ]
-        if len(requirement_ids) == 0:
-            raise NoPackageFound(str(requirement), requirement)
-        self._policy.add_packages_by_id(requirement_ids)
+            requirement_ids = [
+                pool.package_id(package)
+                for package in pool.what_provides(requirement)
+            ]
+            if len(requirement_ids) == 0:
+                raise NoPackageFound(str(requirement), requirement)
+            self._policy.add_packages_by_id(requirement_ids)
 
         # Add installed packages.
         self._policy.add_packages_by_id(
