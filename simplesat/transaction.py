@@ -1,23 +1,26 @@
 from collections import OrderedDict
 
+from attr import attr, attributes
+
 from enstaller.new_solver import Requirement
 
 
+@attributes
 class Operation(object):
-    def __init__(self, package):
-        self.package = package
+    package = attr()
 
 
+@attributes
 class UpdateOperation(Operation):
-    def __init__(self, package, source):
-        super(UpdateOperation, self).__init__(package)
-        self.source = source
+    source = attr()
 
 
+@attributes
 class InstallOperation(Operation):
     pass
 
 
+@attributes
 class RemoveOperation(Operation):
     pass
 

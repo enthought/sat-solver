@@ -25,5 +25,5 @@ setup(
     description='Simple SAT solvers for use in Enstaller',
     packages=PACKAGES,
     package_data=PACKAGE_DATA,
-    install_requires=["six >= 1.9.0"],
+    install_requires=["attrs >= 15.1.0", "six >= 1.9.0"],
 )
