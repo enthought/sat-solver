@@ -34,7 +34,12 @@ class DefaultPolicy(IPolicy):
         return undecided[0]
 
 
-class InstalledFirstPolicy(IPolicy):
+class UndeterminedClausePolicy(IPolicy):
+
+    """ An IPolicy that gathers all undetermined packages from clauses whose
+    truth value is not yet known and suggests them in descending order by
+    package version number. """
+
     def __init__(self, pool, installed_repository):
         self._pool = pool
         self._decision_set = set()
@@ -127,3 +132,6 @@ class InstalledFirstPolicy(IPolicy):
             return self._decision_set, -min(unassigned_ids)
         else:
             return self._decision_set, None
+
+
+InstalledFirstPolicy = UndeterminedClausePolicy
