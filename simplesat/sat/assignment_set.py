@@ -7,7 +7,8 @@ import six
 
 
 class _MISSING(object):
-    pass
+    def __str__(self):
+        return '<MISSING>'
 MISSING = _MISSING()
 
 
