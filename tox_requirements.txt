@@ -1,2 +1,0 @@
--r dev_requirements.txt
-git+https://github.com/enthought/enstaller.git@3f6e99c72ec8a9423b388c6bf219b1f6d7c10b80#egg=enstaller

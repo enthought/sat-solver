@@ -8,11 +8,10 @@ python:
   - "pypy"
 
 install:
+  - pip install -U pip
+  - pip install -U setuptools
   - pip install -r dev_requirements.txt
   - pip install .
-  - pushd dependencies/enstaller
-  - pip install .
-  - popd
 
 script:
   - haas simplesat
