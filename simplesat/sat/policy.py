@@ -6,6 +6,12 @@ from enstaller.collections import DefaultOrderedDict
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
+
+    @abc.abstractmethod
+    def add_requirements(self, package_ids):
+        """ Submit packages to the policy for consideration.
+        """
+
     @abc.abstractmethod
     def get_next_package_id(self, assignments, clauses):
         """ Returns a undecided variable (i.e. integer > 0) for the given sets
@@ -14,6 +20,10 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
 
 class DefaultPolicy(IPolicy):
+
+    def add_requirements(self, assignments):
+        pass
+
     def get_next_package_id(self, assignments, _):
         # Given a dictionary of partial assignments, get an undecided variable
         # to be decided next.
@@ -28,20 +38,18 @@ class InstalledFirstPolicy(IPolicy):
     def __init__(self, pool, installed_repository):
         self._pool = pool
         self._decision_set = set()
-        self._installed_map = set(
+        self._installed_ids = set(
             pool.package_id(package) for package in installed_repository
         )
 
-    def add_packages_by_id(self, package_ids):
-        # TODO Just make this add_requirement.
-        for package_id in package_ids:
-            self._decision_set.add(package_id)
+    def add_requirements(self, package_ids):
+        self._decision_set.update(package_ids)
 
     def get_next_package_id(self, assignments, clauses):
         """Get the next unassigned package.
         """
 
-        self._decision_set.update(self._installed_map)
+        self._decision_set.update(self._installed_ids)
         decision_set = self._decision_set
         # Remove everything that is currently assigned
         if len(decision_set) > 0:
@@ -77,7 +85,7 @@ class InstalledFirstPolicy(IPolicy):
 
         for package_id in sorted(decision_set):
             package = self._pool._id_to_package[package_id]
-            if package_id in self._installed_map:
+            if package_id in self._installed_ids:
                 installed_packages.append(package)
             else:
                 new_package_map[package.name].append(package)

@@ -64,10 +64,10 @@ class DependencySolver(object):
             ]
             if len(requirement_ids) == 0:
                 raise NoPackageFound(str(requirement), requirement)
-            self._policy.add_packages_by_id(requirement_ids)
+            self._policy.add_requirements(requirement_ids)
 
         # Add installed packages.
-        self._policy.add_packages_by_id(
+        self._policy.add_requirements(
             [pool.package_id(package) for package in installed_repository]
         )
 
