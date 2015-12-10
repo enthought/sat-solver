@@ -1,7 +1,7 @@
 packages:
     - appinst 2.1.0-1
     - appinst 2.1.2-1
-    - AppInst 2.0.4-1
+    - appInst 2.0.4-1
     - appinst 2.1.1-1
     - tornado 4.0.2-1; depends (ssl_match_hostname ~= 3.4.0.2)
     - tornado 3.1.1-1

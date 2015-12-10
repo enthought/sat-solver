@@ -1,6 +1,7 @@
 import os.path
-
 from unittest import TestCase, expectedFailure
+
+import six
 
 from egginst.errors import NoPackageFound
 from enstaller.new_solver import Pool
@@ -8,6 +9,32 @@ from enstaller.new_solver import Pool
 from simplesat.errors import SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
 from .common import Scenario
+
+
+def _pretty_operations(ops):
+    ret = []
+    for p in ops:
+        try:
+            name = p.package.name
+            version = str(p.package.version)
+        except AttributeError:
+            name, version = p.package.split()
+        ret.append((name, version))
+    return ret
+
+
+def _pkg_delta(operations, scenario_operations):
+    pkg_delta = {}
+    for p in operations:
+        name, version = _pretty_operations([p])[0]
+        pkg_delta.setdefault(name, [None, None])[0] = version
+    for p in scenario_operations:
+        name, version = _pretty_operations([p])[0]
+        pkg_delta.setdefault(name, [None, None])[1] = version
+    for n, v in list(six.iteritems(pkg_delta)):
+        if v[0] == v[1]:
+            pkg_delta.pop(n)
+    return pkg_delta
 
 
 class ScenarioTestAssistant(object):
@@ -46,7 +73,8 @@ class ScenarioTestAssistant(object):
                                        scenario.operations)
 
     def assertEqualOperations(self, operations, scenario_operations):
-        for i, (left, right) in enumerate(zip(operations, scenario_operations)):
+        pairs = zip(operations, scenario_operations)
+        for i, (left, right) in enumerate(pairs):
             if not type(left) == type(right):
                 msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}"
                 self.fail(msg.format(i, type(left), type(right)))
@@ -81,7 +109,7 @@ class TestNoInstallSet(ScenarioTestAssistant, TestCase):
             self._check_solution("no_candidate.yaml")
 
 
-class TestInstallSet(TestCase, ScenarioTestAssistant):
+class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_simple_numpy(self):
         self._check_solution("simple_numpy_installed.yaml")
