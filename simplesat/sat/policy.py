@@ -124,11 +124,11 @@ class DefaultPolicy(IPolicy):
     def get_next_package_id(self, assignments, _):
         # Given a dictionary of partial assignments, get an undecided variable
         # to be decided next.
-        undecided = [
+        undecided = (
             package_id for package_id, status in six.iteritems(assignments)
             if status is None
-        ]
-        return undecided[0]
+        )
+        return next(undecided)
 
 
 class UndeterminedClausePolicy(IPolicy):
