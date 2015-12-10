@@ -6,6 +6,10 @@ import six
 from enstaller.collections import DefaultOrderedDict
 
 
+def _pkg_id_to_version(pool, package_id):
+    return pool._id_to_package[package_id].version
+
+
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
     @abc.abstractmethod
@@ -139,47 +143,52 @@ class UndeterminedClausePolicy(IPolicy):
 
     def __init__(self, pool, installed_repository):
         self._pool = pool
-        self._decision_set = set()
         self._installed_ids = set(
             pool.package_id(package) for package in installed_repository
         )
+        self._decision_set = self._installed_ids.copy()
+        self._requirements = set()
 
     def add_requirements(self, package_ids):
-        self._decision_set.update(package_ids)
+        self._requirements.update(package_ids)
 
     def get_next_package_id(self, assignments, clauses):
         """Get the next unassigned package.
         """
+        candidate_id = (
+            self._best_candidate(self._installed_ids, assignments) or
+            self._best_candidate(self._requirements, assignments) or
+            self._best_candidate(self._decision_set, assignments)
+        )
 
-        self._decision_set.update(self._installed_ids)
-        decision_set = self._decision_set
-        # Remove everything that is currently assigned
-        if len(decision_set) > 0:
-            decision_set.difference_update(
-                a for a, v in six.iteritems(assignments)
-                if v is not None
-            )
-        if len(decision_set) == 0:
-            decision_set, candidate_id = \
+        if candidate_id is None:
+            self._decision_set.clear()
+            candidate_id = \
                 self._handle_empty_decision_set(assignments, clauses)
-            if candidate_id is not None:
-                return candidate_id
-
-        installed_packages, new_package_map = \
-            self._group_packages_by_name(decision_set)
-        if len(installed_packages) > 0:
-            candidate = installed_packages[0]
-        else:
-            candidate_name = six.next(six.iterkeys(new_package_map))
-            candidates = new_package_map[candidate_name]
-            candidate = max(candidates, key=lambda package: package.version)
-
-        candidate_id = self._pool.package_id(candidate)
+            if candidate_id is None:
+                candidate_id = self._best_candidate(
+                    self._decision_set,
+                    assignments
+                )
 
         assert assignments[candidate_id] is None, \
             "Trying to assign to a variable which is already assigned."
 
         return candidate_id
+
+    def _without_assigned(self, package_ids, assignments):
+        return package_ids.difference(
+            pkg_id for pkg_id in package_ids.copy()
+            if assignments[pkg_id] is not None
+        )
+
+    def _best_candidate(self, package_ids, assignments):
+        by_version = six.functools.partial(_pkg_id_to_version, self._pool)
+        unassigned = self._without_assigned(package_ids, assignments)
+        try:
+            return max(unassigned, key=by_version)
+        except ValueError:
+            return None
 
     def _group_packages_by_name(self, decision_set):
         installed_packages = []
@@ -196,6 +205,7 @@ class UndeterminedClausePolicy(IPolicy):
 
     def _handle_empty_decision_set(self, assignments, clauses):
         # TODO inefficient and verbose
+
         unassigned_ids = set(
             literal for literal, status in six.iteritems(assignments)
             if status is None
@@ -215,10 +225,9 @@ class UndeterminedClausePolicy(IPolicy):
                 # Clause is true
                 continue
 
-            literals = clause.lits
-            undecided = unassigned_ids.intersection(literals)
-
-            self._decision_set.update(abs(lit) for lit in undecided)
+            variables = map(abs, clause.lits)
+            undecided = unassigned_ids.intersection(variables)
+            self._decision_set.update(lit for lit in undecided)
 
         if len(self._decision_set) == 0:
             # This will happen if the remaining packages are irrelevant for
@@ -226,9 +235,10 @@ class UndeterminedClausePolicy(IPolicy):
             # just return one of the undecided IDs.
 
             # We use min to ensure determinisism
-            return self._decision_set, -min(unassigned_ids)
+            return min(unassigned_ids)
         else:
-            return self._decision_set, None
+            return None
+
 
 def LoggedUndeterminedClausePolicy(pool, installed_repository):
     return PolicyLogger(UndeterminedClausePolicy(pool, installed_repository))
