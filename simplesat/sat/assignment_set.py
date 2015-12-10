@@ -23,15 +23,19 @@ class AssignmentSet(object):
         self._orig = {}
         self._cached_changelog = None
         self._assigned_literals = set()
+        self.has_new_keys = False
         for k, v in (assignments or {}).items():
             self[k] = v
 
     def __setitem__(self, key, value):
         assert key > 0
 
-        prev_value = self.get(key)
+        prev_value = self._data.get(key, MISSING)
 
-        if prev_value is not None:
+        if prev_value is MISSING:
+            self.has_new_keys = True
+            prev_value = None
+        elif prev_value is not None:
             self._assigned_literals.difference_update((key, -key))
 
         if value is not None:
@@ -54,6 +58,9 @@ class AssignmentSet(object):
 
     def __len__(self):
         return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
 
     def __contains__(self, key):
         return key in self._data
@@ -90,6 +97,7 @@ class AssignmentSet(object):
         old = self.get_changelog()
         self._orig = {}
         self._cached_changelog = {}
+        self.has_new_keys = False
         return old
 
     def copy(self):
@@ -97,6 +105,7 @@ class AssignmentSet(object):
         new._data = self._data.copy()
         new._orig = self._orig.copy()
         new._assigned_literals = self._assigned_literals.copy()
+        new.has_new_keys = self.has_new_keys
         return new
 
     def value(self, lit):
