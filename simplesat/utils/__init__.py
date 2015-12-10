@@ -3,3 +3,4 @@
 # flake8: noqa
 
 from .timed_context import timed_context
+from .graph import toposort
