@@ -16,7 +16,15 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def get_next_package_id(self, assignments, clauses):
         """ Returns a undecided variable (i.e. integer > 0) for the given sets
-        of assignements and clauses.
+        of assignments and clauses.
+
+        Parameters
+        ----------
+        assignments : AssignmentSet
+            The current assignments of each literal. Keys are variables
+            (integer > 0) and values are one of (True, False, None).
+        clauses : List of Clause
+            The collection of Clause objects to satisfy.
         """
 
 
