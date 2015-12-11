@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import abc
 from collections import Counter, defaultdict
-import sys
 
 import six
 
@@ -10,6 +9,9 @@ from enstaller.collections import DefaultOrderedDict
 from enstaller.new_solver.requirement import Requirement
 from simplesat.utils.graph import toposort
 from .priority_queue import PriorityQueue, GroupPrioritizer
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def _pkg_id_to_version(pool, package_id):
@@ -289,6 +291,7 @@ class PriorityQueuePolicy(IPolicy):
 
         packages_by_name = self._group_packages_by_name(package_ids)
 
+        removed_deps = []
         for package_id in package_ids:
             package = pool._id_to_package[package_id]
             deps = dependencies[package_id]
@@ -298,13 +301,14 @@ class PriorityQueuePolicy(IPolicy):
                 bad = [pool._id_to_package[p]
                        for p in transitive[dep].intersection(group)]
                 if bad:
-                    msg = "BAD: {}-{} -> {}-{} -> {}".format(
+                    msg = "Circular Deps: {}-{} -> {}-{} -> {}".format(
                         package.name, package.version,
                         depkg.name, depkg.version,
                         ["{}-{}".format(pkg.name, pkg.version) for pkg in bad]
                     )
-                    print(msg, file=sys.stderr)
+                    removed_deps.append(msg)
                     deps.remove(dep)
+        logger.info('\n'.join(removed_deps))
 
         for package_id in package_ids:
             package = pool._id_to_package[package_id]
