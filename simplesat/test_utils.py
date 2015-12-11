@@ -100,12 +100,18 @@ class Scenario(object):
         )
         operations = data.get("request", [])
 
+        marked = set(data.get("marked", []))
+
         request = Request()
 
         for operation in operations:
             kind = operation["operation"]
             requirement = Requirement._from_string(operation["requirement"])
+            marked.discard(requirement.name)
             getattr(request, kind)(requirement)
+
+        for package_str in marked:
+            request.install(Requirement._from_string(package_str))
 
         decisions = data.get("decisions", {})
 

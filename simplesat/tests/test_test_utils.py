@@ -121,3 +121,55 @@ class TestScenario(unittest.TestCase):
 
         jobs = scenario.request.jobs
         self.assertEqual(jobs, r_jobs)
+
+    def test_simple_marked(self):
+        # Given
+        yaml = StringIO(textwrap.dedent("""\
+        packages:
+            - MKL 10.3-1
+
+        remote:
+            - MKL 10.3-1
+
+        installed:
+            - MKL 10.3-1
+
+        marked:
+            - MKL
+        """))
+        r_jobs = [_Job(Requirement._from_string("MKL"), JobType.install)]
+
+        # When
+        scenario = Scenario.from_yaml(yaml)
+
+        # Then
+        jobs = scenario.request.jobs
+        self.assertEqual(jobs, r_jobs)
+
+    def test_modify_marked(self):
+        # Given
+        yaml = StringIO(textwrap.dedent("""\
+        packages:
+            - MKL 10.3-1
+
+        remote:
+            - MKL 10.3-1
+
+        installed:
+            - MKL 10.3-1
+
+        marked:
+            - MKL
+
+        request:
+            - operation: remove
+              requirement: MKL
+        """))
+        r_jobs = [_Job(Requirement._from_string("MKL"), JobType.remove)]
+
+        # When
+        scenario = Scenario.from_yaml(yaml)
+
+        # Then
+        jobs = scenario.request.jobs
+        self.assertEqual(jobs, r_jobs)
