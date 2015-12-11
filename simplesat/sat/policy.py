@@ -262,6 +262,16 @@ class PriorityQueuePolicy(IPolicy):
     is suggested.
     """
 
+    def pkg_key(self, package_id):
+        package = self._pool._id_to_package[package_id]
+        installed = package.repository_info.name == 'installed'
+        return package.version, installed
+
+    def pretty_pkg_key(self, package_id):
+        package = self._pool._id_to_package[package_id]
+        installed = package.repository_info.name == 'installed'
+        return package.name, str(package.version), installed
+
     def transitive_deps(self, pkg, dependencies, trans=None):
         trans = trans if trans is not None else defaultdict(set)
         if pkg in trans:
@@ -318,9 +328,8 @@ class PriorityQueuePolicy(IPolicy):
             dependencies[package_id].update(other_older)
 
         ordered = []
-        by_version = six.functools.partial(_pkg_id_to_version, pool)
         for group in reversed(tuple(toposort(dependencies))):
-            ordered.extend(sorted(group, key=by_version, reverse=True))
+            ordered.extend(sorted(group, key=self.pkg_key, reverse=True))
 
         package_id_to_rank = {
             package_id: rank
@@ -338,9 +347,9 @@ class PriorityQueuePolicy(IPolicy):
             name_map[package.name].append(package_id)
 
         name_to_package_ids = {}
-        by_version = six.functools.partial(_pkg_id_to_version, pool)
+
         for name, package_ids in name_map.items():
-            ordered = sorted(package_ids, key=by_version, reverse=True)
+            ordered = sorted(package_ids, key=self.pkg_key, reverse=True)
             name_to_package_ids[name] = ordered
 
         return name_to_package_ids
