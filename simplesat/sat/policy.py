@@ -59,7 +59,11 @@ class PolicyLogger(IPolicy):
         package = self._log_pool._id_to_package[pkg_id]
         name_ver = '{} {}'.format(package.name, package.version)
         fill = '.' if pkg_id % 2 else ''
-        return "{:{fill}<30} {}".format(name_ver, pkg_id, fill=fill)
+        try:
+            repo = package.repository_info.name
+        except AttributeError:
+            repo = ''
+        return "{:{fill}<30} {:3} {}".format(name_ver, pkg_id, repo, fill=fill)
 
     def _log_report(self, ids=None):
 
@@ -221,6 +225,7 @@ class UndeterminedClausePolicy(IPolicy):
             return self._decision_set, -min(unassigned_ids)
         else:
             return self._decision_set, None
+
 
 def LoggedUndeterminedClausePolicy(pool, installed_repository):
     return PolicyLogger(UndeterminedClausePolicy(pool, installed_repository))
