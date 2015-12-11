@@ -366,7 +366,10 @@ class PriorityQueuePolicy(IPolicy):
         self._add_packages(self._installed_ids.copy(), self.INSTALLED)
 
     def add_requirements(self, package_ids):
-        self._installed_ids.difference_update(package_ids)
+        if self.REQUIRED < self.INSTALLED:
+            self._installed_ids.difference_update(package_ids)
+        else:
+            package_ids = set(package_ids).difference(self._installed_ids)
         self._add_packages(package_ids, self.REQUIRED)
 
     def _add_packages(self, package_ids, group):
@@ -420,4 +423,4 @@ def LoggedPriorityInstalledFirstPolicty(pool, installed_repository):
 def LoggedUndeterminedClausePolicy(pool, installed_repository):
     return PolicyLogger(UndeterminedClausePolicy(pool, installed_repository))
 
-InstalledFirstPolicy = LoggedUndeterminedClausePolicy
+InstalledFirstPolicy = LoggedPriorityInstalledFirstPolicty
