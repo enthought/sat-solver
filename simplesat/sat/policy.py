@@ -44,7 +44,6 @@ class PolicyLogger(IPolicy):
         self._policy = policy
         self._log_pool = policy._pool
         self._log_installed = policy._installed_ids.copy()
-        self._log_preferred = getattr(policy, '_preferred_ids', set()).copy()
         self._log_required = []
         self._log_suggestions = []
         self._log_assignment_changes = []
@@ -58,7 +57,6 @@ class PolicyLogger(IPolicy):
 
     def add_requirements(self, package_ids):
         self._log_required.extend(package_ids)
-        self._log_preferred.difference_update(package_ids)
         self._log_installed.difference_update(package_ids)
         self._policy.add_requirements(package_ids)
 
@@ -100,12 +98,10 @@ class PolicyLogger(IPolicy):
         report.append('\n'.join(changes))
 
         required = set(self._log_required)
-        preferred = set(self._log_preferred)
         installed = set(self._log_installed)
         for (i, sugg) in enumerate(ids):
             pretty = self._log_pretty_pkg_id(sugg)
             R = 'R' if sugg in required else ' '
-            P = 'P' if sugg in preferred else ' '
             I = 'I' if sugg in installed else ' '
             changes = []
             try:
@@ -122,8 +118,8 @@ class PolicyLogger(IPolicy):
                     changes = ""
             except IndexError:
                 changes = ""
-            msg = "{:>4} {}{}{} - {}{}"
-            report.append(msg.format(i, R, P, I, pretty, changes))
+            msg = "{:>4} {}{} - {}{}"
+            report.append(msg.format(i, R, I, pretty, changes))
         return '\n'.join(report)
 
 
@@ -255,9 +251,8 @@ class PriorityQueuePolicy(IPolicy):
     Packages are split into groups:
 
         1. currently installed,
-        2. newer versions of currently installed,
-        3. explicitly specified as a requirement,
-        4. everything else,
+        2. explicitly specified as a requirement,
+        3. everything else,
 
     where each group is arranged in topological order by dependency
     relationships and then descending order by version number.
@@ -349,16 +344,10 @@ class PriorityQueuePolicy(IPolicy):
     def __init__(self, pool, installed_repository, prefer_installed=True):
         self._pool = pool
         self._installed_ids = set(map(pool.package_id, installed_repository))
-        self._preferred_ids = set()
 
         package_ids = pool._id_to_package.keys()
         package_id_to_rank = self._rank_packages(package_ids)
         self._name_to_package_ids = self._group_packages_by_name(package_ids)
-
-        for package_id in self._installed_ids:
-            name = pool._id_to_package[package_id].name
-            self._preferred_ids.update(self._name_to_package_ids[name])
-            self._preferred_ids.remove(package_id)
 
         def key_func(p):
             return package_id_to_rank[p]
@@ -367,20 +356,16 @@ class PriorityQueuePolicy(IPolicy):
 
         self.DEFAULT = 0
         if prefer_installed:
-            self.INSTALLED = -3
-            self.PREFERRED = -2
+            self.INSTALLED = -2
             self.REQUIRED = -1
         else:
-            self.PREFERRED = -3
             self.REQUIRED = -2
             self.INSTALLED = -1
 
         self._prioritizer = GroupPrioritizer(key_func)
-        self._add_packages(self._preferred_ids.copy(), self.PREFERRED)
         self._add_packages(self._installed_ids.copy(), self.INSTALLED)
 
     def add_requirements(self, package_ids):
-        self._preferred_ids.difference_update(package_ids)
         self._installed_ids.difference_update(package_ids)
         self._add_packages(package_ids, self.REQUIRED)
 
