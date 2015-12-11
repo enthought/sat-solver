@@ -1,5 +1,5 @@
 import os.path
-from unittest import TestCase, expectedFailure
+from unittest import TestCase
 
 import six
 
@@ -120,13 +120,11 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_ipython(self):
         self._check_solution("ipython_with_installed.yaml")
 
-    # This is not actually blocked until we support pinning packages
-    @expectedFailure
+    # This is currently handled using marked packages
     def test_blocked_upgrade(self):
         self._check_solution("simple_numpy_installed_blocking.yaml")
 
-    # This is not actually blocked until we support pinning packages
-    @expectedFailure
+    # This is currently handled using marked packages
     def test_blocked_downgrade(self):
         self._check_solution("simple_numpy_installed_blocking_downgrade.yaml")
 
