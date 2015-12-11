@@ -8,7 +8,7 @@ from enstaller.new_solver import Pool
 
 from simplesat.errors import SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
-from .common import Scenario
+from simplesat.test_utils import Scenario
 
 
 def _pretty_operations(ops):
