@@ -136,3 +136,6 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_preserve_marked_packages(self):
         self._check_solution("preserve_marked.yaml")
+
+    def test_remove_marked_packages(self):
+        self._check_solution("remove_marked_package.yaml")
