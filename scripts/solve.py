@@ -18,7 +18,10 @@ def solve_and_print(request, remote_repositories, installed_repository,
         pool, remote_repositories, installed_repository, use_pruning=prune)
     transaction = solver.solve(request)
     print(transaction)
-    print(solver._last_solve_time, file=sys.stderr)
+    fmt = "ELAPSED : {description:20} : {elapsed:e}"
+    print(solver._last_rules_time.pretty(fmt), file=sys.stderr)
+    print(solver._last_solver_init_time.pretty(fmt), file=sys.stderr)
+    print(solver._last_solve_time.pretty(fmt), file=sys.stderr)
     if debug:
         print(solver._policy._log_report(), file=sys.stderr)
 
