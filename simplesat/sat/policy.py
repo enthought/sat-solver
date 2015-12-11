@@ -77,7 +77,10 @@ class PolicyLogger(IPolicy):
         package = self._log_pool._id_to_package[pkg_id]
         name_ver = '{} {}'.format(package.name, package.version)
         fill = '.' if pkg_id % 2 else ''
-        repo = package.repository_info.name
+        try:
+            repo = package.repository_info.name
+        except AttributeError:
+            repo = ''
         return "{:{fill}<30} {:3} {}".format(name_ver, pkg_id, repo, fill=fill)
 
     def _log_report(self, ids=None):
@@ -312,7 +315,10 @@ class PriorityQueuePolicy(IPolicy):
     def pkg_key(self, package_id):
         """ Return the key used to compare two packages. """
         package = self._pool._id_to_package[package_id]
-        installed = package.repository_info.name == 'installed'
+        try:
+            installed = package.repository_info.name == 'installed'
+        except AttributeError:
+            installed = False
         return (package.version, installed)
 
     def _rank_packages(self, package_ids):
