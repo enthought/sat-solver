@@ -3,6 +3,8 @@
 
 from __future__ import division, print_function
 
+from collections import defaultdict
+
 import six
 
 
@@ -51,3 +53,24 @@ def toposort(nodes_to_edges):
         msg = "Cyclic dependencies exist among these items:\n{}"
         cyclic = '\n'.join(repr(x) for x in six.iteritems(data))
         raise ValueError(msg.format(cyclic))
+
+
+def transitive_neighbors(nodes_to_edges):
+    """ Return the set of all reachable nodes for each node in the
+    nodes_to_edges adjacency dict. """
+    trans = defaultdict(set)
+    for node in nodes_to_edges.keys():
+        _transitive(node, nodes_to_edges, trans)
+    return trans
+
+
+def _transitive(node, nodes_to_edges, trans):
+    trans = trans if trans is not None else defaultdict(set)
+    if node in trans:
+        return trans
+    neighbors = nodes_to_edges[node]
+    trans[node].update(neighbors)
+    for neighbor in neighbors:
+        _transitive(neighbor, nodes_to_edges, trans)
+        trans[node].update(trans[neighbor])
+    return trans

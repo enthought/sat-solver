@@ -7,7 +7,7 @@ import six
 
 from enstaller.collections import DefaultOrderedDict
 from enstaller.new_solver.requirement import Requirement
-from simplesat.utils.graph import toposort
+from simplesat.utils.graph import toposort, transitive_neighbors
 from .priority_queue import PriorityQueue, GroupPrioritizer
 
 import logging
@@ -262,98 +262,6 @@ class PriorityQueuePolicy(IPolicy):
     is suggested.
     """
 
-    def pkg_key(self, package_id):
-        package = self._pool._id_to_package[package_id]
-        installed = package.repository_info.name == 'installed'
-        return package.version, installed
-
-    def pretty_pkg_key(self, package_id):
-        package = self._pool._id_to_package[package_id]
-        installed = package.repository_info.name == 'installed'
-        return package.name, str(package.version), installed
-
-    def transitive_deps(self, pkg, dependencies, trans=None):
-        trans = trans if trans is not None else defaultdict(set)
-        if pkg in trans:
-            return trans
-        deps = dependencies[pkg]
-        trans[pkg].update(deps)
-        for dep in deps:
-            self.transitive_deps(dep, dependencies, trans)
-            trans[pkg].update(trans[dep])
-        return trans
-
-    def _rank_packages(self, package_ids):
-        pool = self._pool
-
-        dependencies = defaultdict(set)
-        to_req = Requirement.from_legacy_requirement_string
-        for package_id in package_ids:
-            dependencies[package_id].update(
-                pool.package_id(package)
-                for dep_str in pool._id_to_package[package_id].dependencies
-                for package in pool.what_provides(to_req(dep_str))
-            )
-
-        transitive = defaultdict(set)
-        for pkg_id in package_ids:
-            self.transitive_deps(pkg_id, dependencies, transitive)
-
-        packages_by_name = self._group_packages_by_name(package_ids)
-
-        removed_deps = []
-        for package_id in package_ids:
-            package = pool._id_to_package[package_id]
-            deps = dependencies[package_id]
-            group = packages_by_name[package.name]
-            for dep in list(deps):
-                depkg = pool._id_to_package[dep]
-                bad = [pool._id_to_package[p]
-                       for p in transitive[dep].intersection(group)]
-                if bad:
-                    msg = "Circular Deps: {}-{} -> {}-{} -> {}".format(
-                        package.name, package.version,
-                        depkg.name, depkg.version,
-                        ["{}-{}".format(pkg.name, pkg.version) for pkg in bad]
-                    )
-                    removed_deps.append(msg)
-                    deps.remove(dep)
-        logger.info('\n'.join(removed_deps))
-
-        for package_id in package_ids:
-            package = pool._id_to_package[package_id]
-            others = pool.what_provides(to_req(package.name))
-            other_older = (pool.package_id(other) for other in others
-                           if other.version < package.version)
-            dependencies[package_id].update(other_older)
-
-        ordered = []
-        for group in reversed(tuple(toposort(dependencies))):
-            ordered.extend(sorted(group, key=self.pkg_key, reverse=True))
-
-        package_id_to_rank = {
-            package_id: rank
-            for rank, package_id in enumerate(ordered)
-        }
-
-        return package_id_to_rank
-
-    def _group_packages_by_name(self, package_ids):
-        pool = self._pool
-
-        name_map = DefaultOrderedDict(list)
-        for package_id in package_ids:
-            package = pool._id_to_package[package_id]
-            name_map[package.name].append(package_id)
-
-        name_to_package_ids = {}
-
-        for name, package_ids in name_map.items():
-            ordered = sorted(package_ids, key=self.pkg_key, reverse=True)
-            name_to_package_ids[name] = ordered
-
-        return name_to_package_ids
-
     def __init__(self, pool, installed_repository, prefer_installed=True):
         self._pool = pool
         self._installed_ids = set(map(pool.package_id, installed_repository))
@@ -385,6 +293,12 @@ class PriorityQueuePolicy(IPolicy):
             package_ids = set(package_ids).difference(self._installed_ids)
         self._add_packages(package_ids, self.REQUIRED)
 
+    def get_next_package_id(self, assignments, clauses):
+        self._update_cache_from_assignments(assignments)
+
+        # Grab the most interesting looking currently unassigned id
+        return self._unassigned_pkg_ids.peek()
+
     def _add_packages(self, package_ids, group):
         prioritizer = self._prioritizer
         prioritizer.update(package_ids, group=group)
@@ -395,11 +309,107 @@ class PriorityQueuePolicy(IPolicy):
             if pkg_id in self._unassigned_pkg_ids:
                 self._unassigned_pkg_ids.push(pkg_id, prioritizer[pkg_id])
 
-    def get_next_package_id(self, assignments, clauses):
-        self._update_cache_from_assignments(assignments)
+    def pkg_key(self, package_id):
+        """ Return the key used to compare two packages. """
+        package = self._pool._id_to_package[package_id]
+        installed = package.repository_info.name == 'installed'
+        return (package.version, installed)
 
-        # Grab the most interesting looking currently unassigned id
-        return self._unassigned_pkg_ids.peek()
+    def _rank_packages(self, package_ids):
+        """ Return a dictionary of package_id to priority rank.
+
+        Currently we build a dependency tree of all the relevant packages and
+        then rank them topologically, starting with those at the top.
+
+        This strategy causes packages which force more assignments via
+        unit propagation in the solver to be preferred.
+        """
+        pool = self._pool
+
+        # The direct dependencies of each package
+        dependencies = defaultdict(set)
+        R = Requirement.from_legacy_requirement_string
+        for package_id in package_ids:
+            dependencies[package_id].update(
+                pool.package_id(package)
+                for dep_str in pool._id_to_package[package_id].dependencies
+                for package in pool.what_provides(R(dep_str))
+            )
+
+        # This is a flattened version of `dependencies` above
+        transitive = transitive_neighbors(dependencies)
+
+        packages_by_name = self._group_packages_by_name(package_ids)
+
+        # Some packages have unversioned dependencies, such as simply 'pandas'.
+        # This can produce cycles in the dependency graph which much be removed
+        # before topological sorting can be done.
+        # The strategy is to ignore the dependencies of any package that is
+        # present in its own transitive dependency list
+        removed_deps = []
+        for package_id in package_ids:
+            package = pool._id_to_package[package_id]
+            deps = dependencies[package_id]
+            package_group = packages_by_name[package.name]
+            for dep in list(deps):
+                circular = transitive[dep].intersection(package_group)
+                if circular:
+                    packages = [pool._id_to_package[p] for p in circular]
+                    depkg = pool._id_to_package[dep]
+                    pkg_strings = [
+                        "{}-{}".format(pkg.name, pkg.version)
+                        for pkg in packages
+                    ]
+                    msg = "Circular Deps: {}-{} -> {}-{} -> {}".format(
+                        package.name, package.version,
+                        depkg.name, depkg.version,
+                        pkg_strings
+                    )
+                    removed_deps.append(msg)
+                    deps.remove(dep)
+        logger.info('\n'.join(removed_deps))
+
+        # Mark packages as depending on older versions of themselves so that
+        # they will come out first in the toposort
+        for package_id in package_ids:
+            package = pool._id_to_package[package_id]
+            others = pool.what_provides(R(package.name))
+            other_older = (pool.package_id(other) for other in others
+                           if other.version < package.version)
+            dependencies[package_id].update(other_older)
+
+        # Finally toposort the packages, preferring higher version and
+        # already-installed packages to break ties
+        ordered = [
+            package_id
+            for group in reversed(tuple(toposort(dependencies)))
+            for package_id in sorted(group, key=self.pkg_key, reverse=True)
+        ]
+
+        package_id_to_rank = {
+            package_id: rank
+            for rank, package_id in enumerate(ordered)
+        }
+
+        return package_id_to_rank
+
+    def _group_packages_by_name(self, package_ids):
+        """ Return a dictionary from package name to all package ids
+        corresponding to packages with that name. """
+        pool = self._pool
+
+        name_map = DefaultOrderedDict(list)
+        for package_id in package_ids:
+            package = pool._id_to_package[package_id]
+            name_map[package.name].append(package_id)
+
+        name_to_package_ids = {}
+
+        for name, package_ids in name_map.items():
+            ordered = sorted(package_ids, key=self.pkg_key, reverse=True)
+            name_to_package_ids[name] = ordered
+
+        return name_to_package_ids
 
     def _update_cache_from_assignments(self, assignments):
         has_new_keys = assignments.has_new_keys
