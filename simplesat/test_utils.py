@@ -5,7 +5,7 @@ import six
 import yaml
 
 from enstaller import Repository
-from enstaller.new_solver import Pool, Requirement
+from enstaller.new_solver import Requirement
 from enstaller.new_solver.package_parser import PrettyPackageStringParser
 from enstaller.package import RepositoryPackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo
@@ -87,6 +87,7 @@ def installed_repository(yaml_data, packages):
 
 
 class Scenario(object):
+
     @classmethod
     def from_yaml(cls, file_or_filename):
         if isinstance(file_or_filename, six.string_types):
@@ -153,4 +154,3 @@ class Scenario(object):
             package = pool._id_to_package[package_id]
             print("{}: {} {}".format(package_id, package.name,
                                      package.full_version))
-

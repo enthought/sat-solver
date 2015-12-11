@@ -39,7 +39,7 @@ class TestRepositoryFactory(unittest.TestCase):
         repository_info = BroodRepositoryInfo("https://acme.com", "acme/loony")
         r_numpy = P(
             "numpy 1.8.1-2; depends (MKL ~= 10.3)", repository_info,
-             PythonImplementation.from_running_python()
+            PythonImplementation.from_running_python()
         )
 
         # When
