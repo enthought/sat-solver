@@ -135,3 +135,6 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_remove_reverse_dependencies(self):
         self._check_solution("remove_reverse_dependencies.yaml")
+
+    def test_preserve_marked_packages(self):
+        self._check_solution("preserve_marked.yaml")
