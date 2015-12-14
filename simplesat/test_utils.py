@@ -147,4 +147,3 @@ class Scenario(object):
             package = pool._id_to_package[package_id]
             print("{}: {} {}".format(package_id, package.name,
                                      package.full_version))
-
