@@ -1,6 +1,7 @@
 import collections
 import os
 
+import six
 import yaml
 
 from enstaller import Repository
@@ -87,9 +88,12 @@ def installed_repository(yaml_data, packages):
 
 class Scenario(object):
     @classmethod
-    def from_yaml(cls, filename):
-        with open(filename) as fp:
-            data = yaml.load(fp)
+    def from_yaml(cls, file_or_filename):
+        if isinstance(file_or_filename, six.string_types):
+            with open(file_or_filename) as fp:
+                data = yaml.load(fp)
+        else:
+            data = yaml.load(file_or_filename)
 
         packages = collections.OrderedDict(
             parse_package_list(data.get("packages", []))
