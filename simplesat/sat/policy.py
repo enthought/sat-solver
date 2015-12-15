@@ -59,10 +59,7 @@ class PolicyLogger(IPolicy):
         package = self._log_pool._id_to_package[pkg_id]
         name_ver = '{} {}'.format(package.name, package.version)
         fill = '.' if pkg_id % 2 else ''
-        try:
-            repo = package.repository_info.name
-        except AttributeError:
-            repo = ''
+        repo = package.repository_info.name
         return "{:{fill}<30} {:3} {}".format(name_ver, pkg_id, repo, fill=fill)
 
     def _log_report(self, ids=None):
