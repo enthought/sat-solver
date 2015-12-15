@@ -21,3 +21,8 @@ class timed_context(object):
         if self.elapsed is None:
             return "Context {} has not been run".format(self.description)
         return "ELAPSED : {} : {}".format(self.description, self.elapsed)
+
+    def pretty(self, fmt="ELAPSED : {description} : {elapsed}"):
+        if self.elapsed is None:
+            return "Context {} has not been run".format(self.description)
+        return fmt.format(description=self.description, elapsed=self.elapsed)

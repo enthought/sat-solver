@@ -20,6 +20,8 @@ class DependencySolver(object):
         self._installed_repository = installed_repository
         self._remote_repositories = remote_repositories
         self.use_pruning = use_pruning
+        self._last_rules_time = None
+        self._last_solver_init_time = None
         self._last_solve_time = None
 
         self._policy = policy or InstalledFirstPolicy(
@@ -31,9 +33,11 @@ class DependencySolver(object):
         operations to apply to resolve it, or raise SatisfiabilityError
         if no resolution could be found.
         """
-        with timed_context("sat solver") as self._last_solve_time:
+        with timed_context("Generate Rules") as self._last_rules_time:
             requirement_ids, rules = self._create_rules(request)
+        with timed_context("Solver Init") as self._last_solver_init_time:
             sat_solver = MiniSATSolver.from_rules(rules, self._policy)
+        with timed_context("SAT Solve") as self._last_solve_time:
             solution = sat_solver.search()
         solution_ids = _solution_to_ids(solution)
 
