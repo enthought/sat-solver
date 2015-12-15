@@ -56,8 +56,6 @@ class ScenarioTestAssistant(object):
             pool, scenario.remote_repositories, scenario.installed_repository
         )
 
-        solver._policy._log_report()
-
         # Then
         try:
             transaction = solver.solve(request)
