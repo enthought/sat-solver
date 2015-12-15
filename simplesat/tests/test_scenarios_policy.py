@@ -135,3 +135,8 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_remove_reverse_dependencies(self):
         self._check_solution("remove_reverse_dependencies.yaml")
+
+    # We haven't clearly laid out how this should behave yet
+    @expectedFailure
+    def test_update_reverse_dependencies(self):
+        self._check_solution("update_reverse_dependencies.yaml")
