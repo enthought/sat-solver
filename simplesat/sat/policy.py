@@ -96,11 +96,12 @@ class PolicyLogger(IPolicy):
             ids = map(abs, self._log_suggestions)
         report = []
         changes = []
-        for pkg, change in self._log_assignment_changes[0].items():
-            name = self._log_pretty_pkg_id(pkg)
-            if change[1] is not None:
-                changes.append("{} : {}".format(name, change[1]))
-        report.append('\n'.join(changes))
+        if self._log_assignment_changes:
+            for pkg, change in self._log_assignment_changes[0].items():
+                name = self._log_pretty_pkg_id(pkg)
+                if change[1] is not None:
+                    changes.append("{} : {}".format(name, change[1]))
+            report.append('\n'.join(changes))
 
         required = set(self._log_required)
         installed = set(self._log_installed)

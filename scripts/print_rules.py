@@ -2,9 +2,9 @@ import argparse
 import sys
 
 from enstaller.new_solver import Pool
-from enstaller.new_solver.yaml_utils import Scenario
 
 from simplesat.dependency_solver import DependencySolver
+from simplesat.test_utils import Scenario
 
 
 def print_rules(request, remote_repositories, installed_repository):

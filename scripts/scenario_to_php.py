@@ -4,8 +4,7 @@ import sys
 
 import jinja2
 
-from enstaller.new_solver.yaml_utils import Scenario
-
+from simplesat.test_utils import Scenario
 from simplesat.utils._composer_utils import scenario_to_php_template_variables
 
 
