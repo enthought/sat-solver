@@ -35,7 +35,9 @@ class DependencySolver(object):
         if no resolution could be found.
         """
         with timed_context("Generate Rules") as self._last_rules_time:
-            requirement_ids, rules = self._create_rules(request)
+            requirement_ids, rules = self._create_rules_and_initialize_policy(
+                request
+            )
         with timed_context("Solver Init") as self._last_solver_init_time:
             sat_solver = MiniSATSolver.from_rules(rules, self._policy)
         with timed_context("SAT Solve") as self._last_solve_time:
