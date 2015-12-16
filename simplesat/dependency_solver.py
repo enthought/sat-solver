@@ -1,4 +1,5 @@
 import collections
+from operator import attrgetter
 
 import six
 
@@ -54,20 +55,26 @@ class DependencySolver(object):
 
         return Transaction(self._pool, solution_ids, installed_map)
 
-    def _create_rules(self, request):
+    def _create_rules_and_initialize_policy(self, request):
         pool = self._pool
         installed_repository = self._installed_repository
 
         for job in request.jobs:
-            assert job.kind in (JobType.install, JobType.remove)
+            assert job.kind in (
+                JobType.install, JobType.remove, JobType.update
+            ), 'Unknown job kind: {}'.format(job.kind)
+
             requirement = job.requirement
 
-            requirement_ids = [
-                pool.package_id(package)
-                for package in pool.what_provides(requirement)
-            ]
-            if len(requirement_ids) == 0:
+            providers = tuple(pool.what_provides(requirement))
+            if len(providers) == 0:
                 raise NoPackageFound(str(requirement), requirement)
+
+            if job.kind == JobType.update:
+                # An update request *must* install the latest package version
+                providers = [max(providers, key=attrgetter('version'))]
+
+            requirement_ids = list(map(pool.package_id, providers))
             self._policy.add_requirements(requirement_ids)
 
         installed_map = collections.OrderedDict()
