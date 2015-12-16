@@ -5,7 +5,7 @@ import six
 import yaml
 
 from enstaller import Repository
-from enstaller.new_solver import Pool, Requirement
+from enstaller.new_solver import Requirement
 from enstaller.new_solver.package_parser import PrettyPackageStringParser
 from enstaller.package import RepositoryPackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo
@@ -87,6 +87,7 @@ def installed_repository(yaml_data, packages):
 
 
 class Scenario(object):
+
     @classmethod
     def from_yaml(cls, file_or_filename):
         if isinstance(file_or_filename, six.string_types):
@@ -98,14 +99,23 @@ class Scenario(object):
         packages = collections.OrderedDict(
             parse_package_list(data.get("packages", []))
         )
-        operations = data.get("request", [])
+        scenario_requests = data.get("request", [])
+
+        marked = list(data.get("marked", []))
 
         request = Request()
 
-        for operation in operations:
-            kind = operation["operation"]
-            requirement = Requirement._from_string(operation["requirement"])
+        for s_request in scenario_requests:
+            kind = s_request["operation"]
+            requirement = Requirement._from_string(s_request["requirement"])
+            try:
+                marked.remove(requirement.name)
+            except ValueError:
+                pass
             getattr(request, kind)(requirement)
+
+        for package_str in marked:
+            request.install(Requirement._from_string(package_str))
 
         decisions = data.get("decisions", {})
 
