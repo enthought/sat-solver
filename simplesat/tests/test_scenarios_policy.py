@@ -81,7 +81,8 @@ class ScenarioTestAssistant(object):
 
             left_s = "{0} {1}".format(left.package.name,
                                       left.package.version)
-            right_s = right.package
+            right_s = "{0} {1}".format(right.package.name,
+                                       right.package.version)
             if left_s != right_s:
                 msg = "Item {0!r}: {1!r} vs {2!r}".format(i, left_s, right_s)
                 self.fail(msg)
