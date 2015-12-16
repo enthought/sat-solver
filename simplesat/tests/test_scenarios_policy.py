@@ -114,6 +114,9 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_simple_update_single(self):
         self._check_solution("simple_update_single.yaml")
 
+    def test_update_single(self):
+        self._check_solution("update_single.yaml")
+
     def test_simple_numpy(self):
         self._check_solution("simple_numpy_installed.yaml")
 
