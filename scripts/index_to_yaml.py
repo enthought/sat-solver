@@ -10,7 +10,7 @@ from enstaller.new_solver.requirement import Requirement
 from enstaller.new_solver.constraint_types import (
     Any, EnpkgUpstreamMatch, Equal
 )
-from enstaller.versions.enpkg import EnpkgVersion
+from enstaller.versions import EnpkgVersion
 
 
 # TODO Can use new enstaller pretty printer here...
