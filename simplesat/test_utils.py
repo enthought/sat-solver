@@ -99,16 +99,19 @@ class Scenario(object):
         packages = collections.OrderedDict(
             parse_package_list(data.get("packages", []))
         )
-        operations = data.get("request", [])
+        scenario_requests = data.get("request", [])
 
-        marked = set(data.get("marked", []))
+        marked = list(data.get("marked", []))
 
         request = Request()
 
-        for operation in operations:
-            kind = operation["operation"]
-            requirement = Requirement._from_string(operation["requirement"])
-            marked.discard(requirement.name)
+        for s_request in scenario_requests:
+            kind = s_request["operation"]
+            requirement = Requirement._from_string(s_request["requirement"])
+            try:
+                marked.remove(requirement.name)
+            except ValueError:
+                pass
             getattr(request, kind)(requirement)
 
         for package_str in marked:
