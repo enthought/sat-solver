@@ -105,8 +105,13 @@ class Scenario(object):
 
         request = Request()
 
+        update_all = False
+
         for s_request in scenario_requests:
             kind = s_request["operation"]
+            if kind == 'update_all':
+                update_all = True
+                continue
             requirement = Requirement._from_string(s_request["requirement"])
             try:
                 marked.remove(requirement.name)
@@ -114,8 +119,13 @@ class Scenario(object):
                 pass
             getattr(request, kind)(requirement)
 
+        if update_all:
+            request_job = request.update
+        else:
+            request_job = request.install
+
         for package_str in marked:
-            request.install(Requirement._from_string(package_str))
+            request_job(Requirement._from_string(package_str))
 
         decisions = data.get("decisions", {})
 
