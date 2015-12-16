@@ -95,7 +95,6 @@ class PackageRule(object):
             parts = [pool.id_to_string(literal)
                      for literal in self.literals[1:]]
             s = " | ".join(parts)
-
             return "{} {} requires ({})".format(source.name, source.version, s)
         else:
             return s
@@ -276,7 +275,6 @@ class RulesGenerator(object):
             p_id = self._pool.package_id(p)
             if p_id not in self.added_package_ids:
                 self.added_package_ids.add(p_id)
-
                 self._add_dependencies_rules(p, work_queue)
 
                 requirement = Requirement.from_legacy_requirement_string(p.name)
@@ -292,6 +290,7 @@ class RulesGenerator(object):
                         self._add_rule(rule, "package")
 
     def _add_updated_packages_rules(self, package):
+        # FIXME (jtyree 16-12-2015): this looks very much like dead code
         updates = self.policy.find_updated_packages(self.pool,
                                                     self.installed_map,
                                                     package)
