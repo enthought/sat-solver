@@ -1,3 +1,3 @@
 setuptools>=18.4
 PyYAML
-git+https://github.com/enthought/enstaller@5a2c9be9b4a3e89b0c0f462289a0ccda1cc9b3a9#egg=enstaller
+git+https://github.com/enthought/enstaller@ff0bd6140c4efd46c48fcaf182042de9810021d3#egg=enstaller
