@@ -136,6 +136,14 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_update_single(self):
         self._check_solution("update_single.yaml")
 
+    def test_update_all(self):
+        self._check_solution("update_all.yaml")
+
+    # A decision must be made about build-numbers vs installed packages
+    @expectedFailure
+    def test_ipython_upgrade(self):
+        self._check_solution("ipython_upgrade.yaml")
+
     def test_simple_numpy(self):
         self._check_solution("simple_numpy_installed.yaml")
 
