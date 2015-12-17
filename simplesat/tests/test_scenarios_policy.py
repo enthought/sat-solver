@@ -140,6 +140,10 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
         self._check_solution("update_all.yaml")
 
     # A decision must be made about build-numbers vs installed packages
+    def test_update_all_conflict(self):
+        self._check_solution("update_all_conflict.yaml")
+
+    # A decision must be made about build-numbers vs installed packages
     def test_ipython_upgrade(self):
         self._check_solution("ipython_upgrade.yaml")
 
