@@ -289,14 +289,6 @@ class RulesGenerator(object):
                                                            reason, str(p))
                         self._add_rule(rule, "package")
 
-    def _add_updated_packages_rules(self, package):
-        # FIXME (jtyree 16-12-2015): this looks very much like dead code
-        updates = self.policy.find_updated_packages(self.pool,
-                                                    self.installed_map,
-                                                    package)
-        for update in updates:
-            self._add_package_rules(update)
-
     def _add_install_job_rules(self, job):
         packages = self._pool.what_provides(job.requirement)
         if len(packages) > 0:
