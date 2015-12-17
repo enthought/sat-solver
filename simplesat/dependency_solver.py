@@ -58,6 +58,8 @@ class DependencySolver(object):
         pool = self._pool
         installed_repository = self._installed_repository
 
+        all_requirement_ids = []
+
         for job in request.jobs:
             assert job.kind in (JobType.install, JobType.remove)
             requirement = job.requirement
@@ -69,6 +71,7 @@ class DependencySolver(object):
             if len(requirement_ids) == 0:
                 raise NoPackageFound(str(requirement), requirement)
             self._policy.add_requirements(requirement_ids)
+            all_requirement_ids.extend(requirement_ids)
 
         installed_map = collections.OrderedDict()
         for package in installed_repository:
@@ -76,7 +79,7 @@ class DependencySolver(object):
 
         rules_generator = RulesGenerator(pool, request, installed_map)
 
-        return requirement_ids, list(rules_generator.iter_rules())
+        return all_requirement_ids, list(rules_generator.iter_rules())
 
 
 def _connected_packages(solution, root_ids, pool):
