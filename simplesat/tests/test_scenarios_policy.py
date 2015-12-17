@@ -144,3 +144,6 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     @expectedFailure
     def test_update_reverse_dependencies(self):
         self._check_solution("update_reverse_dependencies.yaml")
+
+    def test_multiple_jobs(self):
+        self._check_solution("multiple_jobs.yaml")
