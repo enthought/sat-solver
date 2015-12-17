@@ -1,5 +1,6 @@
 import collections
 import enum
+from operator import attrgetter
 
 from enstaller.errors import EnstallerException
 
@@ -11,6 +12,7 @@ class RuleType(enum.Enum):
     internal_allow_update = 1
     job_install = 2
     job_remove = 3
+    job_update = 4
     package_requires = 7
     package_same_name = 10
     package_implicit_obsoletes = 11
@@ -73,6 +75,8 @@ class PackageRule(object):
 
         if self._reason == RuleType.job_install:
             return "Install command rule ({})".format(s)
+        elif self._reason == RuleType.job_update:
+            return "Update to latest command rule ({})".format(s)
         elif self._reason == RuleType.job_remove:
             return "Remove command rule ({})".format(s)
         elif self._reason == RuleType.package_same_name:
@@ -91,7 +95,6 @@ class PackageRule(object):
             parts = [pool.id_to_string(literal)
                      for literal in self.literals[1:]]
             s = " | ".join(parts)
-
             return "{} {} requires ({})".format(source.name, source.version, s)
         else:
             return s
@@ -272,7 +275,6 @@ class RulesGenerator(object):
             p_id = self._pool.package_id(p)
             if p_id not in self.added_package_ids:
                 self.added_package_ids.add(p_id)
-
                 self._add_dependencies_rules(p, work_queue)
 
                 requirement = Requirement.from_legacy_requirement_string(p.name)
@@ -286,13 +288,6 @@ class RulesGenerator(object):
                         rule = self._create_conflicts_rule(p, provider,
                                                            reason, str(p))
                         self._add_rule(rule, "package")
-
-    def _add_updated_packages_rules(self, package):
-        updates = self.policy.find_updated_packages(self.pool,
-                                                    self.installed_map,
-                                                    package)
-        for update in updates:
-            self._add_package_rules(update)
 
     def _add_install_job_rules(self, job):
         packages = self._pool.what_provides(job.requirement)
@@ -311,6 +306,24 @@ class RulesGenerator(object):
             rule = self._create_remove_rule(package, RuleType.job_remove)
             self._add_rule(rule, "job")
 
+    def _add_update_job_rules(self, job):
+        """
+        Create rules that force the update of the package by requiring all of
+        the standard rules then adding an additional rule for just the most
+        recent version.
+        """
+        packages = self._pool.what_provides(job.requirement)
+        if len(packages) == 0:
+            return
+        # An update request *must* install the latest package version
+        package = max(packages, key=attrgetter('version'))
+        self._add_package_rules(package)
+        rule = PackageRule(
+            (self._pool.package_id(package),),
+            RuleType.job_update
+        )
+        self._add_rule(rule, "job")
+
     def _add_installed_package_rules(self, package):
         packages_all_versions = self._pool._packages_by_name[package.name]
         for other in packages_all_versions:
@@ -322,6 +335,8 @@ class RulesGenerator(object):
                 self._add_install_job_rules(job)
             elif job.kind == JobType.remove:
                 self._add_remove_job_rules(job)
+            elif job.kind == JobType.update:
+                self._add_update_job_rules(job)
             else:
-                msg = "Job kind {0!} not supported".format(job.kind)
+                msg = "Job kind {0!r} not supported".format(job.kind)
                 raise NotImplementedError(msg)

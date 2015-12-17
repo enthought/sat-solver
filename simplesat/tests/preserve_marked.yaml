@@ -7,6 +7,9 @@ installed:
     - requests 2.7.0-1
     - browsey 1.2.0-1
 
+marked:
+    - browsey
+
 request:
     - operation: "remove"
       requirement: "requests"

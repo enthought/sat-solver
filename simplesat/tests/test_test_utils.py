@@ -39,7 +39,7 @@ class TestRepositoryFactory(unittest.TestCase):
         repository_info = BroodRepositoryInfo("https://acme.com", "acme/loony")
         r_numpy = P(
             "numpy 1.8.1-2; depends (MKL ~= 10.3)", repository_info,
-             PythonImplementation.from_running_python()
+            PythonImplementation.from_running_python()
         )
 
         # When
@@ -119,5 +119,57 @@ class TestScenario(unittest.TestCase):
 
         self.assertEqual(len(scenario.installed_repository), 0)
 
+        jobs = scenario.request.jobs
+        self.assertEqual(jobs, r_jobs)
+
+    def test_simple_marked(self):
+        # Given
+        yaml = StringIO(textwrap.dedent("""\
+        packages:
+            - MKL 10.3-1
+
+        remote:
+            - MKL 10.3-1
+
+        installed:
+            - MKL 10.3-1
+
+        marked:
+            - MKL
+        """))
+        r_jobs = [_Job(Requirement._from_string("MKL"), JobType.install)]
+
+        # When
+        scenario = Scenario.from_yaml(yaml)
+
+        # Then
+        jobs = scenario.request.jobs
+        self.assertEqual(jobs, r_jobs)
+
+    def test_modify_marked(self):
+        # Given
+        yaml = StringIO(textwrap.dedent("""\
+        packages:
+            - MKL 10.3-1
+
+        remote:
+            - MKL 10.3-1
+
+        installed:
+            - MKL 10.3-1
+
+        marked:
+            - MKL
+
+        request:
+            - operation: remove
+              requirement: MKL
+        """))
+        r_jobs = [_Job(Requirement._from_string("MKL"), JobType.remove)]
+
+        # When
+        scenario = Scenario.from_yaml(yaml)
+
+        # Then
         jobs = scenario.request.jobs
         self.assertEqual(jobs, r_jobs)

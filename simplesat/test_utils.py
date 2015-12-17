@@ -5,7 +5,7 @@ import six
 import yaml
 
 from enstaller import Repository
-from enstaller.new_solver import Pool, Requirement
+from enstaller.new_solver import Requirement
 from enstaller.new_solver.package_parser import PrettyPackageStringParser
 from enstaller.package import RepositoryPackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo
@@ -87,6 +87,7 @@ def installed_repository(yaml_data, packages):
 
 
 class Scenario(object):
+
     @classmethod
     def from_yaml(cls, file_or_filename):
         if isinstance(file_or_filename, six.string_types):
@@ -98,26 +99,38 @@ class Scenario(object):
         packages = collections.OrderedDict(
             parse_package_list(data.get("packages", []))
         )
-        operations = data.get("request", [])
+        scenario_requests = data.get("request", [])
+
+        marked = list(data.get("marked", []))
 
         request = Request()
 
-        for operation in operations:
-            kind = operation["operation"]
-            requirement = Requirement._from_string(operation["requirement"])
+        for s_request in scenario_requests:
+            kind = s_request["operation"]
+            requirement = Requirement._from_string(s_request["requirement"])
+            try:
+                marked.remove(requirement.name)
+            except ValueError:
+                pass
             getattr(request, kind)(requirement)
 
+        for package_str in marked:
+            request.install(Requirement._from_string(package_str))
+
         decisions = data.get("decisions", {})
+
+        def P(p):
+            return next(parse_package_list([p]))[1]
 
         operations = []
         for operation in data.get("transaction", []):
             if operation["kind"] == "install":
-                operations.append(InstallOperation(operation["package"]))
+                operations.append(InstallOperation(P(operation["package"])))
             elif operation["kind"] == "update":
-                operations.append(UpdateOperation(operation["to"],
-                                                  operation["from"]))
+                operations.append(UpdateOperation(P(operation["to"]),
+                                                  P(operation["from"])))
             elif operation["kind"] == "remove":
-                operations.append(RemoveOperation(operation["package"]))
+                operations.append(RemoveOperation(P(operation["package"])))
             else:
                 msg = "invalid operation kind {!r}".format(operation["kind"])
                 raise ValueError(msg)

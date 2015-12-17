@@ -1,4 +1,5 @@
 import collections
+from operator import attrgetter
 
 import six
 
@@ -34,7 +35,9 @@ class DependencySolver(object):
         if no resolution could be found.
         """
         with timed_context("Generate Rules") as self._last_rules_time:
-            requirement_ids, rules = self._create_rules(request)
+            requirement_ids, rules = self._create_rules_and_initialize_policy(
+                request
+            )
         with timed_context("Solver Init") as self._last_solver_init_time:
             sat_solver = MiniSATSolver.from_rules(rules, self._policy)
         with timed_context("SAT Solve") as self._last_solve_time:
@@ -54,21 +57,30 @@ class DependencySolver(object):
 
         return Transaction(self._pool, solution_ids, installed_map)
 
-    def _create_rules(self, request):
+    def _create_rules_and_initialize_policy(self, request):
         pool = self._pool
         installed_repository = self._installed_repository
 
+        all_requirement_ids = []
+
         for job in request.jobs:
-            assert job.kind in (JobType.install, JobType.remove)
+            assert job.kind in (
+                JobType.install, JobType.remove, JobType.update
+            ), 'Unknown job kind: {}'.format(job.kind)
+
             requirement = job.requirement
 
-            requirement_ids = [
-                pool.package_id(package)
-                for package in pool.what_provides(requirement)
-            ]
-            if len(requirement_ids) == 0:
+            providers = tuple(pool.what_provides(requirement))
+            if len(providers) == 0:
                 raise NoPackageFound(str(requirement), requirement)
+
+            if job.kind == JobType.update:
+                # An update request *must* install the latest package version
+                providers = [max(providers, key=attrgetter('version'))]
+
+            requirement_ids = [pool.package_id(p) for p in providers]
             self._policy.add_requirements(requirement_ids)
+            all_requirement_ids.extend(requirement_ids)
 
         installed_map = collections.OrderedDict()
         for package in installed_repository:
@@ -76,7 +88,7 @@ class DependencySolver(object):
 
         rules_generator = RulesGenerator(pool, request, installed_map)
 
-        return requirement_ids, list(rules_generator.iter_rules())
+        return all_requirement_ids, list(rules_generator.iter_rules())
 
 
 def _connected_packages(solution, root_ids, pool):
