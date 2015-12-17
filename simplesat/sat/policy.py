@@ -71,7 +71,8 @@ class PolicyLogger(IPolicy):
         package = self._log_pool._id_to_package[pkg_id]
         name_ver = '{} {}'.format(package.name, package.version)
         fill = '.' if pkg_id % 2 else ''
-        return "{:{fill}<30} {}".format(name_ver, pkg_id, fill=fill)
+        repo = package.repository_info.name
+        return "{:{fill}<30} {:3} {}".format(name_ver, pkg_id, repo, fill=fill)
 
     def _log_report(self, ids=None):
 
@@ -239,6 +240,7 @@ class UndeterminedClausePolicy(IPolicy):
             return min(unassigned_ids)
         else:
             return None
+
 
 
 def LoggedUndeterminedClausePolicy(pool, installed_repository):

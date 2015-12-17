@@ -346,5 +346,5 @@ class RulesGenerator(object):
             elif job.kind == JobType.update:
                 self._add_update_job_rules(job)
             else:
-                msg = "Job kind {0!} not supported".format(job.kind)
+                msg = "Job kind {0!r} not supported".format(job.kind)
                 raise NotImplementedError(msg)
