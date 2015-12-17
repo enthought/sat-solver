@@ -54,7 +54,7 @@ def _pretty_delta(pkg_delta):
 
 class ScenarioTestAssistant(object):
 
-    def _check_solution(self, filename):
+    def _check_solution(self, filename, prefer_installed=True):
         # Test that the solution described in the scenario file matches with
         # what the SAT solver computes.
 
@@ -68,7 +68,8 @@ class ScenarioTestAssistant(object):
         pool = Pool(scenario.remote_repositories)
         pool.add_repository(scenario.installed_repository)
         solver = DependencySolver(
-            pool, scenario.remote_repositories, scenario.installed_repository
+            pool, scenario.remote_repositories, scenario.installed_repository,
+            prefer_installed=prefer_installed
         )
 
         # Then
