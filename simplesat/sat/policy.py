@@ -201,9 +201,9 @@ class UndeterminedClausePolicy(IPolicy):
         return candidate_id
 
     def _without_assigned(self, package_ids, assignments):
-        return package_ids.difference(
-            pkg_id for pkg_id in package_ids.copy()
-            if assignments[pkg_id] is not None
+        return set(
+            pkg_id for pkg_id in package_ids
+            if assignments[pkg_id] is None
         )
 
     def _best_candidate(self, package_ids, assignments):
