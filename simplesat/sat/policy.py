@@ -149,7 +149,15 @@ class UndeterminedClausePolicy(IPolicy):
             pool.package_id(package) for package in installed_repository
         )
         self._decision_set = self._installed_ids.copy()
+        self._preferred_package_ids = {
+            self._package_key(package_id): package_id
+            for package_id in self._installed_ids
+        }
         self._requirements = set()
+
+    def _package_key(self, package_id):
+        package = self._pool._id_to_package[package_id]
+        return (package.name, package.version)
 
     def add_requirements(self, package_ids):
         self._requirements.update(package_ids)
@@ -175,6 +183,10 @@ class UndeterminedClausePolicy(IPolicy):
 
         assert assignments[candidate_id] is None, \
             "Trying to assign to a variable which is already assigned."
+
+        # If this exact package version is available locally, use that one
+        key = self._package_key(candidate_id)
+        candidate_id = self._preferred_package_ids.get(key, candidate_id)
 
         return candidate_id
 
