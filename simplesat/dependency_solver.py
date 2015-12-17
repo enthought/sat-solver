@@ -78,7 +78,7 @@ class DependencySolver(object):
                 # An update request *must* install the latest package version
                 providers = [max(providers, key=attrgetter('version'))]
 
-            requirement_ids = list(map(pool.package_id, providers))
+            requirement_ids = [pool.package_id(p) for p in providers]
             self._policy.add_requirements(requirement_ids)
             all_requirement_ids.extend(requirement_ids)
 
