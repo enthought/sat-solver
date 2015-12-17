@@ -119,15 +119,18 @@ class Scenario(object):
 
         decisions = data.get("decisions", {})
 
+        def P(p):
+            return next(parse_package_list([p]))[1]
+
         operations = []
         for operation in data.get("transaction", []):
             if operation["kind"] == "install":
-                operations.append(InstallOperation(operation["package"]))
+                operations.append(InstallOperation(P(operation["package"])))
             elif operation["kind"] == "update":
-                operations.append(UpdateOperation(operation["to"],
-                                                  operation["from"]))
+                operations.append(UpdateOperation(P(operation["to"]),
+                                                  P(operation["from"])))
             elif operation["kind"] == "remove":
-                operations.append(RemoveOperation(operation["package"]))
+                operations.append(RemoveOperation(P(operation["package"])))
             else:
                 msg = "invalid operation kind {!r}".format(operation["kind"])
                 raise ValueError(msg)
