@@ -92,10 +92,6 @@ class ScenarioTestAssistant(object):
         pairs = zip(operations, scenario_operations)
         delta = _pretty_delta(_pkg_delta(operations, scenario_operations))
         for i, (left, right) in enumerate(pairs):
-            if not type(left) == type(right):
-                msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}\n{3}"
-                self.fail(msg.format(i, type(left), type(right), delta))
-
             left_s = "{0} {1}".format(left.package.name,
                                       left.package.version)
             right_s = "{0} {1}".format(right.package.name,
@@ -105,6 +101,10 @@ class ScenarioTestAssistant(object):
                 msg = "Item {0!r}: {1!r} vs {2!r}\n{3}".format(
                     i, left_s, right_s, delta)
                 self.fail(msg)
+
+            if not type(left) == type(right):
+                msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}\n{3}"
+                self.fail(msg.format(i, left, right, delta))
 
         if len(operations) != len(scenario_operations):
             self.fail("Length of operations differ.\n{0}".format(delta))
