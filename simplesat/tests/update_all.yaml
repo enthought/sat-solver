@@ -159,8 +159,11 @@ packages:
   - zeromq 4.0.5-1
 
 request:
-    - operation: "install"
-      requirement: "ipython >= 4.0"
+    - operation: "update_all"
+
+marked:
+  - ipython
+  - Jinja2
 
 installed:
   - zeromq 4.0.5-1
@@ -178,7 +181,16 @@ installed:
   - Jinja2 2.7.3-2
   - ipython 3.2.1-1
 
+# If installed packages are preferred, a solution that keeps Jinja2 2.7.3-2
+# will be found instead
+
 transaction:
+  - kind: "update"
+    from: "tornado 4.2-1"
+    to: "tornado 4.2.1-1"
+  - kind: "update"
+    from: "terminado 0.5-2"
+    to: "terminado 0.5-3"
   - kind: "update"
     from: "mistune 0.6-2"
     to: "mistune 0.7.1-1"
@@ -212,10 +224,13 @@ transaction:
     package: "qtconsole 4.0.1-2"
   - kind: "install"
     package: "nbformat 4.0.0-2"
+  - kind: "update"
+    from: "Jinja2 2.7.3-2"
+    to: "Jinja2 2.8-1"
   - kind: "install"
-    package: "nbconvert 4.0.0-3"
+    package: "nbconvert 4.0.0-4"
   - kind: "install"
-    package: "notebook 4.0.5-2"
+    package: "notebook 4.0.5-4"
   - kind: "install"
     package: "jupyter_console 4.0.2-2"
   - kind: "install"
