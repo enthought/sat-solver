@@ -2,7 +2,6 @@ packages:
     - MKL 10.2-1
     - MKL 10.3-1
     - MKL 10.3-2
-    - EPD_free 7.3-1; depends (MKL == 10.2-1, numpy == 1.7.1-1)
     - numpy 1.7.1-1; depends (MKL == 10.2-1)
     - numpy 1.8.1-1; depends (MKL == 10.3-1)
     - numpy 1.9.2-1; depends (MKL == 10.3-1)
@@ -21,9 +20,6 @@ installed:
   - MKL 10.3-1
   - numpy 1.8.1-1
   - pandas 0.12.5-3
-
-# If installed packages are preferred, a solution that keeps Jinja2 2.7.3-2
-# will be found instead
 
 failure:
   - "numpy 1.9.2-2 conflicts with numpy 1.9.2-1 (from pandas 0.18.0-1)"
