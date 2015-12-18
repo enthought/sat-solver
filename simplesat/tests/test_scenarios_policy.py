@@ -143,11 +143,9 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_update_all(self):
         self._check_solution("update_all.yaml")
 
-    # A decision must be made about build-numbers vs installed packages
     def test_update_all_conflict(self):
         self._check_solution("update_all_conflict.yaml")
 
-    # A decision must be made about build-numbers vs installed packages
     def test_ipython_upgrade(self):
         self._check_solution("ipython_upgrade.yaml")
 
@@ -180,10 +178,17 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_remove_marked_packages(self):
         self._check_solution("remove_marked_package.yaml")
 
-    # We haven't clearly laid out how this should behave yet
-    @expectedFailure
     def test_update_reverse_dependencies(self):
-        self._check_solution("update_reverse_dependencies.yaml")
+        self._check_solution(
+            "update_reverse_dependencies.yaml",
+            prefer_installed=True
+        )
+
+    def test_update_reverse_dependencies_no_prefer_installed(self):
+        self._check_solution(
+            "update_reverse_dependencies_no_prefer_installed.yaml",
+            prefer_installed=False
+        )
 
     def test_multiple_jobs(self):
         self._check_solution("multiple_jobs.yaml")
