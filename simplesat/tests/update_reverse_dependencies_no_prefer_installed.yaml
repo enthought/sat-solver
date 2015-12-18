@@ -1,5 +1,5 @@
-# This is update_reverse_dependencies_no_prefer_installed.yaml, but with the
-# solution for prefer_installed=True
+# This is update_reverse_dependencies.yaml, but with the
+# solution for prefer_installed=False
 packages:
   - A 0.0.0-1; depends (C ~= 0.0.0)
   - A 3.0.0-1; depends (G ~= 1.0.0)
@@ -17,6 +17,8 @@ packages:
   - X 1.0.0-1; depends (A ~= 3.0.0, B ~= 1.0.0)
   - Y 0.0.0-1; depends (X ~= 0.0.0)
   - Y 1.0.0-1
+    # Without pruning this can drag F in, even when Y 2.0.0 isn't in the
+    # solution
   - Y 2.0.0-1; depends (F ~= 0.0.0)
   - Y 3.0.0-1; depends (X ~= 1.0.0)
     # None of our direct requirements depend or reverse-depend on Z, but it
@@ -60,9 +62,13 @@ transaction:
     from: "Z 0.0.0-1"
     to: "Z 1.0.0-1"
   - kind: "install"
-    package: "F 0.0.0-1"
+    package: "G 1.0.0-1"
+  - kind: "update"
+    from: "A 0.0.0-1"
+    to: "A 3.0.0-1"
+  - kind: "update"
+    from: "X 0.0.0-1"
+    to: "X 1.0.0-1"
   - kind: "update"
     from: "Y 0.0.0-1"
-    to: "Y 2.0.0-1"
-  - kind: "remove"
-    package: "X 0.0.0-1"
+    to: "Y 3.0.0-1"
