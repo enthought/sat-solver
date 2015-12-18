@@ -8,6 +8,7 @@ from enstaller.new_solver import Pool
 
 from simplesat.errors import SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
+from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.test_utils import Scenario
 from simplesat.transaction import (
     InstallOperation, RemoveOperation, UpdateOperation
@@ -67,9 +68,11 @@ class ScenarioTestAssistant(object):
         # When
         pool = Pool(scenario.remote_repositories)
         pool.add_repository(scenario.installed_repository)
+        policy = InstalledFirstPolicy(pool, scenario.installed_repository,
+                                      prefer_installed=prefer_installed)
         solver = DependencySolver(
             pool, scenario.remote_repositories, scenario.installed_repository,
-            prefer_installed=prefer_installed
+            policy=policy,
         )
 
         # Then

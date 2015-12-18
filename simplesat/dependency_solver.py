@@ -16,7 +16,7 @@ from simplesat.utils import timed_context
 
 class DependencySolver(object):
     def __init__(self, pool, remote_repositories, installed_repository,
-                 policy=None, use_pruning=True, prefer_installed=True):
+                 policy=None, use_pruning=True):
         self._pool = pool
         self._installed_repository = installed_repository
         self._remote_repositories = remote_repositories
@@ -26,7 +26,7 @@ class DependencySolver(object):
         self._last_solve_time = None
 
         self._policy = policy or InstalledFirstPolicy(
-            pool, installed_repository, prefer_installed=prefer_installed
+            pool, installed_repository
         )
 
     def solve(self, request):
