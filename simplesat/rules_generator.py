@@ -70,35 +70,47 @@ class PackageRule(object):
     def reason(self):
         return self._reason
 
-    def to_string(self, pool):
-        parts = [pool.id_to_string(literal) for literal in self.literals]
-        s = " | ".join(parts)
+    def _pretty_literals(self, pool, literals, sign=True, unique=False):
+        parts = (pool.id_to_string(literal) for literal in literals)
+        if not sign:
+            parts = (p[1:] for p in parts)
+        if unique:
+            parts = collections.OrderedDict.fromkeys(parts).keys()
+        return " | ".join(parts)
+
+    def to_string(self, pool, unique=False):
+        s = self._pretty_literals(pool, self.literals, unique=unique)
 
         if self._reason == RuleType.job_install:
-            return "Install command rule ({})".format(s)
+            rule_desc = "Install command rule ({})".format(s)
         elif self._reason == RuleType.job_update:
-            return "Update to latest command rule ({})".format(s)
+            rule_desc = "Update to latest command rule ({})".format(s)
         elif self._reason == RuleType.job_remove:
-            return "Remove command rule ({})".format(s)
+            rule_desc = "Remove command rule ({})".format(s)
         elif self._reason == RuleType.package_same_name:
             parts = [pool.id_to_string(abs(literal))
                      for literal in self.literals]
             s = " | ".join(parts)
-            return "Can only install one of: ({})".format(s)
+            rule_desc = "Can only install one of: ({})".format(s)
         elif self._reason == RuleType.package_installed:
             parts = [pool.id_to_string(abs(literal))
                      for literal in self.literals]
             s = " | ".join(parts)
-            return "Should install one of: ({})".format(s)
+            rule_desc = "Should install one of: ({})".format(s)
         elif self._reason == RuleType.package_requires:
-            source_id = abs(self.literals[0])
-            source = pool._id_to_package[source_id]
-            parts = [pool.id_to_string(literal)
-                     for literal in self.literals[1:]]
-            s = " | ".join(parts)
-            return "{} {} requires ({})".format(source.name, source.version, s)
+            source_ids = [abs(self.literals[0])]
+            source = self._pretty_literals(pool, source_ids, unique=unique)
+            source = source[1:]  # trim off +/- sign
+            s = self._pretty_literals(pool, self.literals[1:], unique=unique)
+            rule_desc = "{} requires ({})".format(source, s)
         else:
-            return s
+            rule_desc = s
+
+        if self._requirement is not None:
+            rule_desc = "Requirement: '{}'\n\t{}".format(
+                self._requirement, rule_desc)
+
+        return rule_desc
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
