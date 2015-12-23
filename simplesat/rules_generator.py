@@ -55,11 +55,12 @@ class PackageRule(object):
                     package_literals.append(_id)
                 else:
                     package_literals.append(-_id)
-        return cls(package_literals)
+        return cls(package_literals, None, requirement)
 
-    def __init__(self, literals, reason):
+    def __init__(self, literals, reason, requirement=None):
         self.literals = tuple(sorted(literals))
         self._reason = RuleType(reason)
+        self._requirement = requirement
 
     @property
     def is_assertion(self):
@@ -189,7 +190,7 @@ class RulesGenerator(object):
             return PackageRule([-self._pool.package_id(issuer),
                                 -self._pool.package_id(provider)], reason)
 
-    def _create_install_one_of_rule(self, packages, reason):
+    def _create_install_one_of_rule(self, packages, reason, requirement=None):
         """
         Creates a rule to Install one of the given packages.
 
@@ -207,9 +208,9 @@ class RulesGenerator(object):
         rule: PackageRule
         """
         literals = [self._pool.package_id(p) for p in packages]
-        return PackageRule(literals, reason)
+        return PackageRule(literals, reason, requirement=requirement)
 
-    def _create_remove_rule(self, package, reason):
+    def _create_remove_rule(self, package, reason, requirement=None):
         """
         Create the rule to remove a package.
 
@@ -224,7 +225,8 @@ class RulesGenerator(object):
         -------
         rule: PackageRule or None
         """
-        return PackageRule((-self._pool.package_id(package),), reason)
+        return PackageRule((-self._pool.package_id(package),), reason,
+                           requirement=requirement)
 
     # -------------------------------------------------
     # API to assemble individual rules from requirement
@@ -296,14 +298,15 @@ class RulesGenerator(object):
                 if package not in self.installed_map:
                     self._add_package_rules(package)
 
-            rule = self._create_install_one_of_rule(packages,
-                                                    RuleType.job_install)
+            rule = self._create_install_one_of_rule(
+                packages, RuleType.job_install, requirement=job.requirement)
             self._add_rule(rule, "job")
 
     def _add_remove_job_rules(self, job):
         packages = self._pool.what_provides(job.requirement)
         for package in packages:
-            rule = self._create_remove_rule(package, RuleType.job_remove)
+            rule = self._create_remove_rule(
+                package, RuleType.job_remove, requirement=job.requirement)
             self._add_rule(rule, "job")
 
     def _add_update_job_rules(self, job):
@@ -320,7 +323,8 @@ class RulesGenerator(object):
         self._add_package_rules(package)
         rule = PackageRule(
             (self._pool.package_id(package),),
-            RuleType.job_update
+            RuleType.job_update,
+            requirement=job.requirement
         )
         self._add_rule(rule, "job")
 
