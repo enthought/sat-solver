@@ -8,11 +8,13 @@ PACKAGES = [
     "simplesat.sat.tests",
     "simplesat.scripts",
     "simplesat.tests",
+    "simplesat.test_data",
     "simplesat.utils",
 ]
 
 PACKAGE_DATA = {
     "simplesat.tests": ["*.yaml"],
+    "simplesat.test_data": ["indices/*.json"],
 }
 
 
