@@ -12,6 +12,9 @@ def _pkg_id_to_version(pool, package_id):
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
+    def __init__(self, pool, installed_repository):
+        pass
+
     @abc.abstractmethod
     def add_requirements(self, package_ids):
         """ Submit packages to the policy for consideration.
@@ -34,13 +37,13 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
 class PolicyLogger(IPolicy):
 
-    def __init__(self, policy, extra_args=None, extra_kwargs=None):
+    def __init__(self, policy, args=None, kwargs=None):
         self._policy = policy
-        self._log_pool = policy._pool
-        self._log_installed = policy._installed_ids.copy()
+        self._log_pool = args[0]
+        self._log_installed = getattr(policy, '_installed_ids', set()).copy()
         self._log_preferred = getattr(policy, '_preferred_ids', set()).copy()
-        self._log_extra_args = extra_args
-        self._log_extra_kwargs = extra_kwargs
+        self._log_args = args
+        self._log_kwargs = kwargs
         self._log_required = []
         self._log_suggestions = []
         self._log_assignment_changes = []
@@ -73,10 +76,13 @@ class PolicyLogger(IPolicy):
         package = self._log_pool._id_to_package[pkg_id]
         name_ver = '{} {}'.format(package.name, package.version)
         fill = '.' if pkg_id % 2 else ''
-        repo = package.repository_info.name
+        try:
+            repo = package.repository_info.name
+        except AttributeError:
+            repo = 'installed'
         return "{:{fill}<30} {:3} {}".format(name_ver, pkg_id, repo, fill=fill)
 
-    def _log_report(self, ids=None):
+    def _log_report(self, detailed=True):
 
         def pkg_name(pkg_id):
             return pkg_key(pkg_id)[0]
@@ -85,8 +91,7 @@ class PolicyLogger(IPolicy):
             pkg = self._log_pool._id_to_package[pkg_id]
             return pkg.name, pkg.version
 
-        if ids is None:
-            ids = map(abs, self._log_suggestions)
+        ids = map(abs, self._log_suggestions)
         report = []
         changes = []
         if self._log_assignment_changes:
@@ -106,13 +111,16 @@ class PolicyLogger(IPolicy):
             I = 'I' if sugg in installed else ' '
             changes = []
             try:
-                items = self._log_assignment_changes[i + 1].items()
-                for pkg, change in sorted(items, key=lambda p: pkg_key(p[0])):
-                    if pkg_name(pkg) != pkg_name(sugg):
-                        _pretty = self._log_pretty_pkg_id(pkg)
-                        fro, to = map(str, change)
-                        msg = "{:10} - {:10} : {}"
-                        changes.append(msg.format(fro, to, _pretty))
+                change_items = self._log_assignment_changes[i + 1].items()
+                if detailed:
+                    change_items = sorted(
+                        change_items, key=lambda p: pkg_key(p[0]))
+                    for pkg, change in change_items:
+                        if pkg_name(pkg) != pkg_name(sugg):
+                            _pretty = self._log_pretty_pkg_id(pkg)
+                            fro, to = map(str, change)
+                            msg = "{:10} - {:10} : {}"
+                            changes.append(msg.format(fro, to, _pretty))
                 if changes:
                     changes = '\n\t\t'.join([''] + changes)
                 else:
@@ -264,13 +272,12 @@ class UndeterminedClausePolicy(IPolicy):
             return None
 
 
+def LoggedPolicy(policy_factory):
+    def PolicyFactory(*args, **kwargs):
+        policy = policy_factory(*args, **kwargs)
+        logger = PolicyLogger(policy, args=args, kwargs=kwargs)
+        return logger
+    return PolicyFactory
 
-def LoggedUndeterminedClausePolicy(pool, installed_repository,
-                                   *args, **kwargs):
-    policy = UndeterminedClausePolicy(
-        pool, installed_repository, *args, **kwargs
-    )
-    logger = PolicyLogger(policy, extra_args=args, extra_kwargs=kwargs)
-    return logger
 
-InstalledFirstPolicy = LoggedUndeterminedClausePolicy
+InstalledFirstPolicy = LoggedPolicy(UndeterminedClausePolicy)
