@@ -14,6 +14,55 @@ from .clause import Clause
 from .policy import DefaultPolicy
 
 
+class UNSAT(object):
+
+    """An unsatisfiable set of boolean clauses."""
+
+    def __init__(self, conflict):
+        self._conflict = conflict
+        self._clauses = conflict.trail
+        self._requirements = [c for c in self._clauses
+                              if c.rule is not None
+                              if c.rule._requirement is not None]
+
+    def to_string(self, pool=None, detailed=False):
+        if pool and not detailed:
+            if len(self._requirements) == 2:
+                pretty_reqs = [
+                    "'{}' ({})".format(
+                        c.rule._requirement,
+                        c.rule._pretty_literals(
+                            pool, c.rule.literals,
+                            sign=False, unique=True
+                        )
+                    ) for c in self._requirements
+                ]
+                msg = "Requirement {} conflicts with {}"
+                reason = msg.format(*pretty_reqs)
+            else:
+                reason = "Conflicting rules:\n"
+                reason += '\n'.join(c.rule.to_string(pool)
+                                    for c in self._requirements)
+            return reason
+        else:
+            return self._detailed_string(pool)
+        return reason
+
+    def _detailed_string(self, pool=None):
+        if pool:
+            rules = [c.rule.to_string(pool, unique=True)
+                     for c in self._clauses
+                     if c.rule]
+            if self._conflict.rule:
+                rules.append(
+                    self._conflict.rule.to_string(pool, unique=True))
+            else:
+                rules.append(str(self._conflict))
+        else:
+            rules = [str(c.lits) for c in self._clauses + [self._conflict]]
+        return '\n'.join(rules)
+
+
 class MiniSATSolver(object):
     @classmethod
     def from_rules(cls, rules, policy=None):
@@ -151,8 +200,8 @@ class MiniSATSolver(object):
         """
         root_level = self.decision_level
         while True:
-            conflict = self.propagate()
-            if conflict is None:
+            conflict_clause = self.propagate()
+            if conflict_clause is None:
                 if self.number_assigned == self.number_variables:
                     # Model found.
                     return self.assignments.copy()  # Do something better...
@@ -166,10 +215,11 @@ class MiniSATSolver(object):
                     self.assume(p)
             else:
                 # Conflict!
+                learned_clause, bt_level = self.analyze(conflict_clause)
                 if root_level == self.decision_level:
-                    raise SatisfiabilityError("unknown conflict")
+                    conflict = UNSAT(learned_clause)
+                    raise SatisfiabilityError(conflict)
 
-                learned_clause, bt_level = self.analyze(conflict)
                 self.cancel_until(max(bt_level, root_level))
                 self.record(learned_clause)
 

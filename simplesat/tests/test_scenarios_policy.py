@@ -81,8 +81,11 @@ class ScenarioTestAssistant(object):
         except SatisfiabilityError as failure:
             if not scenario.failed:
                 msg = "Solver unexpectedly failed"
-                if failure.reason:
-                    msg += " because {0}".format(failure.reason)
+                if failure.unsat:
+                    reason = failure.unsat.to_string(pool=pool)
+                    msg += " because:\n{0}".format(reason)
+                    reason = failure.unsat.to_string(pool=pool, detailed=True)
+                    msg += "\n\nDetailed:\n{0}".format(reason)
                 self.fail(msg)
         else:
             if scenario.failed:
