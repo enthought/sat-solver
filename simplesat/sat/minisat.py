@@ -147,7 +147,7 @@ class MiniSATSolver(object):
             return True
 
     def search(self):
-        """ Return next solution, or False if unsatisfiable.
+        """ Return next solution or Raise SatisfiabilityError if unsatisfiable.
         """
         root_level = self.decision_level
         while True:
