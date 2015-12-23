@@ -33,7 +33,7 @@ class MiniSATSolver(object):
         """
         solver = cls(policy)
         for rule in rules:
-            solver.add_clause(rule.literals)
+            solver.add_clause(rule.literals, rule=rule)
         solver._setup_assignments()
         return solver
 
@@ -67,14 +67,14 @@ class MiniSATSolver(object):
 
         self._policy = policy or DefaultPolicy()
 
-    def add_clause(self, clause):
+    def add_clause(self, clause, rule=None):
         """ Add a new clause to the solver.
         """
         # TODO: Do some simplifications, and check whether clause contains p
         # and -p at the same time.
 
         if not isinstance(clause, Clause):
-            clause = Clause(clause, learned=False)
+            clause = Clause(clause, learned=False, rule=rule)
 
         if len(clause) == 0:
             # Clause is guaranteed to be false under the current variable
@@ -82,7 +82,7 @@ class MiniSATSolver(object):
             self.status = False
         elif len(clause) == 1:
             # Unit facts are enqueued.
-            self.enqueue(clause[0])
+            self.enqueue(clause[0], cause=clause)
         else:
             p, q = clause[:2]
             self.watches[-p].append(clause)
@@ -199,6 +199,8 @@ class MiniSATSolver(object):
         # Level to backtrack to.
         btlevel = 0
 
+        clause_trail = [conflict]
+
         while True:
             reason = conflict.calculate_reason(p)
 
@@ -220,6 +222,7 @@ class MiniSATSolver(object):
             while True:
                 p = self.trail[-1]
                 conflict = self.reason[abs(p)]
+                clause_trail.append(conflict)
                 self.undo_one()
                 if abs(p) in seen:
                     break
@@ -229,7 +232,7 @@ class MiniSATSolver(object):
                 break
 
         learned_lits.append(-p)  # At this point p is the UIP.
-        return Clause(learned_lits, learned=True), btlevel
+        return Clause(learned_lits, learned=True, trail=clause_trail), btlevel
 
     def record(self, learned_clause):  # Needs test.
         """Drive the backtracking by adding a learned clause, which is unit by
@@ -277,9 +280,9 @@ class MiniSATSolver(object):
         for _ in range(c):
             self.undo_one()
 
-    def assume(self, lit):
+    def assume(self, lit, cause="assumption"):
         self.trail_lim.append(len(self.trail))  # FIXME: This is fishy.
-        return self.enqueue(lit)
+        return self.enqueue(lit, cause="assumption")
 
     @property
     def number_assigned(self):
