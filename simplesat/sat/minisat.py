@@ -93,6 +93,9 @@ class MiniSATSolver(object):
 
         self.assignments = AssignmentSet()
 
+        # The most recent (non-None) assigned value of each literal
+        self.most_recent_assignments = {}
+
         # A list of literals which become successively true (because of direct
         # assignment, or by unit propagation).
         self.levels = defaultdict(int)
@@ -192,6 +195,7 @@ class MiniSATSolver(object):
             self.trail.append(lit)
             self.levels[abs(lit)] = self.decision_level
             self.reason[abs(lit)] = cause
+            self.most_recent_assignments[abs(lit)] = ((lit > 0), cause)
 
             return True
 
