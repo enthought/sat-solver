@@ -246,7 +246,7 @@ class RulesGenerator(object):
             self._rules_set[rule] = None
 
     def _add_dependencies_rules(self, package, work_queue):
-        for dependency in package.dependencies:
+        for dependency in sorted(package.dependencies):
             requirement = Requirement.from_legacy_requirement_string(dependency)
             dependency_candidates = self._pool.what_provides(requirement)
 
