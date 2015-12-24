@@ -215,7 +215,8 @@ class UndeterminedClausePolicy(IPolicy):
         )
 
     def _best_candidate(self, package_ids, assignments):
-        by_version = six.functools.partial(_pkg_id_to_version, self._pool)
+        def by_version(p_id):
+            return (_pkg_id_to_version(self._pool, p_id), p_id)
         unassigned = self._without_assigned(package_ids, assignments)
         try:
             return max(unassigned, key=by_version)
