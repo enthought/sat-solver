@@ -27,7 +27,8 @@ def solve_and_print(request, remote_repositories, installed_repository,
         transaction = solver.solve(request)
         print(transaction)
     except SatisfiabilityError as e:
-        print("UNSATISFIABLE: {}".format(e.unsat.to_string(pool)))
+        msg = "UNSATISFIABLE: {}"
+        print(msg.format(e.unsat.to_string(pool, detailed=debug)))
         print(e.unsat._find_requirement_time.pretty(fmt), file=sys.stderr)
     print(solver._last_rules_time.pretty(fmt), file=sys.stderr)
     print(solver._last_solver_init_time.pretty(fmt), file=sys.stderr)
