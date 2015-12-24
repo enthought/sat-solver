@@ -450,7 +450,7 @@ class TestMiniSATSolver(unittest.TestCase):
         self.assertEqual(s.decision_level, 3)
         for var in [1, 2, 5, 10, 11, 12, 16, 18]:
             self.assertIsNone(s.assignments[var])
-            self.assertIsNone(s.reason[var])
+            self.assertIsNone(s.assigning_clause[var])
         for lit, clauses in s.watches.items():
             if len(clauses) > 2:
                 self.assertNotEqual(s.assignments.value(-lit), False)

@@ -112,7 +112,7 @@ class MiniSATSolver(object):
 
         # For each variable assignment, a reference to the clause that forced
         # this assignment.
-        self.reason = OrderedDict()
+        self.assigning_clause = OrderedDict()
 
         # Whether the system is satisfiable.
         self.status = None
@@ -194,7 +194,7 @@ class MiniSATSolver(object):
             self.prop_queue.append(lit)
             self.trail.append(lit)
             self.levels[abs(lit)] = self.decision_level
-            self.reason[abs(lit)] = cause
+            self.assigning_clause[abs(lit)] = cause
             self.most_recent_assignments[abs(lit)] = ((lit > 0), cause)
 
             return True
@@ -275,7 +275,7 @@ class MiniSATSolver(object):
             # Select next literal to look at.
             while True:
                 p = self.trail[-1]
-                conflict = self.reason[abs(p)]
+                conflict = self.assigning_clause[abs(p)]
                 clause_trail.append(conflict)
                 self.undo_one()
                 if abs(p) in seen:
@@ -317,7 +317,7 @@ class MiniSATSolver(object):
         p = self.trail.pop()
         v = abs(p)  # Underlying variable
         self.assignments[v] = None
-        self.reason[v] = None
+        self.assigning_clause[v] = None
         self.levels[v] = -1  # FIXME Why -1?
 
     def cancel_until(self, level):
