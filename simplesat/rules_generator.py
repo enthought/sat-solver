@@ -147,7 +147,7 @@ class RulesGenerator(object):
             The package with a requirement
         dependencies: sequence
             Sequence of packages that fulfill the requirement.
-        reason: str
+        reason: RuleType
             A valid PackageRule.reason value
         reason_details: str
             Optional details explaining that rule origin.
@@ -176,7 +176,7 @@ class RulesGenerator(object):
             Package declaring the conflict
         provider: PackageInfo
             Package causing the conflict
-        reason: str
+        reason: RuleType
             One of PackageRule.reason
         reason_details: str
             Optional details explaining that rule origin.
@@ -199,7 +199,7 @@ class RulesGenerator(object):
         ----------
         packages: sequence
             List of packages to choose from
-        reason: str
+        reason: RuleType
             One of PackageRule.reason
 
         Returns
@@ -239,8 +239,8 @@ class RulesGenerator(object):
         ----------
         rule: PackageRule or None
             The rule to add
-        rule_type: str
-            Rule's  type
+        rule_type: RuleType
+            Rule's type
         """
         if rule is not None and rule not in self._rules_set:
             self._rules_set[rule] = None
