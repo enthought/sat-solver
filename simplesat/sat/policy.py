@@ -12,7 +12,7 @@ def _pkg_id_to_version(pool, package_id):
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
-    def __init__(self, pool, installed_repository):
+    def __init__(self, *args):
         pass
 
     @abc.abstractmethod
