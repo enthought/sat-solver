@@ -46,7 +46,7 @@ class UNSAT(object):
         return trail
 
     def to_string(self, pool=None, detailed=False):
-        pretty_reqs = [str(r) for r in self._requirements]
+        pretty_reqs = sorted(str(r) for r in self._requirements)
         if len(self._requirements) == 2:
             msg = "Requirement {!r} conflicts with {!r}"
             reason = msg.format(*pretty_reqs)
