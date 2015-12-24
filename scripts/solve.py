@@ -21,12 +21,14 @@ def solve_and_print(request, remote_repositories, installed_repository,
     solver = DependencySolver(
         pool, remote_repositories, installed_repository,
         policy=policy, use_pruning=prune)
+
+    fmt = "ELAPSED : {description:20} : {elapsed:e}"
     try:
         transaction = solver.solve(request)
         print(transaction)
     except SatisfiabilityError as e:
         print("UNSATISFIABLE: {}".format(e.unsat.to_string(pool)))
-    fmt = "ELAPSED : {description:20} : {elapsed:e}"
+        print(e.unsat._find_requirement_time.pretty(fmt), file=sys.stderr)
     print(solver._last_rules_time.pretty(fmt), file=sys.stderr)
     print(solver._last_solver_init_time.pretty(fmt), file=sys.stderr)
     print(solver._last_solve_time.pretty(fmt), file=sys.stderr)

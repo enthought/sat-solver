@@ -12,56 +12,48 @@ from simplesat.errors import SatisfiabilityError
 from .assignment_set import AssignmentSet
 from .clause import Clause
 from .policy import DefaultPolicy
+from simplesat.utils import timed_context
 
 
 class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
 
-    def __init__(self, conflict):
+    def __init__(self, conflict, learned):
         self._conflict = conflict
-        self._clauses = conflict.trail
-        self._requirements = [c for c in self._clauses
-                              if c.rule is not None
-                              if c.rule._requirement is not None]
+        self._clauses = [conflict, learned] + learned.trail + conflict.trail
+        self._find_requirement_time = None
+        with timed_context("Find Requirements") as self._find_requirement_time:
+            seen = set()
+            self._requirements = set(e.rule._requirement
+                                     for c in self._clauses
+                                     for e in self.expand(c, seen))
+            self._requirements.discard(None)
+
+    def expand(self, clause, seen):
+        try:
+            if clause.learned:
+                if clause not in seen:
+                    seen.add(clause)
+                    trail = (e for c in clause.trail
+                             for e in self.expand(c, seen))
+                else:
+                    trail = ()
+            else:
+                trail = (clause,)
+        except AttributeError:
+            trail = ()
+        return trail
 
     def to_string(self, pool=None, detailed=False):
-        if pool and not detailed:
-            if len(self._requirements) == 2:
-                pretty_reqs = [
-                    "'{}' ({})".format(
-                        c.rule._requirement,
-                        c.rule._pretty_literals(
-                            pool, c.rule.literals,
-                            sign=False, unique=True
-                        )
-                    ) for c in self._requirements
-                ]
-                msg = "Requirement {} conflicts with {}"
-                reason = msg.format(*pretty_reqs)
-            else:
-                reason = "Conflicting rules:\n"
-                reason += '\n'.join(c.rule.to_string(pool)
-                                    for c in self._requirements)
-            return reason
+        pretty_reqs = [str(r) for r in self._requirements]
+        if len(self._requirements) == 2:
+            msg = "Requirement {!r} conflicts with {!r}"
+            reason = msg.format(*pretty_reqs)
         else:
-            return self._detailed_string(pool)
+            reason = "Conflicting requirements:\n\t"
+            reason += '\n\t'.join(pretty_reqs)
         return reason
-
-    def _detailed_string(self, pool=None):
-        if pool:
-            rules = [c.rule.to_string(pool, unique=True)
-                     for c in self._clauses
-                     if c.rule]
-            if self._conflict.rule:
-                rules.append(
-                    self._conflict.rule.to_string(pool, unique=True))
-            else:
-                rules.append(str(self._conflict))
-        else:
-            rules = [str(c.lits) for c in self._clauses + [self._conflict]]
-        return '\n'.join(rules)
-
 
 class MiniSATSolver(object):
     @classmethod
@@ -221,7 +213,7 @@ class MiniSATSolver(object):
                 # Conflict!
                 learned_clause, bt_level = self.analyze(conflict_clause)
                 if root_level == self.decision_level:
-                    conflict = UNSAT(learned_clause)
+                    conflict = UNSAT(conflict_clause, learned_clause)
                     raise SatisfiabilityError(conflict)
 
                 self.cancel_until(max(bt_level, root_level))
