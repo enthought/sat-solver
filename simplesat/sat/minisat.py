@@ -19,16 +19,18 @@ class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
 
-    def __init__(self, conflict, learned):
+    def __init__(self, conflict, learned, assignments):
         self._conflict = conflict
         self._clauses = [conflict, learned] + learned.trail + conflict.trail
         self._find_requirement_time = None
         with timed_context("Find Requirements") as self._find_requirement_time:
             seen = set()
-            self._requirements = set(e.rule._requirement
-                                     for c in self._clauses
-                                     for e in self.expand(c, seen))
-            self._requirements.discard(None)
+            self._requirements = {
+                e.rule._requirement: e.rule
+                for c in self._clauses
+                for e in self.expand(c, seen)
+            }
+            self._requirements.pop(None)
 
     def expand(self, clause, seen):
         try:
@@ -46,14 +48,25 @@ class UNSAT(object):
         return trail
 
     def to_string(self, pool=None, detailed=False):
-        pretty_reqs = sorted(str(r) for r in self._requirements)
+        items = sorted(self._requirements.items(), key=str)
         if len(self._requirements) == 2:
-            msg = "Requirement {!r} conflicts with {!r}"
-            reason = msg.format(*pretty_reqs)
+            reqs, rules = zip(*items)
+            reason = ["Requirement '{}' conflicts with '{}'".format(*reqs)]
+            if detailed and pool:
+                reason.extend(
+                    rule.to_string(pool, unique=True) for rule in rules)
         else:
-            reason = "Conflicting requirements:\n\t"
-            reason += '\n\t'.join(pretty_reqs)
-        return reason
+            reason = ["Conflicting requirements:"]
+            if detailed and pool:
+                reason += [
+                    "{}".format(req, rule.to_string(pool, unique=True))
+                    for req, rule in items
+                ]
+            else:
+                reason += [
+                    "'{}'".format(req) for req, _ in items
+                ]
+        return '\n'.join(reason)
 
 class MiniSATSolver(object):
     @classmethod
@@ -213,7 +226,9 @@ class MiniSATSolver(object):
                 # Conflict!
                 learned_clause, bt_level = self.analyze(conflict_clause)
                 if root_level == self.decision_level:
-                    conflict = UNSAT(conflict_clause, learned_clause)
+                    conflict = UNSAT(
+                        conflict_clause, learned_clause,
+                        self.most_recent_assignments)
                     raise SatisfiabilityError(conflict)
 
                 self.cancel_until(max(bt_level, root_level))
