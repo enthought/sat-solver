@@ -11,7 +11,7 @@ from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import Transaction
-from simplesat.utils import timed_context
+from simplesat.utils import timed_context, connected_nodes
 
 
 class DependencySolver(object):
@@ -127,8 +127,8 @@ def _connected_packages(solution, root_ids, pool):
     # each one individually
     should_include = set()
     for pkg_id in solution_root_ids:
-        # We pass in `should_keep` to avoid re-walking a subgraph
-        nodes = _connected_nodes(pkg_id, neighborfunc, should_include)
+        # We pass in `should_include` to avoid re-walking a subgraph
+        nodes = connected_nodes(pkg_id, neighborfunc, should_include)
         should_include.update(nodes)
     assert should_include.issuperset(solution_root_ids)
 
@@ -136,22 +136,6 @@ def _connected_packages(solution, root_ids, pool):
     # all packages newly *excluded* from root_ids
     connected = should_include.union(s for s in solution if abs(s) in root_ids)
     return connected
-
-
-def _connected_nodes(node, neighborfunc, visited):
-    """ Recursively build up a set of nodes connected to `node` by following
-    neighbors as given by `neighborfunc(node)`. """
-    visited.add(node)
-    queued = set([node])
-
-    while queued:
-        node = queued.pop()
-        visited.add(node)
-        neighbors = neighborfunc(node)
-        queued.update(neighbors)
-        queued.difference_update(visited)
-
-    return visited
 
 
 def _solution_to_ids(solution):
