@@ -341,9 +341,9 @@ class MiniSATSolver(object):
         for _ in range(c):
             self.undo_one()
 
-    def assume(self, lit, cause="assumption"):
+    def assume(self, lit, cause=Clause([])):
         self.trail_lim.append(len(self.trail))  # FIXME: This is fishy.
-        return self.enqueue(lit, cause="assumption")
+        return self.enqueue(lit, cause=cause)
 
     @property
     def number_assigned(self):
