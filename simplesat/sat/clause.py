@@ -9,10 +9,9 @@ class Constraint(object):
 
 class Clause(Constraint):
 
-    def __init__(self, lits, learned=False, trail=None, rule=None):
+    def __init__(self, lits, learned=False, rule=None):
         self.learned = learned
         self.rule = rule
-        self.trail = trail or []
         # This maintains the ordering while removing duplicate values
         self.lits = list(OrderedDict.fromkeys(lits).keys())
 

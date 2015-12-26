@@ -14,59 +14,113 @@ from .clause import Clause
 from .policy import DefaultPolicy
 from simplesat.utils import timed_context
 
+#  from simplesat.rules_generator import CONFLICTABLE_RULETYPES
+
 
 class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
 
-    def __init__(self, conflict, learned, assignments):
+    def __init__(self, conflict, learned, assignments, trails):
+
         self._conflict = conflict
-        self._clauses = [conflict, learned] + learned.trail + conflict.trail
+        self._learned = learned
+        self._assignments = assignments
+        self._clause_trails = trails
+        self._flat_clause_trails = {}
+        self._clause_requirements = {}
+        self._conflict_details = []
+
         self._find_requirement_time = None
         with timed_context("Find Requirements") as self._find_requirement_time:
-            seen = set()
-            self._requirements = {
-                e.rule._requirement: e.rule
-                for c in self._clauses
-                for e in self.expand(c, seen)
-            }
-            self._requirements.pop(None)
+            # What conflict is implied?
+            assert len(learned.lits) == 1
+            self._implicand = -learned[0]
+            requirement_clauses = self.clause_requirements(learned)
+            self._conflict_details.append(requirement_clauses)
 
-    def expand(self, clause, seen):
-        try:
+    def _key(self, clause):
+        return sorted(abs(l) for l in clause.lits)
+
+    def clause_requirements(self, clause, ignore=None):
+        ignore = ignore or set()
+        if clause in ignore:
+            return []
+        ignore.add(clause)
+        if clause not in self._clause_requirements:
+            reqs = []
+            if clause.rule and clause.rule._requirement:
+                reqs.append(clause)
             if clause.learned:
-                if clause not in seen:
-                    seen.add(clause)
-                    trail = (e for c in clause.trail
-                             for e in self.expand(c, seen))
-                else:
-                    trail = ()
-            else:
-                trail = (clause,)
-        except AttributeError:
-            trail = ()
-        return trail
+                trail = self.clause_trail(clause)
+                reqs.extend(r for c in trail
+                            for r in self.clause_requirements(c, ignore))
+            self._clause_requirements[clause] = reqs
+        return self._clause_requirements[clause]
+
+    def clause_trail(self, clause, ignore=None):
+        ignore = ignore or set()
+        if clause in ignore:
+            return []
+        ignore.add(clause)
+        if clause not in self._flat_clause_trails:
+            flat_trail = []
+            if clause.learned:
+                for t_clause in self._clause_trails[clause]:
+                    if t_clause.learned:
+                        flat_trail.extend(self.clause_trail(t_clause, ignore))
+                    else:
+                        flat_trail.append(t_clause)
+                        ignore.add(t_clause)
+            self._flat_clause_trails[clause] = flat_trail
+        return self._flat_clause_trails[clause]
 
     def to_string(self, pool=None, detailed=False):
-        items = sorted(self._requirements.items(), key=str)
-        if len(self._requirements) == 2:
-            reqs, rules = zip(*items)
+        learned_clauses = self.clause_requirements(self._learned)
+
+        details = OrderedDict()
+
+        def add(clause):
+            if not isinstance(clause, Clause):
+                for c in clause:
+                    add(c)
+                return
+
+            if clause.learned:
+                clauses = self.clause_trail(clause)
+            else:
+                clauses = (clause,)
+
+            for clause in clauses:
+                if pool:
+                    pretties = (pool.id_to_string(l) for l in clause.lits)
+                else:
+                    pretties = clause.lits
+                key = tuple(sorted(pretties))
+                details.setdefault(key, clause)
+
+        if len(learned_clauses) == 2:
+            reqs = [c.rule._requirement for c in learned_clauses]
             reason = ["Requirement '{}' conflicts with '{}'".format(*reqs)]
-            if detailed and pool:
-                reason.extend(
-                    rule.to_string(pool, unique=True) for rule in rules)
+            if pool:
+                add(learned_clauses)
         else:
             reason = ["Conflicting requirements:"]
-            if detailed and pool:
-                reason += [
-                    "{}".format(req, rule.to_string(pool, unique=True))
-                    for req, rule in items
-                ]
-            else:
-                reason += [
-                    "'{}'".format(req) for req, _ in items
-                ]
-        return '\n'.join(reason)
+            add(learned_clauses)
+
+        if detailed:
+            add(self._conflict_details)
+
+        for clause in details.values():
+            is_requirement = clause in learned_clauses
+            if pool and (detailed or is_requirement):
+                reason.append(clause.rule.to_string(pool, unique=True))
+            elif is_requirement:
+                reason.append(str(clause.rule._requirement))
+            elif detailed:
+                reason.append(str(clause.lits))
+        return '\n'.join(reason) + '\n'
+
 
 class MiniSATSolver(object):
     @classmethod
@@ -118,6 +172,7 @@ class MiniSATSolver(object):
         # For each variable assignment, a reference to the clause that forced
         # this assignment.
         self.assigning_clause = OrderedDict()
+        self.clause_trails = {}
 
         # Whether the system is satisfiable.
         self.status = None
@@ -228,7 +283,8 @@ class MiniSATSolver(object):
                 if root_level == self.decision_level:
                     conflict = UNSAT(
                         conflict_clause, learned_clause,
-                        self.most_recent_assignments)
+                        self.most_recent_assignments,
+                        self.clause_trails)
                     raise SatisfiabilityError(conflict)
 
                 self.cancel_until(max(bt_level, root_level))
@@ -293,7 +349,9 @@ class MiniSATSolver(object):
                 break
 
         learned_lits.append(-p)  # At this point p is the UIP.
-        return Clause(learned_lits, learned=True, trail=clause_trail), btlevel
+        learned = Clause(learned_lits, learned=True)
+        self.clause_trails[learned] = clause_trail
+        return learned, btlevel
 
     def record(self, learned_clause):  # Needs test.
         """Drive the backtracking by adding a learned clause, which is unit by
