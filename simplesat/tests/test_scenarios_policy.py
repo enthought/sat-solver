@@ -1,5 +1,5 @@
 import os.path
-from unittest import TestCase, expectedFailure
+from unittest import TestCase
 
 import six
 
@@ -144,7 +144,8 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
         self._check_solution("update_single.yaml")
 
     def test_no_prefer_installed(self):
-        self._check_solution("no_prefer_installed.yaml", prefer_installed=False)
+        self._check_solution("no_prefer_installed.yaml",
+                             prefer_installed=False)
 
     def test_update_all(self):
         self._check_solution("update_all.yaml")
