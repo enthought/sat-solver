@@ -214,12 +214,13 @@ class UndeterminedClausePolicy(IPolicy):
             if assignments[pkg_id] is None
         )
 
+    def _by_version(self, package_id):
+        return (_pkg_id_to_version(self._pool, package_id), package_id)
+
     def _best_candidate(self, package_ids, assignments):
-        def by_version(p_id):
-            return (_pkg_id_to_version(self._pool, p_id), p_id)
         unassigned = self._without_assigned(package_ids, assignments)
         try:
-            return max(unassigned, key=by_version)
+            return max(unassigned, key=self._by_version)
         except ValueError:
             return None
 

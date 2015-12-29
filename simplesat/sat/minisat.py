@@ -144,10 +144,12 @@ class MiniSATSolver(object):
         self.watches = defaultdict(list)
 
         self.assignments = AssignmentSet()
-        self._assignment_seq = count()
 
         # The most recent (non-None) assigned value of each literal
         self.most_recent_assignments = {}
+
+        # The trail of clauses used to learn each new clause
+        self.clause_trails = {}
 
         # A list of literals which become successively true (because of direct
         # assignment, or by unit propagation).
@@ -165,8 +167,8 @@ class MiniSATSolver(object):
 
         # For each variable assignment, a reference to the clause that forced
         # this assignment.
-        self.assigning_clause = OrderedDict()
-        self.clause_trails = {}
+        self.assigning_clause = {}
+        self._assignment_seq = count()
 
         # Whether the system is satisfiable.
         self.status = None
