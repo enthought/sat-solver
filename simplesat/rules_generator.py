@@ -25,7 +25,8 @@ class PackageRule(object):
     @classmethod
     def _from_string(cls, rule_string, pool):
         """
-        Creates a PackageRule from a rule string, e.g. '-numpy-1.6.0 | numpy-1.7.0'
+        Creates a PackageRule from a rule string, e.g.
+            '-numpy-1.6.0 | numpy-1.7.0'
 
         Because package full name -> id is not 1-to-1 mapping, this may fail
         when a package has multiple ids. This is mostly used for testing, to
@@ -113,8 +114,8 @@ class PackageRule(object):
         return rule_desc
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__)
-                and self.literals == other.literals)
+        return (isinstance(other, self.__class__) and
+                self.literals == other.literals)
 
     def __ne__(self, other):
         return not (self == other)
@@ -177,7 +178,8 @@ class RulesGenerator(object):
 
         return PackageRule(literals, reason)
 
-    def _create_conflicts_rule(self, issuer, provider, reason, reason_details=""):
+    def _create_conflicts_rule(self, issuer, provider,
+                               reason, reason_details=""):
         """
         Create a conflict rule between issuer and provider
 
@@ -260,8 +262,9 @@ class RulesGenerator(object):
             self._rules_set[rule] = None
 
     def _add_dependencies_rules(self, package, work_queue):
+        R = Requirement.from_legacy_requirement_string
         for dependency in sorted(package.dependencies):
-            requirement = Requirement.from_legacy_requirement_string(dependency)
+            requirement = R(dependency)
             dependency_candidates = self._pool.what_provides(requirement)
 
             assert len(dependency_candidates) > 0, \
@@ -282,6 +285,7 @@ class RulesGenerator(object):
         """
         work_queue = collections.deque()
         work_queue.append(package)
+        R = Requirement.from_legacy_requirement_string
 
         while len(work_queue) > 0:
             p = work_queue.popleft()
@@ -291,7 +295,7 @@ class RulesGenerator(object):
                 self.added_package_ids.add(p_id)
                 self._add_dependencies_rules(p, work_queue)
 
-                requirement = Requirement.from_legacy_requirement_string(p.name)
+                requirement = R(p.name)
                 obsolete_providers = self._pool.what_provides(requirement)
                 for provider in obsolete_providers:
                     if provider != p:
