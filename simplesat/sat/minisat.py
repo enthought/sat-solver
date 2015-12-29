@@ -5,6 +5,7 @@ A SAT solver which follows the Minisat approach.
 from __future__ import absolute_import
 
 from collections import defaultdict, deque, OrderedDict
+from itertools import count
 
 from six.moves import range
 
@@ -151,6 +152,7 @@ class MiniSATSolver(object):
         self.watches = defaultdict(list)
 
         self.assignments = AssignmentSet()
+        self._assignment_seq = count()
 
         # The most recent (non-None) assigned value of each literal
         self.most_recent_assignments = {}
@@ -255,7 +257,8 @@ class MiniSATSolver(object):
             self.trail.append(lit)
             self.levels[abs(lit)] = self.decision_level
             self.assigning_clause[abs(lit)] = cause
-            self.most_recent_assignments[abs(lit)] = ((lit > 0), cause)
+            seq = next(self._assignment_seq)
+            self.most_recent_assignments[abs(lit)] = ((lit > 0), cause, seq)
 
             return True
 
