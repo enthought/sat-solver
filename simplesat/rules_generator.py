@@ -21,16 +21,6 @@ class RuleType(enum.Enum):
     internal = 256
 
 
-CONFLICTABLE_RULETYPES = set((
-    RuleType.job_update,
-    RuleType.job_install,
-    RuleType.job_remove,
-    RuleType.package_requires,
-    RuleType.package_same_name,
-    RuleType.package_implicit_obsoletes
-))
-
-
 class PackageRule(object):
     @classmethod
     def _from_string(cls, rule_string, pool):

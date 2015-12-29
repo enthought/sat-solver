@@ -15,8 +15,6 @@ from .clause import Clause
 from .policy import DefaultPolicy
 from simplesat.utils import timed_context
 
-#  from simplesat.rules_generator import CONFLICTABLE_RULETYPES
-
 
 class UNSAT(object):
 
