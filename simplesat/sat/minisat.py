@@ -98,14 +98,8 @@ class UNSAT(object):
                 key = tuple(sorted(pretties))
                 details.setdefault(key, clause)
 
-        if len(learned_clauses) == 2:
-            reqs = [c.rule._requirement for c in learned_clauses]
-            reason = ["Requirement '{}' conflicts with '{}'".format(*reqs)]
-            if pool:
-                add(learned_clauses)
-        else:
-            reason = ["Conflicting requirements:"]
-            add(learned_clauses)
+        reason = ["Conflicting requirements:"]
+        add(learned_clauses)
 
         if detailed:
             add(self._conflict_details)

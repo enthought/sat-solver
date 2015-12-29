@@ -83,7 +83,7 @@ class ScenarioTestAssistant(object):
                 msg = "Solver unexpectedly failed"
                 if failure.unsat:
                     reason = failure.unsat.to_string(pool=pool)
-                    msg += " because:\n{0}".format(reason)
+                    msg += ":\n{0}".format(reason)
                     reason = failure.unsat.to_string(pool=pool, detailed=True)
                     msg += "\n\nDetailed:\n{0}".format(reason)
                 self.fail(msg)
