@@ -1,6 +1,22 @@
-=====================
+=======================
 ``simplesat`` CHANGELOG
-=====================
+=======================
+
+Changes since version 0.1.0
+===========================
+
+Enhancements
+------------
+
+* Details relating to unsatisfiable scenarios are captured in an ``UNSAT``
+  object and attached to the ``SatisifiabilityError`` raised (#101).
+
+Bugs Fixed
+----------
+
+* ``IPolicy`` constructor now ignores initialization arguments (#101).
+* Some sort operations that were using non-unique keys have been fixed (#101).
+* Assumptions are now represented as an empty Clause object (#101).
 
 Version 0.1.0
 =============
@@ -35,3 +51,4 @@ Features
   assumptions made throughout the search process.
 * Make some effort to prune irrelevant truth values from solutions, i.e. find
   the minimal set of values needed to solve a problem.
+>>>>>>> fb1d985... MAINT: update changelog
