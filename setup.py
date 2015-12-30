@@ -6,7 +6,6 @@ PACKAGES = [
     "simplesat.examples",
     "simplesat.sat",
     "simplesat.sat.tests",
-    "simplesat.scripts",
     "simplesat.tests",
     "simplesat.utils",
 ]
