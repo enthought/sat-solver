@@ -3,3 +3,6 @@
 *.egg-info
 .coverage
 .tox
+benchmarks/env
+benchmarks/html
+benchmarks/sat-solver
