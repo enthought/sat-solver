@@ -1,9 +1,9 @@
 import argparse
 import sys
 
-from enstaller.new_solver import Pool
 
 from simplesat.dependency_solver import DependencySolver
+from simplesat.pool import Pool
 from simplesat.test_utils import Scenario
 
 
