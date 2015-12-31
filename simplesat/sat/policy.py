@@ -190,7 +190,7 @@ class UndeterminedClausePolicy(IPolicy):
                     assignments
                 )
 
-        assert assignments.get(candidate_id) is None, \
+        assert assignments.value(candidate_id) is None, \
             "Trying to assign to a variable which is already assigned."
 
         if not self.prefer_installed:
@@ -203,7 +203,7 @@ class UndeterminedClausePolicy(IPolicy):
     def _without_assigned(self, package_ids, assignments):
         return set(
             pkg_id for pkg_id in package_ids
-            if assignments.get(pkg_id) is None
+            if assignments.value(pkg_id) is None
         )
 
     def _best_candidate(self, package_ids, assignments):
