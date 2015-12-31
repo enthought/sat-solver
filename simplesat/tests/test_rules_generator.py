@@ -36,10 +36,10 @@ class TestRulesGenerator(unittest.TestCase):
         rules = list(rules_generator.iter_rules())
 
         # Then
-        self.assertEqual(len(rules), 1)
+        self.assertEqual(len(rules), 2)
 
         # Given/When
-        update = rules[0]
+        update = rules[1]
 
         # Then
         self.assertEqual(update.reason, RuleType.job_update)
