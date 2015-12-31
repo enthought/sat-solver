@@ -264,7 +264,6 @@ class UndeterminedClausePolicy(IPolicy):
             return None
 
 
-
 def LoggedUndeterminedClausePolicy(pool, installed_repository,
                                    *args, **kwargs):
     policy = UndeterminedClausePolicy(
