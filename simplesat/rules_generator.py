@@ -3,9 +3,9 @@ import enum
 from operator import attrgetter
 
 from enstaller.errors import EnstallerException
-
-from enstaller.new_solver.requirement import Requirement
 from enstaller.solver import JobType
+
+from .requirement import Requirement
 
 
 class RuleType(enum.Enum):
