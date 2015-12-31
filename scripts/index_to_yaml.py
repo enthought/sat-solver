@@ -60,7 +60,7 @@ def main(argv=None):
 
     data = dict(data)
     yaml.safe_dump(data, sys.stdout, allow_unicode=True,
-                   default_flow_style=False)
+                   width=100000, default_flow_style=False)
 
 
 if __name__ == "__main__":
