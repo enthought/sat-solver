@@ -35,60 +35,68 @@ class DependencySolver(object):
         if no resolution could be found.
         """
         with timed_context("Generate Rules") as self._last_rules_time:
-            requirement_ids, rules = self._create_rules_and_initialize_policy(
-                request
+            packed = create_rules_and_initialize_policy(
+                self._pool,
+                self._installed_repository,
+                request,
+                self._policy,
             )
+            installed_dict, requirement_ids, rules = packed
         with timed_context("Solver Init") as self._last_solver_init_time:
             sat_solver = MiniSATSolver.from_rules(rules, self._policy)
         with timed_context("SAT Solve") as self._last_solve_time:
             solution = sat_solver.search()
-        solution_ids = _solution_to_ids(solution)
 
-        installed_map = set(
-            self._pool.package_id(p)
-            for p in self._installed_repository
-        )
-
-        if self.use_pruning:
-            root_ids = installed_map.union(requirement_ids)
-            solution_ids = _connected_packages(
-                solution_ids, root_ids, self._pool
-            )
+        solution_ids, installed_map = compute_solution_ids(
+            self._pool, installed_dict, requirement_ids, solution,
+            use_pruning=True)
 
         return Transaction(self._pool, solution_ids, installed_map)
 
-    def _create_rules_and_initialize_policy(self, request):
-        pool = self._pool
-        installed_repository = self._installed_repository
 
-        all_requirement_ids = []
+def create_rules_and_initialize_policy(
+        pool, installed_repository, request, policy):
 
-        for job in request.jobs:
-            assert job.kind in (
-                JobType.install, JobType.remove, JobType.update
-            ), 'Unknown job kind: {}'.format(job.kind)
+    all_requirement_ids = []
 
-            requirement = job.requirement
+    for job in request.jobs:
+        assert job.kind in (
+            JobType.install, JobType.remove, JobType.update
+        ), 'Unknown job kind: {}'.format(job.kind)
 
-            providers = tuple(pool.what_provides(requirement))
-            if len(providers) == 0:
-                raise NoPackageFound(str(requirement), requirement)
+        requirement = job.requirement
 
-            if job.kind == JobType.update:
-                # An update request *must* install the latest package version
-                providers = [max(providers, key=attrgetter('version'))]
+        providers = tuple(pool.what_provides(requirement))
+        if len(providers) == 0:
+            raise NoPackageFound(str(requirement), requirement)
 
-            requirement_ids = [pool.package_id(p) for p in providers]
-            self._policy.add_requirements(requirement_ids)
-            all_requirement_ids.extend(requirement_ids)
+        if job.kind == JobType.update:
+            # An update request *must* install the latest package version
+            providers = [max(providers, key=attrgetter('version'))]
 
-        installed_map = collections.OrderedDict()
-        for package in installed_repository:
-            installed_map[pool.package_id(package)] = package
+        requirement_ids = [pool.package_id(p) for p in providers]
+        policy.add_requirements(requirement_ids)
+        all_requirement_ids.extend(requirement_ids)
 
-        rules_generator = RulesGenerator(pool, request, installed_map)
+    installed_map = collections.OrderedDict()
+    for package in installed_repository:
+        installed_map[pool.package_id(package)] = package
 
-        return all_requirement_ids, list(rules_generator.iter_rules())
+    rules_generator = RulesGenerator(pool, request, installed_map)
+    rules = list(rules_generator.iter_rules())
+
+    return (installed_map, all_requirement_ids, rules)
+
+
+def compute_solution_ids(
+        pool, installed_dict, requirement_ids, solution, use_pruning=True):
+    installed_map = set(installed_dict)
+    solution_ids = sorted(solution.assigned_literals,
+                          key=lambda lit: abs(lit))
+    if use_pruning:
+        root_ids = installed_map.union(requirement_ids)
+        solution_ids = _connected_packages(solution_ids, root_ids, pool)
+    return solution_ids, installed_map
 
 
 def _connected_packages(solution, root_ids, pool):
@@ -152,10 +160,3 @@ def _connected_nodes(node, neighborfunc, visited):
         queued.difference_update(visited)
 
     return visited
-
-
-def _solution_to_ids(solution):
-    # Return solution as list of signed integers.
-    ids = (pkg_id if value else -pkg_id
-           for pkg_id, value in six.iteritems(solution))
-    return sorted(ids, key=lambda lit: abs(lit))
