@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import io
@@ -14,7 +13,8 @@ class TestRulesGenerator(unittest.TestCase):
 
     def test_prefer_installed(self):
 
-        self.yaml = u"""
+        # Given
+        yaml = u"""
             packages:
                 - A 1.0.0-1
             installed:
@@ -24,8 +24,9 @@ class TestRulesGenerator(unittest.TestCase):
             request:
                 - operation: "update_all"
         """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
 
-        scenario = Scenario.from_yaml(io.StringIO(self.yaml))
+        # When
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
@@ -33,16 +34,23 @@ class TestRulesGenerator(unittest.TestCase):
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(pool, scenario.request, installed_map)
         rules = list(rules_generator.iter_rules())
-        updates = [r for r in rules if r.reason == RuleType.job_update]
 
-        self.assertEqual(len(updates), 1)
+        # Then
+        self.assertEqual(len(rules), 1)
 
-        update = updates[0]
+        # Given/When
+        update = rules[0]
 
+        # Then
         self.assertEqual(update.reason, RuleType.job_update)
         self.assertEqual(len(update.literals), 1)
 
+        # Given
+        installed_repo_package = next(iter(scenario.installed_repository))
+
+        # When
         pkg_id = update.literals[0]
         package = pool._id_to_package[pkg_id]
 
-        self.assertEqual(package.repository_info.name, "installed")
+        # Then
+        self.assertIs(package, installed_repo_package)
