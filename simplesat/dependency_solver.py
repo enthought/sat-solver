@@ -5,11 +5,11 @@ import six
 
 from egginst.errors import NoPackageFound
 from enstaller.solver import JobType
-from enstaller.new_solver import Requirement
 
+from simplesat.requirement import Requirement
+from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
-from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import Transaction
 from simplesat.utils import timed_context
 
