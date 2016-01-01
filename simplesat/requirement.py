@@ -8,8 +8,8 @@ from enstaller.new_solver.constraint import MultiConstraints
 from enstaller.new_solver.constraint_types import (
     Any, EnpkgUpstreamMatch, Equal
 )
-from enstaller.new_solver.constraints_parser import _RawRequirementParser
 
+from .constraints.parser import _RawRequirementParser
 from .errors import InvalidDependencyString, SolverException
 
 
