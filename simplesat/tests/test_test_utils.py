@@ -12,7 +12,7 @@ from enstaller.solver.request import _Job
 
 from okonomiyaki.platforms import PythonImplementation
 
-from ..requirement import Requirement
+from ..constraints import Requirement
 from ..test_utils import Scenario, parse_package_list, repository_factory
 
 if sys.version_info[0] == 2:

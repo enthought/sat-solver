@@ -6,7 +6,7 @@ import six
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.requirement import Requirement
+from simplesat.constraints import Requirement
 from simplesat.test_utils import repository_from_index
 from simplesat.test_data import NUMPY_INDEX
 

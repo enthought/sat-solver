@@ -5,7 +5,7 @@ from operator import attrgetter
 from enstaller.errors import EnstallerException
 from enstaller.solver import JobType
 
-from .requirement import Requirement
+from .constraints import Requirement
 
 
 class RuleType(enum.Enum):

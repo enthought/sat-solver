@@ -15,8 +15,7 @@ from enstaller.solver import Request
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints import PrettyPackageStringParser
-from simplesat.requirement import Requirement
+from simplesat.constraints import PrettyPackageStringParser, Requirement
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import (
     InstallOperation, RemoveOperation, UpdateOperation

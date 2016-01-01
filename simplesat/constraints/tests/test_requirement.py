@@ -2,9 +2,10 @@ import unittest
 
 from okonomiyaki.versions import EnpkgVersion
 
-from ..constraints import MultiConstraints
-from ..constraints.kinds import Any, EnpkgUpstreamMatch, Equal
-from ..errors import InvalidDependencyString, SolverException
+from simplesat.errors import InvalidDependencyString, SolverException
+
+from ..kinds import Any, EnpkgUpstreamMatch, Equal
+from ..multi import MultiConstraints
 from ..requirement import Requirement, parse_package_full_name
 
 

@@ -4,13 +4,12 @@ import six
 
 from okonomiyaki.versions import EnpkgVersion
 
-from .constraints import MultiConstraints
-from .constraints.kinds import Any, EnpkgUpstreamMatch, Equal
-from .constraints.package_parser import (
-    _legacy_requirement_string_to_name_constraints
-)
-from .constraints.parser import _RawRequirementParser
-from .errors import InvalidDependencyString, SolverException
+from simplesat.errors import InvalidDependencyString, SolverException
+
+from .kinds import Any, EnpkgUpstreamMatch, Equal
+from .multi import MultiConstraints
+from .package_parser import _legacy_requirement_string_to_name_constraints
+from .parser import _RawRequirementParser
 
 
 _FULL_PACKAGE_RE = re.compile("""\
@@ -232,4 +231,3 @@ class _LegacyRequirement(object):
 
     def __hash__(self):
         return hash(self._requirement)
-
