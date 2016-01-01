@@ -2,11 +2,11 @@ import unittest
 
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller.new_solver.constraint import MultiConstraints
 from enstaller.new_solver.constraint_types import (
     Any, EnpkgUpstreamMatch, Equal
 )
 
+from ..constraints import MultiConstraints
 from ..errors import InvalidDependencyString, SolverException
 from ..requirement import Requirement, parse_package_full_name
 
