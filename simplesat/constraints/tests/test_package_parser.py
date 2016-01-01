@@ -6,9 +6,9 @@ import six
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller.new_solver.constraint_types import Equal
 from enstaller.package import PackageMetadata
 
+from simplesat.constraints.kinds import Equal
 from simplesat.constraints.package_parser import (
     PrettyPackageStringParser, legacy_dependencies_to_pretty_string,
     package_to_pretty_string

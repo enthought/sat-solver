@@ -4,11 +4,8 @@ import six
 
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller.new_solver.constraint_types import (
-    Any, EnpkgUpstreamMatch, Equal
-)
-
 from .constraints import MultiConstraints
+from .constraints.kinds import Any, EnpkgUpstreamMatch, Equal
 from .constraints.package_parser import (
     _legacy_requirement_string_to_name_constraints
 )

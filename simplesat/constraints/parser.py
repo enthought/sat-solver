@@ -1,7 +1,7 @@
 import collections
 import re
 
-from enstaller.new_solver.constraint_types import (
+from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT, Not
 )
 

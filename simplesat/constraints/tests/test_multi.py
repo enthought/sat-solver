@@ -2,10 +2,9 @@ import unittest
 
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller.new_solver.constraint_types import (
-    Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT, Not, _VersionConstraint
+from ..kinds import (
+    Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT, Not, IVersionConstraint
 )
-
 from ..multi import MultiConstraints
 
 
@@ -36,11 +35,16 @@ class TestConstraintMisc(unittest.TestCase):
 
     def test_comparison(self):
         # Given
+        class DummyVersion(IVersionConstraint):
+            def matches(self, version):
+                return True
+
         v1 = V("1.2.1-1")
         v2 = V("1.2.1-1")
 
-        self.assertEqual(_VersionConstraint(v1), _VersionConstraint(v2))
-        self.assertFalse(_VersionConstraint(v1) != _VersionConstraint(v2))
+        # Then
+        self.assertEqual(DummyVersion(v1), DummyVersion(v2))
+        self.assertFalse(DummyVersion(v1) != DummyVersion(v2))
 
 
 class TestAreCompatible(unittest.TestCase):

@@ -3,14 +3,13 @@ import unittest
 
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller.new_solver.constraint_types import (
+from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GT, GEQ, LT, LEQ, Not
 )
-
-from simplesat.errors import SolverException
 from simplesat.constraints.parser import (
     _RawConstraintsParser, _RawRequirementParser
 )
+from simplesat.errors import SolverException
 
 
 V = EnpkgVersion.from_string
