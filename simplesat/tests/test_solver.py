@@ -4,9 +4,9 @@ from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from enstaller import Repository
-from enstaller.new_solver.package_parser import PrettyPackageStringParser
 from enstaller.solver import Request
 
+from simplesat.constraints import PrettyPackageStringParser
 from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
 from simplesat.requirement import Requirement

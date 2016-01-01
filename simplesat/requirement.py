@@ -9,6 +9,9 @@ from enstaller.new_solver.constraint_types import (
     Any, EnpkgUpstreamMatch, Equal
 )
 
+from .constraints.package_parser import (
+    _legacy_requirement_string_to_name_constraints
+)
 from .constraints.parser import _RawRequirementParser
 from .errors import InvalidDependencyString, SolverException
 
@@ -79,19 +82,10 @@ class Requirement(object):
         requirement_string : str
             The legacy requirement string, e.g. 'MKL 10.3'
         """
-        parts = requirement_string.split(None, 1)
-        if len(parts) == 2:
-            name, version_string = parts
-            version = version_factory(version_string)
-            if version.build == 0:
-                return cls(name, [EnpkgUpstreamMatch(version)])
-            else:
-                return cls(name, [Equal(version)])
-        elif len(parts) == 1:
-            name = parts[0]
-            return cls(name, [Any()])
-        else:
-            raise ValueError(parts)
+        name, constraint = _legacy_requirement_string_to_name_constraints(
+            requirement_string
+        )
+        return cls(name, [constraint])
 
     @classmethod
     def from_package_string(cls, package_string,
