@@ -10,12 +10,11 @@ from enstaller.legacy_stores import parse_index
 from enstaller.package import RepositoryPackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo
 
-from enstaller.solver import Request
-
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, Requirement
+from simplesat.request import Request
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import (
     InstallOperation, RemoveOperation, UpdateOperation

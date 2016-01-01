@@ -4,9 +4,9 @@ from operator import attrgetter
 import six
 
 from egginst.errors import NoPackageFound
-from enstaller.solver import JobType
 
 from simplesat.constraints import Requirement
+from simplesat.request import JobType
 from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver

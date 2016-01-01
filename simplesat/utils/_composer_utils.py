@@ -5,11 +5,10 @@ don't use this in enstaller itself.
 import collections
 import json
 
-from enstaller.solver import JobType
-
 from ..constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT
 )
+from ..request import JobType
 from ..requirement import Requirement
 
 # We ignore alpha/rc/etc... as composer does not allow to combine those with
