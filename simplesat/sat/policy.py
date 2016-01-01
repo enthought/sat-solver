@@ -3,7 +3,7 @@ from collections import Counter
 
 import six
 
-from enstaller.collections import DefaultOrderedDict
+from simplesat.utils import DefaultOrderedDict
 
 
 def _pkg_id_to_version(pool, package_id):
