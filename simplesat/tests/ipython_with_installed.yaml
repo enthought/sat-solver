@@ -108,9 +108,9 @@ decisions:
 
 transaction:
     - kind: "install"
-      package: "ssl_match_hostname 3.4.0.2-1"
-    - kind: "install"
       package: "zeromq 4.0.4-1"
+    - kind: "install"
+      package: "ssl_match_hostname 3.4.0.2-1"
     - kind: "install"
       package: "pyzmq 14.3.1-1"
     - kind: "install"
