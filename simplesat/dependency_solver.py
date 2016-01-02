@@ -1,5 +1,4 @@
 import collections
-from operator import attrgetter
 
 import six
 
@@ -76,7 +75,9 @@ class DependencySolver(object):
 
             if job.kind == JobType.update:
                 # An update request *must* install the latest package version
-                providers = [max(providers, key=attrgetter('version'))]
+                def key(package):
+                    return (package.version, package in installed_repository)
+                providers = [max(providers, key=key)]
 
             requirement_ids = [pool.package_id(p) for p in providers]
             self._policy.add_requirements(requirement_ids)
