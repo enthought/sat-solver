@@ -80,7 +80,8 @@ class Repository(object):
         Returns
         -------
         packages : iterable
-            Iterable of RemotePackageMetadata-like (order is unspecified)
+            Iterable of RemotePackageMetadata-like (order is from lower to
+            higher version)
         """
         if name in self._name_to_packages:
             return list(self._name_to_packages[name])
