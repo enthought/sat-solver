@@ -2,9 +2,9 @@ import collections
 import enum
 
 from enstaller.errors import EnstallerException
-from enstaller.solver import JobType
 
-from .requirement import Requirement
+from .constraints import Requirement
+from .request import JobType
 
 
 class RuleType(enum.Enum):

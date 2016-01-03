@@ -4,13 +4,12 @@ import six
 
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller.new_solver.constraint import MultiConstraints
-from enstaller.new_solver.constraint_types import (
-    Any, EnpkgUpstreamMatch, Equal
-)
-from enstaller.new_solver.constraints_parser import _RawRequirementParser
+from simplesat.errors import InvalidDependencyString, SolverException
 
-from .errors import InvalidDependencyString, SolverException
+from .kinds import Any, EnpkgUpstreamMatch, Equal
+from .multi import MultiConstraints
+from .package_parser import _legacy_requirement_string_to_name_constraints
+from .parser import _RawRequirementParser
 
 
 _FULL_PACKAGE_RE = re.compile("""\
@@ -79,19 +78,10 @@ class Requirement(object):
         requirement_string : str
             The legacy requirement string, e.g. 'MKL 10.3'
         """
-        parts = requirement_string.split(None, 1)
-        if len(parts) == 2:
-            name, version_string = parts
-            version = version_factory(version_string)
-            if version.build == 0:
-                return cls(name, [EnpkgUpstreamMatch(version)])
-            else:
-                return cls(name, [Equal(version)])
-        elif len(parts) == 1:
-            name = parts[0]
-            return cls(name, [Any()])
-        else:
-            raise ValueError(parts)
+        name, constraint = _legacy_requirement_string_to_name_constraints(
+            requirement_string
+        )
+        return cls(name, [constraint])
 
     @classmethod
     def from_package_string(cls, package_string,
@@ -241,4 +231,3 @@ class _LegacyRequirement(object):
 
     def __hash__(self):
         return hash(self._requirement)
-

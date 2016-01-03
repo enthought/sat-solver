@@ -3,6 +3,8 @@ from setuptools import setup
 
 PACKAGES = [
     "simplesat",
+    "simplesat.constraints",
+    "simplesat.constraints.tests",
     "simplesat.examples",
     "simplesat.sat",
     "simplesat.sat.tests",

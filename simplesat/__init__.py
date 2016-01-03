@@ -1,1 +1,1 @@
-from .requirement import Requirement
+from .constraints import Requirement

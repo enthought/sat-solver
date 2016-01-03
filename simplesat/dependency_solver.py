@@ -3,9 +3,9 @@ import collections
 import six
 
 from egginst.errors import NoPackageFound
-from enstaller.solver import JobType
 
-from simplesat.requirement import Requirement
+from simplesat.constraints import Requirement
+from simplesat.request import JobType
 from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
