@@ -18,9 +18,6 @@ Bugs Fixed
 * Some sort operations that were using non-unique keys have been fixed (#101).
 * Assumptions are now represented as an empty Clause object (#101).
 
-Changes since version 0.1.0
-===========================
-
 Version 0.1.0
 =============
 
@@ -54,4 +51,3 @@ Features
   assumptions made throughout the search process.
 * Make some effort to prune irrelevant truth values from solutions, i.e. find
   the minimal set of values needed to solve a problem.
->>>>>>> fb1d985... MAINT: update changelog
