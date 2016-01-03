@@ -114,12 +114,14 @@ class TestRepository(unittest.TestCase):
         dummy_with_proxy 1.3.40-3
         dummy_with_proxy_scripts 1.0.0-1
         dummy_with_proxy_softlink 1.0.0-1
-        nose 1.2.1-1
         nose 1.3.0-1
+        nose 1.2.1-1
         nose 1.3.0-2\
         """)
         packages = self.packages_from_definition(packages_definition)
         repository = Repository(packages)
+
+        r_versions = [V("1.2.1-1"), V("1.3.0-1"), V("1.3.0-2")]
 
         # When
         packages = repository.find_packages("nose")
@@ -134,6 +136,7 @@ class TestRepository(unittest.TestCase):
 
         # Then
         self.assertEqual(len(packages), 3)
+        self.assertEqual([p.version for p in packages], r_versions)
 
         # When
         packages = repository.find_packages("non_existing_package")

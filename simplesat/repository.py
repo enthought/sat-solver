@@ -14,7 +14,8 @@ class Repository(object):
     """
     def __init__(self, packages=None):
         self._name_to_packages = collections.defaultdict(list)
-        # Sorted list of keys in self._name_to_packages
+        # Sorted list of keys in self._name_to_packages, to keep iteration
+        # over a repository reproducible
         self._names = []
 
         packages = packages or []
@@ -22,8 +23,10 @@ class Repository(object):
             self.add_package(package)
 
     def __len__(self):
-        return sum(len(self._name_to_packages[p])
-                   for p in self._name_to_packages)
+        return sum(
+            len(self._name_to_packages[p])
+            for p in self._name_to_packages
+        )
 
     def __iter__(self):
         for name in self._names:
