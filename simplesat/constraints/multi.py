@@ -29,7 +29,10 @@ class MultiConstraints(object):
         return cls(parser.parse(requirement_string, version_factory))
 
     def __init__(self, constraints=None):
-        self._constraints = tuple(constraints) or tuple()
+        if constraints is None:
+            self._constraints = frozenset()
+        else:
+            self._constraints = frozenset(constraints)
 
     def matches(self, version_candidate):
         """ Returns True if the given version matches this set of
