@@ -1,9 +1,8 @@
 import collections
 import enum
 
-from enstaller.errors import EnstallerException
-
 from .constraints import Requirement
+from .errors import NoPackageFound, SolverException
 from .request import JobType
 
 
@@ -43,11 +42,11 @@ class PackageRule(object):
             package_candidates = pool.what_provides(requirement)
             if len(package_candidates) == 0:
                 msg = "No candidate for package {0!r}".format(package_string)
-                raise EnstallerException(msg)
+                raise NoPackageFound(msg)
             elif len(package_candidates) > 1:
                 msg = "> 1 candidate for package {0!r} requirement, cannot " \
                       "create rule from it" % package_string
-                raise EnstallerException(msg)
+                raise SolverException(msg)
             else:
                 _id = pool.package_id(package_candidates[0])
                 if positive:

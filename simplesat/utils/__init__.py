@@ -3,5 +3,16 @@
 # flake8: noqa
 from __future__ import absolute_import
 
+import contextlib
+import shutil
+import tempfile
+
 from .timed_context import timed_context
 from ._collections import DefaultOrderedDict
+
+
+@contextlib.contextmanager
+def mkdtemp():
+    d = tempfile.mkdtemp()
+    yield d
+    shutil.rmtree(d)

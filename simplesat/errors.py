@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from egginst.errors import SolverException
+class SolverException(Exception):
+    pass
 
 
 class InvalidDependencyString(SolverException):
     pass
 
 
-class NoSuchPackage(SolverException):
+class NoPackageFound(SolverException):
     pass
 
 

@@ -8,7 +8,7 @@ from enstaller.package import PackageMetadata, RemotePackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo, FSRepositoryInfo
 
 from simplesat.constraints import PrettyPackageStringParser
-from simplesat.errors import NoSuchPackage
+from simplesat.errors import NoPackageFound
 from simplesat.repository import Repository
 
 
@@ -99,10 +99,10 @@ class TestRepository(unittest.TestCase):
         repository = Repository(packages)
 
         # When/Then
-        with self.assertRaises(NoSuchPackage):
+        with self.assertRaises(NoPackageFound):
             repository.find_package("nose", V("1.4.0-1"))
 
-        with self.assertRaises(NoSuchPackage):
+        with self.assertRaises(NoPackageFound):
             repository.find_package("nono", V("1.4.0-1"))
 
     def test_find_packages(self):

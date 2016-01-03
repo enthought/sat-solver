@@ -4,7 +4,7 @@ import bisect
 import collections
 import operator
 
-from .errors import NoSuchPackage
+from .errors import NoPackageFound
 
 
 class Repository(object):
@@ -64,7 +64,7 @@ class Repository(object):
         for candidate in candidates:
             if candidate.version == version:
                 return candidate
-        raise NoSuchPackage(
+        raise NoPackageFound(
             "Package '{0}-{1}' not found".format(name, str(version))
         )
 
