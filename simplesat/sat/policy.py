@@ -3,7 +3,7 @@ from collections import Counter
 
 import six
 
-from enstaller.collections import DefaultOrderedDict
+from simplesat.utils import DefaultOrderedDict
 
 
 def _pkg_id_to_version(pool, package_id):
@@ -190,7 +190,7 @@ class UndeterminedClausePolicy(IPolicy):
                     assignments
                 )
 
-        assert assignments[candidate_id] is None, \
+        assert assignments.get(candidate_id) is None, \
             "Trying to assign to a variable which is already assigned."
 
         if not self.prefer_installed:
@@ -203,7 +203,7 @@ class UndeterminedClausePolicy(IPolicy):
     def _without_assigned(self, package_ids, assignments):
         return set(
             pkg_id for pkg_id in package_ids
-            if assignments[pkg_id] is None
+            if assignments.get(pkg_id) is None
         )
 
     def _best_candidate(self, package_ids, assignments):
@@ -262,7 +262,6 @@ class UndeterminedClausePolicy(IPolicy):
             return min(unassigned_ids)
         else:
             return None
-
 
 
 def LoggedUndeterminedClausePolicy(pool, installed_repository,

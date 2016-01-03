@@ -4,10 +4,10 @@ from unittest import TestCase, expectedFailure
 import six
 
 from egginst.errors import NoPackageFound
-from enstaller.new_solver import Pool
 
 from simplesat.errors import SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
+from simplesat.pool import Pool
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.test_utils import Scenario
 from simplesat.transaction import (
@@ -148,6 +148,9 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_update_all_conflict(self):
         self._check_solution("update_all_conflict.yaml")
+
+    def test_update_all_noop(self):
+        self._check_solution("update_all_noop.yaml")
 
     def test_ipython_upgrade(self):
         self._check_solution("ipython_upgrade.yaml")

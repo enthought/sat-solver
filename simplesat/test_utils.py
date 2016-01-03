@@ -1,19 +1,22 @@
 import collections
+import json
 import os
 
 import six
 import yaml
 
 from enstaller import Repository
-from enstaller.new_solver import Requirement
+from enstaller.legacy_stores import parse_index
 from enstaller.new_solver.package_parser import PrettyPackageStringParser
 from enstaller.package import RepositoryPackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo
+
 from enstaller.solver import Request
 
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
+from simplesat.requirement import Requirement
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import (
     InstallOperation, RemoveOperation, UpdateOperation
@@ -170,3 +173,16 @@ class Scenario(object):
             package = pool._id_to_package[package_id]
             print("{}: {} {}".format(package_id, package.name,
                                      package.full_version))
+
+
+def repository_from_index(path, pyver="2.7"):
+    """ Create a repository from a index.json file.
+    """
+    with open(path) as fp:
+        data = json.load(fp)
+
+    repository = Repository()
+    for package in parse_index(data, "", pyver):
+        repository.add_package(package)
+
+    return repository

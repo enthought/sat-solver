@@ -122,6 +122,25 @@ class TestAssignmentSet(unittest.TestCase):
         self.assertIs(AS.value(3), None)
         self.assertIs(AS.value(-3), None)
 
+    def test_getitem(self):
+        AS = AssignmentSet()
+
+        AS[1] = False
+        AS[2] = True
+        AS[3] = None
+
+        self.assertFalse(AS[1])
+        self.assertTrue(AS[2])
+        self.assertIs(AS[3], None)
+
+        with self.assertRaises(KeyError):
+            AS[4]
+
+        self.assertFalse(AS.get(1))
+        self.assertTrue(AS.get(2))
+        self.assertIs(AS.get(3), None)
+        self.assertIs(AS.get(4), None)
+
     def test_changelog(self):
 
         AS = AssignmentSet()

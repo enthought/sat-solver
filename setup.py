@@ -6,19 +6,21 @@ PACKAGES = [
     "simplesat.examples",
     "simplesat.sat",
     "simplesat.sat.tests",
-    "simplesat.scripts",
     "simplesat.tests",
+    "simplesat.test_data",
     "simplesat.utils",
+    "simplesat.utils.tests",
 ]
 
 PACKAGE_DATA = {
     "simplesat.tests": ["*.yaml"],
+    "simplesat.test_data": ["indices/*.json"],
 }
 
 
 setup(
     name='simplesat',
-    version='0.1',
+    version='0.2.0.dev1',
     author='Enthought, Inc',
     author_email='info@enthought.com',
     url='https://github.com/enthought/sat-solvers',

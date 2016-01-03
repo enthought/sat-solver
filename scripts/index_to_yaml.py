@@ -6,11 +6,12 @@ import sys
 import yaml
 
 from enstaller.new_solver.tests.common import repository_from_index
-from enstaller.new_solver.requirement import Requirement
 from enstaller.new_solver.constraint_types import (
     Any, EnpkgUpstreamMatch, Equal
 )
 from enstaller.versions import EnpkgVersion
+
+from simplesat.requirement import Requirement
 
 
 # TODO Can use new enstaller pretty printer here...
@@ -60,7 +61,7 @@ def main(argv=None):
 
     data = dict(data)
     yaml.safe_dump(data, sys.stdout, allow_unicode=True,
-                   default_flow_style=False)
+                   width=100000, default_flow_style=False)
 
 
 if __name__ == "__main__":
