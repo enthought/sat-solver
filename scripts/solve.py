@@ -3,9 +3,9 @@ from __future__ import print_function
 import argparse
 import sys
 
-from enstaller.new_solver import Pool
 
 from simplesat.dependency_solver import DependencySolver
+from simplesat.pool import Pool
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.test_utils import Scenario
 from simplesat.errors import SatisfiabilityError

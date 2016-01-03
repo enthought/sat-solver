@@ -5,14 +5,13 @@ import textwrap
 from egginst._compat import StringIO
 from egginst.tests.common import mkdtemp
 
-from enstaller.new_solver import Requirement
 from enstaller.package import RepositoryPackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo
-from enstaller.solver import JobType
-from enstaller.solver.request import _Job
 
 from okonomiyaki.platforms import PythonImplementation
 
+from ..constraints import Requirement
+from ..request import _Job, JobType
 from ..test_utils import Scenario, parse_package_list, repository_factory
 
 if sys.version_info[0] == 2:

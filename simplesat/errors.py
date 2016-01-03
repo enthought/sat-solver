@@ -4,6 +4,10 @@
 from egginst.errors import SolverException
 
 
+class InvalidDependencyString(SolverException):
+    pass
+
+
 class SatisfiabilityError(SolverException):
     def __init__(self, unsat):
         reason = unsat.to_string()

@@ -5,12 +5,11 @@ don't use this in enstaller itself.
 import collections
 import json
 
-from enstaller.new_solver.constraint_types import (
+from ..constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT
 )
-from enstaller.new_solver.requirement import Requirement
-from enstaller.solver import JobType
-
+from ..request import JobType
+from ..requirement import Requirement
 
 # We ignore alpha/rc/etc... as composer does not allow to combine those with
 # patch versions, which we use to emulate build numbers.

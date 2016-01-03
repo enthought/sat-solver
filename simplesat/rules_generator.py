@@ -1,11 +1,10 @@
 import collections
 import enum
-from operator import attrgetter
 
 from enstaller.errors import EnstallerException
 
-from enstaller.new_solver.requirement import Requirement
-from enstaller.solver import JobType
+from .constraints import Requirement
+from .request import JobType
 
 
 class RuleType(enum.Enum):
@@ -335,7 +334,10 @@ class RulesGenerator(object):
         if len(packages) == 0:
             return
         # An update request *must* install the latest package version
-        package = max(packages, key=attrgetter('version'))
+        def key(package):
+            installed = self._pool.package_id(package) in self.installed_map
+            return (package.version, installed)
+        package = max(packages, key=key)
         self._add_package_rules(package)
         rule = PackageRule(
             (self._pool.package_id(package),),

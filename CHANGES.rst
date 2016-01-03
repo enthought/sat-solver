@@ -18,6 +18,9 @@ Bugs Fixed
 * Some sort operations that were using non-unique keys have been fixed (#101).
 * Assumptions are now represented as an empty Clause object (#101).
 
+Changes since version 0.1.0
+===========================
+
 Version 0.1.0
 =============
 

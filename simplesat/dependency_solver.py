@@ -1,15 +1,14 @@
 import collections
-from operator import attrgetter
 
 import six
 
 from egginst.errors import NoPackageFound
-from enstaller.solver import JobType
-from enstaller.new_solver import Requirement
 
+from simplesat.constraints import Requirement
+from simplesat.request import JobType
+from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
-from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import Transaction
 from simplesat.utils import timed_context, connected_nodes
 
@@ -76,7 +75,9 @@ class DependencySolver(object):
 
             if job.kind == JobType.update:
                 # An update request *must* install the latest package version
-                providers = [max(providers, key=attrgetter('version'))]
+                def key(package):
+                    return (package.version, package in installed_repository)
+                providers = [max(providers, key=key)]
 
             requirement_ids = [pool.package_id(p) for p in providers]
             self._policy.add_requirements(requirement_ids)
