@@ -34,6 +34,18 @@ class Repository(object):
                 yield package
 
     def add_package(self, package_metadata):
+        """ Add the given package to this repository.
+
+        Parameters
+        ----------
+        package : PackageMetadata
+            The package metadata to add. May be a subclass of PackageMetadata.
+
+        Note
+        ----
+        If the same package is added multiple times to a repository, every copy
+        will be available when calling find_package or when iterating.
+        """
         if package_metadata.name not in self._name_to_packages:
             bisect.insort(self._names, package_metadata.name)
 
@@ -88,8 +100,11 @@ class Repository(object):
         else:
             return []
 
-    def update(self, repository):
-        """ Add the given repository's packages to this repository.
+    def update(self, iterable):
+        """ Add the packages from the given iterable into this repository.
+
+        Parameters
+        ----------
         """
         for package in repository:
             self.add_package(package)
