@@ -4,12 +4,10 @@ import textwrap
 
 import six
 
-from enstaller.package import RepositoryPackageMetadata
-from enstaller.repository_info import BroodRepositoryInfo
-
 from okonomiyaki.platforms import PythonImplementation
 
 from ..constraints import Requirement
+from ..package import RepositoryInfo, RepositoryPackageMetadata
 from ..request import _Job, JobType
 from ..test_utils import Scenario, parse_package_list, repository_factory
 from ..utils import mkdtemp
@@ -27,18 +25,17 @@ class TestRepositoryFactory(unittest.TestCase):
     def test_simple(self):
         # Given
         package_strings = [
-            "MKL 10.3-1",
-            "numpy 1.8.1-1; depends (MKL ~= 10.3)",
-            "numpy 1.8.1-2; depends (MKL ~= 10.3)",
+            u"MKL 10.3-1",
+            u"numpy 1.8.1-1; depends (MKL ~= 10.3)",
+            u"numpy 1.8.1-2; depends (MKL ~= 10.3)",
         ]
         repository_packages = [
             "MKL 10.3-1",
             "numpy 1.8.1-2",
         ]
-        repository_info = BroodRepositoryInfo("https://acme.com", "acme/loony")
+        repository_info = RepositoryInfo(u"acme/loony")
         r_numpy = P(
-            "numpy 1.8.1-2; depends (MKL ~= 10.3)", repository_info,
-            PythonImplementation.from_running_python()
+            u"numpy 1.8.1-2; depends (MKL ~= 10.3)", repository_info,
         )
 
         # When
@@ -51,7 +48,7 @@ class TestRepositoryFactory(unittest.TestCase):
         self.assertEqual(len(repository.find_packages("numpy")), 1)
 
         numpy = repository.find_packages("numpy")[0]
-        self.assertEqual(numpy._comp_key, r_numpy._comp_key)
+        self.assertEqual(numpy, r_numpy)
 
 
 class TestScenario(unittest.TestCase):
