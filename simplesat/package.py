@@ -1,6 +1,6 @@
 import six
 
-from attr import attr, attributes
+from attr import Factory, attr, attributes
 from attr.validators import instance_of
 
 from okonomiyaki.versions import EnpkgVersion
@@ -16,7 +16,10 @@ class PackageMetadata(object):
     name = attr(validator=instance_of(six.text_type))
     version = attr(validator=instance_of(EnpkgVersion))
 
-    dependencies = attr(validator=instance_of(tuple))
+    dependencies = attr(
+        validator=instance_of(tuple),
+        default=Factory(tuple),
+    )
 
     @classmethod
     def _from_pretty_string(cls, s):
@@ -37,17 +40,28 @@ class PackageMetadata(object):
 
 
 @attributes
-class RepositoryPackageMetadata(PackageMetadata):
+class RepositoryPackageMetadata(object):
     repository_info = attr(validator=instance_of(RepositoryInfo))
+
+    _package = attr(validator=instance_of(PackageMetadata))
 
     @classmethod
     def from_package(cls, package, repository_info):
-        return cls(
-            package.name, package.version, package.dependencies,
-            repository_info
-        )
+        return cls(repository_info, package)
 
     @classmethod
     def _from_pretty_string(cls, s, repository_info):
         package = PackageMetadata._from_pretty_string(s) 
         return cls.from_package(package, repository_info)
+
+    @property
+    def name(self):
+        return self._package.name
+
+    @property
+    def version(self):
+        return self._package.version
+
+    @property
+    def dependencies(self):
+        return self._package.dependencies
