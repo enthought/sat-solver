@@ -4,9 +4,6 @@ import unittest
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller.package import PackageMetadata, RemotePackageMetadata
-from enstaller.repository_info import BroodRepositoryInfo, FSRepositoryInfo
-
 from simplesat.constraints import PrettyPackageStringParser
 from simplesat.errors import NoPackageFound
 from simplesat.repository import Repository
@@ -55,6 +52,34 @@ class TestRepository(unittest.TestCase):
 
         # When
         repository = Repository(reversed(packages))
+
+        # Then
+        self.assertEqual(len(repository), len(packages))
+        self.assertEqual(list(repository), packages)
+
+    def test_update(self):
+        # Given
+        packages_definition = textwrap.dedent("""\
+        dummy 1.0.1-1
+        dummy_with_appinst 1.0.0-1
+        dummy_with_entry_points 1.0.0-1
+        dummy_with_proxy 1.3.40-3
+        dummy_with_proxy_scripts 1.0.0-1
+        dummy_with_proxy_softlink 1.0.0-1
+        nose 1.2.1-1
+        nose 1.3.0-1
+        nose 1.3.0-2\
+        """)
+        packages = self.packages_from_definition(packages_definition)
+
+        # When
+        repository = Repository(packages[:4])
+
+        # Then
+        self.assertEqual(len(repository), 4)
+
+        # When
+        repository.update(packages[4:])
 
         # Then
         self.assertEqual(len(repository), len(packages))

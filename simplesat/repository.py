@@ -106,5 +106,5 @@ class Repository(object):
         Parameters
         ----------
         """
-        for package in repository:
+        for package in iterable:
             self.add_package(package)
