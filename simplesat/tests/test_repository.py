@@ -127,8 +127,9 @@ class TestRepository(unittest.TestCase):
         with self.assertRaises(NoPackageFound):
             repository.find_package("nose", V("1.4.0-1"))
 
+        repository.find_package("nose", V("1.3.0-1"))
         with self.assertRaises(NoPackageFound):
-            repository.find_package("nono", V("1.4.0-1"))
+            repository.find_package("nono", V("1.3.0-1"))
 
     def test_find_packages(self):
         # Given
@@ -146,22 +147,14 @@ class TestRepository(unittest.TestCase):
         packages = self.packages_from_definition(packages_definition)
         repository = Repository(packages)
 
-        r_versions = [V("1.2.1-1"), V("1.3.0-1"), V("1.3.0-2")]
+        r_versions = (V("1.2.1-1"), V("1.3.0-1"), V("1.3.0-2"))
 
         # When
         packages = repository.find_packages("nose")
 
         # Then
         self.assertEqual(len(packages), 3)
-
-        # When
-        # Ensure find_packages returns a copy of the metadata
-        packages[:] = []
-        packages = repository.find_packages("nose")
-
-        # Then
-        self.assertEqual(len(packages), 3)
-        self.assertEqual([p.version for p in packages], r_versions)
+        self.assertEqual(tuple(p.version for p in packages), r_versions)
 
         # When
         packages = repository.find_packages("non_existing_package")

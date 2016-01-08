@@ -3,14 +3,19 @@ from __future__ import absolute_import
 import bisect
 import collections
 import operator
+import six
 
 from .errors import NoPackageFound
 
 
 class Repository(object):
     """
-    A Repository is a set of package, and knows about which package it
+    A Repository is a set of packages, and knows about which package it
     contains.
+
+    It also supports the iterator protocol. Iteration is guaranteed to be
+    deterministic and independent of the order in which packages have been
+    added.
     """
     def __init__(self, packages=None):
         self._name_to_packages = collections.defaultdict(list)
@@ -24,8 +29,7 @@ class Repository(object):
 
     def __len__(self):
         return sum(
-            len(self._name_to_packages[p])
-            for p in self._name_to_packages
+            len(packages) for packages in six.itervalues(self._name_to_packages)
         )
 
     def __iter__(self):
@@ -69,7 +73,7 @@ class Repository(object):
 
         Returns
         -------
-        package : RemotePackageMetadata
+        package : PackageMetadata
             The corresponding metadata.
         """
         candidates = self._name_to_packages[name]
@@ -81,8 +85,8 @@ class Repository(object):
         )
 
     def find_packages(self, name):
-        """ Returns a list of package metadata with the given name,
-        sorted from lowest to highest version.
+        """ Returns an iterable of package metadata with the given name, sorted
+        from lowest to highest version.
 
         Parameters
         ----------
@@ -92,13 +96,10 @@ class Repository(object):
         Returns
         -------
         packages : iterable
-            Iterable of RemotePackageMetadata-like (order is from lower to
+            Iterable of PackageMetadata instances (order is from lower to
             higher version)
         """
-        if name in self._name_to_packages:
-            return list(self._name_to_packages[name])
-        else:
-            return []
+        return tuple(self._name_to_packages[name])
 
     def update(self, iterable):
         """ Add the packages from the given iterable into this repository.
