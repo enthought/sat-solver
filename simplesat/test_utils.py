@@ -65,7 +65,7 @@ def repository_factory(package_names, repository_info, reference_packages):
     repository = Repository()
     for package_name in package_names:
         package = reference_packages[package_name]
-        package = RepositoryPackageMetadata.from_package(package, repository_info)
+        package = RepositoryPackageMetadata(package, repository_info)
         repository.add_package(package)
     return repository
 

@@ -1,26 +1,36 @@
+import abc
 import six
-
-from attr import Factory, attr, attributes
-from attr.validators import instance_of
 
 from okonomiyaki.versions import EnpkgVersion
 
 
-@attributes
-class RepositoryInfo(object):
-    name = attr(validator=instance_of(six.text_type))
+class IRepositoryInfo(six.with_metaclass(abc.ABCMeta)):
+    @abc.abstractproperty
+    def name(self):
+        """ A name that uniquely indentifies a repository."""
 
 
-@attributes
+class RepositoryInfo(IRepositoryInfo):
+    def __init__(self, name):
+        self._name = name
+        self._key = (name,)
+        self._hash = hash(self._key)
+
+    @property
+    def name(self):
+        return self._name
+
+    def __hash__(self):
+        return self._hash
+
+    def __eq__(self, other):
+        return self._key == other._key
+
+    def __ne__(self, other):
+        return self._key != other._key
+
+
 class PackageMetadata(object):
-    name = attr(validator=instance_of(six.text_type))
-    version = attr(validator=instance_of(EnpkgVersion))
-
-    dependencies = attr(
-        validator=instance_of(tuple),
-        default=Factory(tuple),
-    )
-
     @classmethod
     def _from_pretty_string(cls, s):
         """ Create an instance from a pretty string.
@@ -38,21 +48,48 @@ class PackageMetadata(object):
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
         return parser.parse_to_package(s)
 
+    def __init__(self, name, version, dependencies=None):
+        self._name = name
+        self._version = version
+        self._dependencies = dependencies or tuple()
 
-@attributes
+        self._key = (name, version, self._dependencies)
+        self._hash = hash(self._key)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def dependencies(self):
+        return self._dependencies
+
+    def __hash__(self):
+        return self._hash
+
+    def __eq__(self, other):
+        return self._key == other._key
+
+    def __ne__(self, other):
+        return self._key != other._key
+
+
 class RepositoryPackageMetadata(object):
-    repository_info = attr(validator=instance_of(RepositoryInfo))
-
-    _package = attr(validator=instance_of(PackageMetadata))
-
-    @classmethod
-    def from_package(cls, package, repository_info):
-        return cls(repository_info, package)
-
     @classmethod
     def _from_pretty_string(cls, s, repository_info):
         package = PackageMetadata._from_pretty_string(s) 
-        return cls.from_package(package, repository_info)
+        return cls(package, repository_info)
+
+    def __init__(self, package, repository_info):
+        self._package = package
+        self._repository_info = repository_info
+
+        self._key = (package._key, repository_info)
+        self._hash = hash(self._key)
 
     @property
     def name(self):
@@ -65,3 +102,16 @@ class RepositoryPackageMetadata(object):
     @property
     def dependencies(self):
         return self._package.dependencies
+
+    @property
+    def repository_info(self):
+        return self._repository_info
+
+    def __hash__(self):
+        return self._hash
+
+    def __eq__(self, other):
+        return self._key == other._key
+
+    def __ne__(self, other):
+        return self._key != other._key
