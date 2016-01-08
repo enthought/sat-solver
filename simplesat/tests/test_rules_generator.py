@@ -3,8 +3,7 @@
 import io
 import unittest
 
-from enstaller.new_solver import Pool
-
+from ..pool import Pool
 from ..rules_generator import RuleType, RulesGenerator
 from ..test_utils import Scenario
 
