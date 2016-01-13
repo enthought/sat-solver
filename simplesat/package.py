@@ -88,7 +88,7 @@ class PackageMetadata(object):
 class RepositoryPackageMetadata(object):
     @classmethod
     def _from_pretty_string(cls, s, repository_info):
-        package = PackageMetadata._from_pretty_string(s) 
+        package = PackageMetadata._from_pretty_string(s)
         return cls(package, repository_info)
 
     def __init__(self, package, repository_info):
