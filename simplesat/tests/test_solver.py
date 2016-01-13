@@ -80,7 +80,7 @@ class TestSolver(unittest.TestCase):
         mkl = self.package_factory(u"mkl 10.3-1")
         libgfortran = self.package_factory(u"libgfortran 3.0.0-2")
         numpy = self.package_factory(
-            u"numpy 1.9.2-1; depends (mkl == 10.3-1, libgfortran ~= 3.0.0)"
+            u"numpy 1.9.2-1; depends (mkl == 10.3-1, libgfortran ^= 3.0.0)"
         )
 
         r_operations = [

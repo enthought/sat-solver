@@ -1,7 +1,7 @@
 packages:
     - requests 2.7.0-1
     - browsey 1.1.0-1
-    - browsey 1.2.0-1; depends (requests ~= 2.7.0)
+    - browsey 1.2.0-1; depends (requests ^= 2.7.0)
 
 installed:
     - requests 2.7.0-1

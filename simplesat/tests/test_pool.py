@@ -20,7 +20,7 @@ mkl 10.2-2
 mkl 10.3-1
 numpy 1.4.0-1
 numpy 1.4.0-2
-numpy 1.4.0-4; depends (MKL ~= 10.2)
+numpy 1.4.0-4; depends (MKL ^= 10.2)
 numpy 1.4.0-6; depends (MKL == 10.2-2)
 numpy 1.4.0-7; depends (MKL == 10.2-2)
 numpy 1.4.0-8; depends (MKL == 10.2-2)
@@ -60,7 +60,7 @@ class TestPool(unittest.TestCase):
     def test_what_provides_tilde(self):
         # Given
         repository = Repository(self.packages_from_definition(NUMPY_PACKAGES))
-        requirement = Requirement._from_string("numpy ~= 1.8.1")
+        requirement = Requirement._from_string("numpy ^= 1.8.1")
 
         # When
         pool = Pool([repository])
@@ -73,7 +73,7 @@ class TestPool(unittest.TestCase):
     def test_what_provides_casing(self):
         # Given
         repository = Repository(self.packages_from_definition(NUMPY_PACKAGES))
-        requirement = Requirement._from_string("mkl ~= 10.2")
+        requirement = Requirement._from_string("mkl ^= 10.2")
 
         # When
         pool = Pool([repository])
