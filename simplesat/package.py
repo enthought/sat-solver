@@ -72,8 +72,7 @@ class PackageMetadata(object):
         return self._dependencies
 
     def __repr__(self):
-        return "PackageMetadata('{0}-{1}', key={2!r})".format(
-            self._name, self._version, self._key)
+        return "PackageMetadata('{0}-{1}')".format(self._name, self._version)
 
     def __hash__(self):
         return self._hash
