@@ -116,7 +116,7 @@ class RepositoryPackageMetadata(object):
     def __repr__(self):
         return (
             "RepositoryPackageMetadata('{pkg._name}-{pkg._version}'"
-            ", repo={repository_info!r}".format(
+            ", repo={repository_info!r})".format(
                 pkg=self._package, repository_info=self._repository_info))
 
     def __hash__(self):
