@@ -14,17 +14,16 @@ V = EnpkgVersion.from_string
 
 class TestRepository(unittest.TestCase):
     def packages_from_definition(self, packages_definition):
-        python_implementation = PythonImplementation.from_running_python()
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
 
         return [
-            parser.parse_to_package(line, python_implementation)
+            parser.parse_to_package(line)
             for line in packages_definition.splitlines()
         ]
 
     def test_simple(self):
         # Given
-        packages_definition = textwrap.dedent("""\
+        packages_definition = textwrap.dedent(u"""\
         dummy 1.0.1-1
         dummy_with_appinst 1.0.0-1
         dummy_with_entry_points 1.0.0-1
@@ -59,7 +58,7 @@ class TestRepository(unittest.TestCase):
 
     def test_update(self):
         # Given
-        packages_definition = textwrap.dedent("""\
+        packages_definition = textwrap.dedent(u"""\
         dummy 1.0.1-1
         dummy_with_appinst 1.0.0-1
         dummy_with_entry_points 1.0.0-1
@@ -87,7 +86,7 @@ class TestRepository(unittest.TestCase):
 
     def test_find_package(self):
         # Given
-        packages_definition = textwrap.dedent("""\
+        packages_definition = textwrap.dedent(u"""\
         dummy 1.0.1-1
         dummy_with_appinst 1.0.0-1
         dummy_with_entry_points 1.0.0-1
@@ -105,11 +104,12 @@ class TestRepository(unittest.TestCase):
         package = repository.find_package("nose", V("1.3.0-1"))
 
         # Then
-        self.assertEqual(package.key, "nose-1.3.0-1.egg")
+        self.assertEqual(package.name, "nose")
+        self.assertEqual(package.version, V("1.3.0-1"))
 
     def test_find_unavailable_package(self):
         # Given
-        packages_definition = textwrap.dedent("""\
+        packages_definition = textwrap.dedent(u"""\
         dummy 1.0.1-1
         dummy_with_appinst 1.0.0-1
         dummy_with_entry_points 1.0.0-1
@@ -133,7 +133,7 @@ class TestRepository(unittest.TestCase):
 
     def test_find_packages(self):
         # Given
-        packages_definition = textwrap.dedent("""\
+        packages_definition = textwrap.dedent(u"""\
         dummy 1.0.1-1
         dummy_with_appinst 1.0.0-1
         dummy_with_entry_points 1.0.0-1
