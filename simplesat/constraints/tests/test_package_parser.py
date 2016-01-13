@@ -6,14 +6,13 @@ import six
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller.package import PackageMetadata
-
 from simplesat.constraints.kinds import Equal
 from simplesat.constraints.package_parser import (
     PrettyPackageStringParser, legacy_dependencies_to_pretty_string,
     package_to_pretty_string
 )
 from simplesat.errors import SolverException
+from simplesat.package import PackageMetadata
 
 
 RUNNING_PYTHON = PythonImplementation(
@@ -96,7 +95,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ["nose 1.3.4-1"])
+        self.assertEqual(constraints, ("nose 1.3.4-1",))
 
         # Given
         package_string = "numpy 1.8.0-1; depends (nose ~= 1.3.4)"
@@ -107,7 +106,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ["nose 1.3.4"])
+        self.assertEqual(constraints, ("nose 1.3.4",))
 
         # Given
         package_string = "numpy 1.8.0-1; depends (nose)"
@@ -118,7 +117,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ["nose"])
+        self.assertEqual(constraints, ("nose",))
 
 
 class TestLegacyDependenciesToPrettyString(unittest.TestCase):
@@ -137,12 +136,9 @@ class TestLegacyDependenciesToPrettyString(unittest.TestCase):
 class TestPackagePrettyString(unittest.TestCase):
     def test_simple(self):
         # Given
-        key = "numpy-1.8.1-1.egg"
-        python = RUNNING_PYTHON
-        package = PackageMetadata(key, "numpy", V("1.8.1-1"), ("MKL 10.3-1",),
-                                  python)
+        package = PackageMetadata(u"numpy", V("1.8.1-1"), ("MKL 10.3-1",))
 
-        r_pretty_string = "numpy 1.8.1-1; depends (MKL == 10.3-1)"
+        r_pretty_string = u"numpy 1.8.1-1; depends (MKL == 10.3-1)"
 
         # When
         pretty_string = package_to_pretty_string(package)
@@ -152,8 +148,7 @@ class TestPackagePrettyString(unittest.TestCase):
 
         # Given
         key = "numpy-1.8.1-1.egg"
-        package = PackageMetadata(key, "numpy", V("1.8.1-1"), ("nose",),
-                                  RUNNING_PYTHON)
+        package = PackageMetadata(u"numpy", V("1.8.1-1"), ("nose",))
 
         r_pretty_string = "numpy 1.8.1-1; depends (nose)"
 
@@ -167,13 +162,12 @@ class TestPackagePrettyString(unittest.TestCase):
 class TestToPackage(unittest.TestCase):
     def test_simple(self):
         # Given
-        s = "numpy 1.8.1; depends (MKL ~= 10.3)"
+        s = u"numpy 1.8.1; depends (MKL ~= 10.3)"
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
-        python = PythonImplementation.from_string("cp27")
 
         # When
-        package = parser.parse_to_package(s, python)
+        package = parser.parse_to_package(s)
 
         # Then
         self.assertEqual(package.name, "numpy")
-        self.assertEqual(package.dependencies, frozenset(["MKL 10.3"]))
+        self.assertEqual(package.dependencies, ("MKL 10.3",))

@@ -14,7 +14,7 @@ from ..pool import Pool
 V = EnpkgVersion.from_string
 
 
-NUMPY_PACKAGES = """\
+NUMPY_PACKAGES = u"""\
 mkl 10.2-1
 mkl 10.2-2
 mkl 10.3-1
@@ -50,11 +50,10 @@ numpy 1.8.1-1; depends (MKL == 10.3-1)
 
 class TestPool(unittest.TestCase):
     def packages_from_definition(self, packages_definition):
-        python_implementation = PythonImplementation.from_running_python()
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
 
         return [
-            parser.parse_to_package(line, python_implementation)
+            parser.parse_to_package(line)
             for line in packages_definition.splitlines()
         ]
 
@@ -69,7 +68,7 @@ class TestPool(unittest.TestCase):
 
         # Then
         self.assertEqual(len(candidates), 1)
-        self.assertEqual(candidates[0].full_version, "1.8.1-1")
+        self.assertEqual(candidates[0].version, V("1.8.1-1"))
 
     def test_what_provides_casing(self):
         # Given
@@ -79,7 +78,7 @@ class TestPool(unittest.TestCase):
         # When
         pool = Pool([repository])
         candidates = pool.what_provides(requirement)
-        versions = [candidate.full_version for candidate in candidates]
+        versions = [str(candidate.version) for candidate in candidates]
 
         # Then
         six.assertCountEqual(self, versions, ["10.2-1", "10.2-2"])
@@ -92,7 +91,7 @@ class TestPool(unittest.TestCase):
         # When
         pool = Pool([repository])
         candidates = pool.what_provides(requirement)
-        versions = [candidate.full_version for candidate in candidates]
+        versions = [str(candidate.version) for candidate in candidates]
 
         # Then
         six.assertCountEqual(
@@ -107,7 +106,7 @@ class TestPool(unittest.TestCase):
         # When
         pool = Pool([repository])
         candidates = pool.what_provides(requirement)
-        versions = [candidate.full_version for candidate in candidates]
+        versions = [str(candidate.version) for candidate in candidates]
 
         # Then
         six.assertCountEqual(
