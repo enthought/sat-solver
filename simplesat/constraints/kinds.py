@@ -9,7 +9,7 @@ class IConstraint(six.with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def matches(self, version):
         """Returns True if the version object matches this constraint.
-        
+
         Parameters
         ==========
         version : Version
