@@ -29,6 +29,9 @@ class RepositoryInfo(IRepositoryInfo):
     def __ne__(self, other):
         return self._key != other._key
 
+    def __repr__(self):
+        return "Repository(<{0.name}>)".format(self)
+
 
 class PackageMetadata(object):
     @classmethod
@@ -68,6 +71,10 @@ class PackageMetadata(object):
     def dependencies(self):
         return self._dependencies
 
+    def __repr__(self):
+        return "PackageMetadata('{0}-{1}', key={2!r})".format(
+            self._name, self._version, self._key)
+
     def __hash__(self):
         return self._hash
 
@@ -106,6 +113,12 @@ class RepositoryPackageMetadata(object):
     @property
     def repository_info(self):
         return self._repository_info
+
+    def __repr__(self):
+        return (
+            "RepositoryPackageMetadata('{pkg._name}-{pkg._version}'"
+            ", repo={repository_info!r}".format(
+                pkg=self._package, repository_info=self._repository_info))
 
     def __hash__(self):
         return self._hash
