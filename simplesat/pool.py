@@ -29,7 +29,7 @@ class Pool(object):
         repository : Repository
             The repository to add
         """
-        for package in repository.iter_packages():
+        for package in repository:
             current_id = self._id
             self._id += 1
 

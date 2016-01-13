@@ -3,11 +3,10 @@ import unittest
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller import Repository
-
 from simplesat.constraints import PrettyPackageStringParser, Requirement
 from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
+from simplesat.repository import Repository
 from simplesat.request import Request
 from simplesat.transaction import InstallOperation, UpdateOperation
 
@@ -60,8 +59,8 @@ class TestSolver(unittest.TestCase):
         libgfortran = self.package_factory("libgfortran 3.0.0-2")
 
         r_operations = [
-            InstallOperation(libgfortran),
             InstallOperation(mkl),
+            InstallOperation(libgfortran),
         ]
 
         self.repository.add_package(mkl)

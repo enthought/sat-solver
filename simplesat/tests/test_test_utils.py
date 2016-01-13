@@ -2,8 +2,7 @@ import os.path
 import sys
 import textwrap
 
-from egginst._compat import StringIO
-from egginst.tests.common import mkdtemp
+import six
 
 from enstaller.package import RepositoryPackageMetadata
 from enstaller.repository_info import BroodRepositoryInfo
@@ -13,6 +12,7 @@ from okonomiyaki.platforms import PythonImplementation
 from ..constraints import Requirement
 from ..request import _Job, JobType
 from ..test_utils import Scenario, parse_package_list, repository_factory
+from ..utils import mkdtemp
 
 if sys.version_info[0] == 2:
     import unittest2 as unittest
@@ -57,7 +57,7 @@ class TestRepositoryFactory(unittest.TestCase):
 class TestScenario(unittest.TestCase):
     def test_simple(self):
         # Given
-        yaml = StringIO(textwrap.dedent("""\
+        yaml = six.StringIO(textwrap.dedent("""\
         packages:
             - MKL 10.3-1
             - numpy 1.8.1-1; depends (MKL ~= 10.3)
@@ -123,7 +123,7 @@ class TestScenario(unittest.TestCase):
 
     def test_simple_marked(self):
         # Given
-        yaml = StringIO(textwrap.dedent("""\
+        yaml = six.StringIO(textwrap.dedent("""\
         packages:
             - MKL 10.3-1
 
@@ -147,7 +147,7 @@ class TestScenario(unittest.TestCase):
 
     def test_modify_marked(self):
         # Given
-        yaml = StringIO(textwrap.dedent("""\
+        yaml = six.StringIO(textwrap.dedent("""\
         packages:
             - MKL 10.3-1
 
