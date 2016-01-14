@@ -26,8 +26,8 @@ class TestRepositoryFactory(unittest.TestCase):
         # Given
         package_strings = [
             u"MKL 10.3-1",
-            u"numpy 1.8.1-1; depends (MKL ~= 10.3)",
-            u"numpy 1.8.1-2; depends (MKL ~= 10.3)",
+            u"numpy 1.8.1-1; depends (MKL ^= 10.3)",
+            u"numpy 1.8.1-2; depends (MKL ^= 10.3)",
         ]
         repository_packages = [
             "MKL 10.3-1",
@@ -35,7 +35,7 @@ class TestRepositoryFactory(unittest.TestCase):
         ]
         repository_info = RepositoryInfo(u"acme/loony")
         r_numpy = P(
-            u"numpy 1.8.1-2; depends (MKL ~= 10.3)", repository_info,
+            u"numpy 1.8.1-2; depends (MKL ^= 10.3)", repository_info,
         )
 
         # When
@@ -57,8 +57,8 @@ class TestScenario(unittest.TestCase):
         yaml = six.StringIO(textwrap.dedent("""\
         packages:
             - MKL 10.3-1
-            - numpy 1.8.1-1; depends (MKL ~= 10.3)
-            - numpy 1.8.1-2; depends (MKL ~= 10.3)
+            - numpy 1.8.1-1; depends (MKL ^= 10.3)
+            - numpy 1.8.1-2; depends (MKL ^= 10.3)
 
         remote:
             - MKL 10.3-1
@@ -88,8 +88,8 @@ class TestScenario(unittest.TestCase):
         data = textwrap.dedent("""\
         packages:
             - MKL 10.3-1
-            - numpy 1.8.1-1; depends (MKL ~= 10.3)
-            - numpy 1.8.1-2; depends (MKL ~= 10.3)
+            - numpy 1.8.1-1; depends (MKL ^= 10.3)
+            - numpy 1.8.1-2; depends (MKL ^= 10.3)
 
         remote:
             - MKL 10.3-1

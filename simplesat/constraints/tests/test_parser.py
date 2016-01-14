@@ -74,7 +74,7 @@ class Test_RawConstraintsParser(unittest.TestCase):
         self.assertEqual(constraints, r_constraints)
 
         # Given
-        constraints_string = "~= 1.2.0-1"
+        constraints_string = "^= 1.2.0-1"
         r_constraints = set([EnpkgUpstreamMatch(V("1.2.0-1"))])
 
         # When

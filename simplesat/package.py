@@ -40,7 +40,7 @@ class PackageMetadata(object):
 
         A pretty string looks as follows::
 
-            'numpy 1.8.1-1; depends (MKL ~= 10.3)'
+            'numpy 1.8.1-1; depends (MKL ^= 10.3)'
 
         Note
         ----

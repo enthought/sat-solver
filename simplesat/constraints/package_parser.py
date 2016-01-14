@@ -15,7 +15,7 @@ class PrettyPackageStringParser(object):
 
     Pretty package strings are of the form::
 
-        numpy 1.8.1-1; depends (MKL == 10.3, nose ~= 1.3.4)
+        numpy 1.8.1-1; depends (MKL == 10.3, nose ^= 1.3.4)
     """
     def __init__(self, version_factory):
         self._parser = _RawRequirementParser()
@@ -28,7 +28,7 @@ class PrettyPackageStringParser(object):
         ----------
         package_string : str
             The pretty package string, e.g.
-            "numpy 1.8.1-1; depends (MKL == 10.3, nose ~= 1.3.4)"
+            "numpy 1.8.1-1; depends (MKL == 10.3, nose ^= 1.3.4)"
 
         Returns
         -------
@@ -72,7 +72,7 @@ class PrettyPackageStringParser(object):
         ----------
         package_string : str
             The pretty package string, e.g.
-            "numpy 1.8.1-1; depends (MKL == 10.3, nose ~= 1.3.4)"
+            "numpy 1.8.1-1; depends (MKL == 10.3, nose ^= 1.3.4)"
 
         Returns
         -------
