@@ -133,8 +133,8 @@ def _tokenize(scanner, requirement_string):
     for part in parts:
         scanned, remaining = scanner.scan(part.strip())
         if len(remaining) > 0:
-            msg = "Invalid requirement string: {0!r}".  format(requirement_string)
-            raise SolverException(msg)
+            msg = "Invalid requirement string: {0!r}"
+            raise SolverException(msg.format(requirement_string))
         elif len(scanned) > 0:
             tokens.append(scanned)
     return tokens
