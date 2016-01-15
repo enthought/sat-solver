@@ -181,18 +181,18 @@ class _RawRequirementParser(object):
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
                 name = distribution.value
-                constraints[name].add(_operator_factory(operator, version,
-                                                        version_factory))
+                constraints.setdefault(name, set()).add(
+                    _operator_factory(operator, version, version_factory))
             elif len(requirement_block) == 1:
                 name = requirement_block[0].value
                 # Force name to exist in constraints
-                constraints[name].add(Any())
+                constraints.setdefault(name, set()).add(Any())
             else:
                 msg = ("Invalid requirement block: {0!r}".
                        format(requirement_block))
                 raise SolverException(msg)
 
-        constraints = collections.defaultdict(set)
+        constraints = collections.OrderedDict()
         tokens_blocks = _tokenize(self._scanner, requirement_string)
 
         for requirement_block in tokens_blocks:
