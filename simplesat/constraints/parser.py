@@ -33,7 +33,7 @@ _CONSTRAINTS_SCANNER = re.Scanner([
     (_WS_R, lambda scanner, token: None),
 ])
 
-_DISTRIBUTION_R = "[a-zA-Z_][^\s-]*"
+_DISTRIBUTION_R = "[a-zA-Z_][^\s,-]*"
 
 _REQUIREMENTS_SCANNER = re.Scanner([
     (_DISTRIBUTION_R, lambda scanner, token: DistributionNameToken(token)),

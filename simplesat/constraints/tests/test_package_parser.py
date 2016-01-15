@@ -1,15 +1,12 @@
 import sys
 import unittest
 
-import six
-
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints.kinds import Equal
 from simplesat.constraints.package_parser import (
     PrettyPackageStringParser, legacy_dependencies_to_pretty_string,
-    package_to_pretty_string
+    package_to_pretty_string, PrettyPackageStringParser2
 )
 from simplesat.errors import SolverException
 from simplesat.package import PackageMetadata
@@ -25,13 +22,13 @@ V = EnpkgVersion.from_string
 class TestPrettyPackageStringParser(unittest.TestCase):
     def test_invalid_formats(self):
         # Given
-        parser = PrettyPackageStringParser(V)
+        parse = PrettyPackageStringParser2(V).parse
         package_string = ""
         r_message = "Invalid preamble: "
 
         # When
         with self.assertRaisesRegexp(ValueError, r_message):
-            parser.parse(package_string)
+            parse(package_string)
 
         # Given
         package_string = "numpy"
@@ -39,85 +36,52 @@ class TestPrettyPackageStringParser(unittest.TestCase):
 
         # When
         with self.assertRaisesRegexp(ValueError, r_message):
-            parser.parse(package_string)
+            parse(package_string)
 
         # Given
         package_string = "numpy 1.8.0-1; depends (nose 1.3.2)"
         r_message = "Invalid requirement block: "
 
-        # When
-        with self.assertRaisesRegexp(SolverException, r_message):
-            parser.parse(package_string)
-
         # Given
         package_string = "numpy 1.8.0-1; conflicts (nose 1.3.2)"
-        r_message = "Invalid constraint block: 'conflicts \(nose 1.3.2\)'"
+        r_message = ("Invalid package string. "
+                     "Unknown constraint kind: 'conflicts'")
 
         # When
         with self.assertRaisesRegexp(ValueError, r_message):
-            parser.parse(package_string)
+            parse(package_string)
 
     def test_simple(self):
         # Given
-        parser = PrettyPackageStringParser(V)
+        parse = PrettyPackageStringParser2(V).parse
         package_string = "numpy 1.8.0-1; depends (nose == 1.3.4-1)"
 
         # When
-        name, version, constraints = parser.parse(package_string)
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        install_requires = dict(package['install_requires'])
 
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        self.assertTrue("nose" in constraints)
-        self.assertEqual(constraints["nose"], set((Equal(V("1.3.4-1")),)))
+        self.assertTrue("nose" in install_requires)
+        self.assertEqual(install_requires["nose"], (('== 1.3.4-1',),))
 
     def test_no_dependencies(self):
         # Given
-        parser = PrettyPackageStringParser(V)
+        parse = PrettyPackageStringParser2(V).parse
         package_string = "numpy 1.8.0-1"
 
         # When
-        name, version, constraints = parser.parse(package_string)
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
 
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        six.assertCountEqual(self, constraints, set())
-
-    def test_to_legacy_constraints(self):
-        # Given
-        parser = PrettyPackageStringParser(V)
-        package_string = "numpy 1.8.0-1; depends (nose == 1.3.4-1)"
-
-        # When
-        name, version, constraints = parser.parse_to_legacy_constraints(package_string)
-
-        # Then
-        self.assertEqual(name, "numpy")
-        self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ("nose 1.3.4-1",))
-
-        # Given
-        package_string = "numpy 1.8.0-1; depends (nose ^= 1.3.4)"
-
-        # When
-        name, version, constraints = parser.parse_to_legacy_constraints(package_string)
-
-        # Then
-        self.assertEqual(name, "numpy")
-        self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ("nose 1.3.4",))
-
-        # Given
-        package_string = "numpy 1.8.0-1; depends (nose)"
-
-        # When
-        name, version, constraints = parser.parse_to_legacy_constraints(package_string)
-
-        # Then
-        self.assertEqual(name, "numpy")
-        self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ("nose",))
+        self.assertNotIn('install_requires', package)
 
 
 class TestLegacyDependenciesToPrettyString(unittest.TestCase):
@@ -163,11 +127,12 @@ class TestToPackage(unittest.TestCase):
     def test_simple(self):
         # Given
         s = u"numpy 1.8.1; depends (MKL ^= 10.3)"
-        parser = PrettyPackageStringParser(EnpkgVersion.from_string)
+        parser = PrettyPackageStringParser2(V)
 
         # When
         package = parser.parse_to_package(s)
 
         # Then
         self.assertEqual(package.name, "numpy")
-        self.assertEqual(package.install_requires, ("MKL 10.3",))
+        self.assertEqual(package.version, V('1.8.1'))
+        self.assertEqual(package.install_requires, (("MKL", (("^= 10.3",),)),))
