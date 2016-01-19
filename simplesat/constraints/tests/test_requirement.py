@@ -71,47 +71,6 @@ class TestRequirement(unittest.TestCase):
         with self.assertRaises(SolverException):
             Requirement._from_string(requirement_string)
 
-    def test_from_legacy_requirement_string(self):
-        # Given
-        requirement_s = "numpy 1.8.1"
-
-        # When
-        requirement = Requirement.from_legacy_requirement_string(requirement_s)
-
-        # Then
-        self.assertEqual(requirement.name, "numpy")
-        self.assertEqual(requirement._constraints,
-                         MultiConstraints([EnpkgUpstreamMatch(V("1.8.1"))]))
-
-        # Given
-        requirement_s = "numpy 1.8.1-2"
-
-        # When
-        requirement = Requirement.from_legacy_requirement_string(requirement_s)
-
-        # Then
-        self.assertEqual(requirement.name, "numpy")
-        self.assertEqual(requirement._constraints,
-                         MultiConstraints([Equal(V("1.8.1-2"))]))
-
-        # Given
-        requirement_s = "numpy"
-
-        # When
-        requirement = Requirement.from_legacy_requirement_string(requirement_s)
-
-        # Then
-        self.assertEqual(requirement.name, "numpy")
-        self.assertEqual(requirement._constraints,
-                         MultiConstraints([Any()]))
-
-        # Given
-        requirement_s = " "
-
-        # When/Then
-        with self.assertRaises(ValueError):
-            Requirement.from_legacy_requirement_string(requirement_s)
-
     def test_from_package_string(self):
         # Given
         package_s = "numpy-1.8.1-1"

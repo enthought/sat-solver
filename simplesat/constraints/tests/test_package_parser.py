@@ -5,10 +5,8 @@ from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints.package_parser import (
-    PrettyPackageStringParser, legacy_dependencies_to_pretty_string,
-    package_to_pretty_string
+    PrettyPackageStringParser, package_to_pretty_string
 )
-from simplesat.errors import SolverException
 from simplesat.package import PackageMetadata
 
 
@@ -75,7 +73,6 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertEqual(version, V("1.8.0-1"))
         self.assertTrue("nose" in install_requires)
         self.assertEqual(install_requires["nose"], (('== 1.3.4-1',),))
-
 
     # FIXME: MORE OF THESE. SCARY SCARY SCARY!
 
@@ -165,19 +162,6 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
         self.assertNotIn('install_requires', package)
-
-
-class TestLegacyDependenciesToPrettyString(unittest.TestCase):
-    def test_simple(self):
-        # Given
-        install_requires = ["MKL 10.3-1", "nose 1.3.4"]
-        r_pretty_string = "MKL == 10.3-1, nose ^= 1.3.4"
-
-        # When
-        pretty_string = legacy_dependencies_to_pretty_string(install_requires)
-
-        # Then
-        self.assertEqual(pretty_string, r_pretty_string)
 
 
 class TestPackagePrettyString(unittest.TestCase):

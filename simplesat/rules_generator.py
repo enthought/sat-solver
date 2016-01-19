@@ -280,7 +280,7 @@ class RulesGenerator(object):
                 self.added_package_ids.add(p_id)
                 self._add_install_requires_rules(p, work_queue)
 
-                requirement = Requirement.from_legacy_requirement_string(p.name)
+                requirement = Requirement._from_string(p.name)
                 obsolete_providers = self._pool.what_provides(requirement)
                 for provider in obsolete_providers:
                     if provider != p:

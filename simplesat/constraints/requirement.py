@@ -8,7 +8,6 @@ from simplesat.errors import InvalidDependencyString, SolverException
 
 from .kinds import Any, EnpkgUpstreamMatch, Equal
 from .multi import MultiConstraints
-from .package_parser import _legacy_requirement_string_to_name_constraints
 from .parser import _RawRequirementParser
 
 
@@ -66,22 +65,6 @@ class Requirement(object):
         assert len(named_constraints) > 0
         name = _first(named_constraints.keys())
         return cls(name, named_constraints[name])
-
-    @classmethod
-    def from_legacy_requirement_string(cls, requirement_string,
-                                       version_factory=EnpkgVersion.from_string):
-        """ Creates a requirement from a legacy requirement string (as
-        found in our current egg metadata, format < 2).
-
-        Parameters
-        ----------
-        requirement_string : str
-            The legacy requirement string, e.g. 'MKL 10.3'
-        """
-        name, constraint = _legacy_requirement_string_to_name_constraints(
-            requirement_string
-        )
-        return cls(name, [constraint])
 
     @classmethod
     def from_package_string(cls, package_string,

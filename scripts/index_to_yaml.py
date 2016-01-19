@@ -14,11 +14,10 @@ from simplesat.constraints.kinds import (
 from simplesat.test_utils import repository_from_index
 
 
-
 # TODO Can use new enstaller pretty printer here...
 
 def dependency_to_string(dependency):
-    req = Requirement.from_legacy_requirement_string(dependency)
+    req = Requirement._from_string(dependency)
     constraints = list(req._constraints._constraints)
     assert len(constraints) == 1
     assert isinstance(constraints[0],
