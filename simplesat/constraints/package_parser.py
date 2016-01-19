@@ -107,9 +107,9 @@ def constraints_to_pretty_strings(install_requires):
     """
     flat_strings = [
         "{} {}".format(dist, constraint_string).strip()
-        for dist, constraint_string_disjunction in install_requires
-        for constraint_string_conjunction in constraint_string_disjunction
-        for constraint_string in constraint_string_conjunction
+        for dist, disjunction in install_requires
+        for conjunction in disjunction
+        for constraint_string in conjunction
     ]
 
     return flat_strings
