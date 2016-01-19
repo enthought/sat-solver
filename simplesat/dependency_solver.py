@@ -2,8 +2,6 @@ import collections
 
 import six
 
-from simplesat.constraints import Requirement
-from simplesat.constraints.package_parser import constraints_to_pretty_strings
 from simplesat.errors import NoPackageFound
 from simplesat.request import JobType
 from simplesat.rules_generator import RulesGenerator
@@ -116,13 +114,8 @@ def _connected_packages(solution, root_ids, pool):
     def neighborfunc(pkg_id):
         """ Given a pkg id, return the pkg ids of the immediate dependencies
         that appeared in our solution. """
-        dep_strings = sorted(constraints_to_pretty_strings(
-            pool._id_to_package[pkg_id].install_requires))
-        pkg_names = (
-            Requirement._from_string(d).name
-            for d in dep_strings
-        )
-        neighbors = set(solution_name_to_id[name] for name in pkg_names)
+        constraints = pool._id_to_package[pkg_id].install_requires
+        neighbors = set(solution_name_to_id[name] for name, _ in constraints)
         return neighbors
 
     # Each package can root its own independent graph, so we must start at

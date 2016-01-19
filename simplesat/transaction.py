@@ -145,12 +145,9 @@ class Transaction(object):
                     self.update(operation.source, operation.package)
             else:
                 queue.append(package)
-                # We use sorted for determinism
-                dep_strings = sorted(
-                    constraints_to_pretty_strings(package.install_requires))
-                for dependency in dep_strings:
-                    package_requirement = Requirement._from_string(dependency)
-                    candidates = pool.what_provides(package_requirement)
+                for constraints in package.install_requires:
+                    requirement = Requirement.from_constraints(constraints)
+                    candidates = pool.what_provides(requirement)
                     queue.extend(candidates)
 
                 visited_ids.add(package_id)
