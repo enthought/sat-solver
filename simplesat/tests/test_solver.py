@@ -3,13 +3,11 @@ import unittest
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
-from enstaller import Repository
-from enstaller.new_solver.package_parser import PrettyPackageStringParser
-from enstaller.solver import Request
-
+from simplesat.constraints import PrettyPackageStringParser, Requirement
 from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
-from simplesat.requirement import Requirement
+from simplesat.repository import Repository
+from simplesat.request import Request
 from simplesat.transaction import InstallOperation, UpdateOperation
 
 
@@ -24,10 +22,9 @@ class TestSolver(unittest.TestCase):
         self._package_parser = PrettyPackageStringParser(
             EnpkgVersion.from_string
         )
-        self._python = PythonImplementation("cp", 2, 7)
 
     def package_factory(self, s):
-        return self._package_parser.parse_to_package(s, self._python)
+        return self._package_parser.parse_to_package(s)
 
     def resolve(self, request):
         pool = Pool([self.repository, self.installed_repository])
@@ -41,7 +38,7 @@ class TestSolver(unittest.TestCase):
 
     def test_simple_install(self):
         # Given
-        mkl = self.package_factory("mkl 10.3-1")
+        mkl = self.package_factory(u"mkl 10.3-1")
         self.repository.add_package(mkl)
 
         r_operations = [InstallOperation(mkl)]
@@ -57,12 +54,12 @@ class TestSolver(unittest.TestCase):
 
     def test_multiple_installs(self):
         # Given
-        mkl = self.package_factory("mkl 10.3-1")
-        libgfortran = self.package_factory("libgfortran 3.0.0-2")
+        mkl = self.package_factory(u"mkl 10.3-1")
+        libgfortran = self.package_factory(u"libgfortran 3.0.0-2")
 
         r_operations = [
-            InstallOperation(libgfortran),
             InstallOperation(mkl),
+            InstallOperation(libgfortran),
         ]
 
         self.repository.add_package(mkl)
@@ -80,10 +77,10 @@ class TestSolver(unittest.TestCase):
 
     def test_simple_dependency(self):
         # Given
-        mkl = self.package_factory("mkl 10.3-1")
-        libgfortran = self.package_factory("libgfortran 3.0.0-2")
+        mkl = self.package_factory(u"mkl 10.3-1")
+        libgfortran = self.package_factory(u"libgfortran 3.0.0-2")
         numpy = self.package_factory(
-            "numpy 1.9.2-1; depends (mkl == 10.3-1, libgfortran ~= 3.0.0)"
+            u"numpy 1.9.2-1; depends (mkl == 10.3-1, libgfortran ^= 3.0.0)"
         )
 
         r_operations = [
@@ -107,8 +104,8 @@ class TestSolver(unittest.TestCase):
 
     def test_already_installed(self):
         # Given
-        mkl1 = self.package_factory("mkl 10.3-1")
-        mkl2 = self.package_factory("mkl 10.3-2")
+        mkl1 = self.package_factory(u"mkl 10.3-1")
+        mkl2 = self.package_factory(u"mkl 10.3-2")
 
         r_operations = []
 

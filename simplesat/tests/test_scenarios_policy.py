@@ -3,9 +3,7 @@ from unittest import TestCase, expectedFailure
 
 import six
 
-from egginst.errors import NoPackageFound
-
-from simplesat.errors import SatisfiabilityError
+from simplesat.errors import NoPackageFound, SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
 from simplesat.sat.policy import InstalledFirstPolicy

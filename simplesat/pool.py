@@ -29,7 +29,7 @@ class Pool(object):
         repository : Repository
             The repository to add
         """
-        for package in repository.iter_packages():
+        for package in repository:
             current_id = self._id
             self._id += 1
 
@@ -66,9 +66,8 @@ class Pool(object):
         Convert a package id to a nice string representation.
         """
         package = self._id_to_package[abs(package_id)]
-        package_string = package.name + "-" + package.full_version
+        package_string = package.name + "-" + str(package.version)
         if package_id > 0:
             return "+" + package_string
         else:
             return "-" + package_string
-

@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from attr import attr, attributes
 
-from .requirement import Requirement
+from .constraints import Requirement
 
 
 @attributes

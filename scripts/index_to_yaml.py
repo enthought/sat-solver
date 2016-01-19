@@ -5,13 +5,14 @@ import sys
 
 import yaml
 
-from enstaller.new_solver.tests.common import repository_from_index
-from enstaller.new_solver.constraint_types import (
+from okonomiyaki.versions import EnpkgVersion
+
+from simplesat.constraints import Requirement
+from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal
 )
-from enstaller.versions import EnpkgVersion
+from simplesat.test_utils import repository_from_index
 
-from simplesat.requirement import Requirement
 
 
 # TODO Can use new enstaller pretty printer here...
