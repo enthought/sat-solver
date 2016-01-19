@@ -89,6 +89,7 @@ class TestRequirement(unittest.TestCase):
             ("numpy", False),
             ("numpy < 1.8.1", True),
             ("numpy == 1.8.1-1", True),
+            ("numpy ^= 1.8.1", True),
         ]
 
         # When/Then
