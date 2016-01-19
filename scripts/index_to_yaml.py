@@ -8,6 +8,7 @@ import yaml
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import Requirement
+from simplesat.constraints.package_parser import constraints_to_pretty_strings
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal
 )
@@ -38,7 +39,8 @@ def requirements_string(package):
     if len(package.install_requires) > 0:
         template += "; depends ({install_requires})"
     install_requires = ', '.join(
-        dependency_to_string(dep) for dep in package.install_requires)
+        dependency_to_string(dep)
+        for dep in constraints_to_pretty_strings(package.install_requires))
     return template.format(
         name=name, version=package.version, install_requires=install_requires)
 

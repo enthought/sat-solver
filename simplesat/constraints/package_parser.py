@@ -95,14 +95,14 @@ class PrettyPackageStringParser(object):
         return PackageMetadata(distribution, version, **pkg_dict)
 
 
-def install_requires_to_pretty_strings(install_requires):
-    """ Convert a sequence of legacy dependency strings to a pretty constraint
-    string.
+def constraints_to_pretty_strings(install_requires):
+    """ Convert a sequence of constraint tuples as used in PackageMetadata to a
+    list of pretty constraint strings.
 
     Parameters
     ----------
     install_requires : seq
-        Sequence of legacy dependency string (e.g. 'MKL 10.3')
+        Sequence of constraint tuples, e.g. ("MKL", ((">= 10.1", "< 11"),))
     """
     flat_strings = [
         "{} {}".format(dist, constraint_string).strip()
@@ -119,7 +119,7 @@ def package_to_pretty_string(package):
     template = "{0.name} {0.version}"
     if len(package.install_requires) > 0:
         string = ' '.join(
-            install_requires_to_pretty_strings(package.install_requires))
+            constraints_to_pretty_strings(package.install_requires))
         template += "; depends ({0})".format(string)
     return template.format(package)
 

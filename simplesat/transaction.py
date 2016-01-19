@@ -3,7 +3,7 @@ from collections import OrderedDict
 from attr import attr, attributes
 
 from .constraints import Requirement
-from .constraints.package_parser import install_requires_to_pretty_strings
+from .constraints.package_parser import constraints_to_pretty_strings
 
 
 @attributes
@@ -147,7 +147,7 @@ class Transaction(object):
                 queue.append(package)
                 # We use sorted for determinism
                 dep_strings = sorted(
-                    install_requires_to_pretty_strings(package.install_requires))
+                    constraints_to_pretty_strings(package.install_requires))
                 for dependency in dep_strings:
                     package_requirement = Requirement._from_string(dependency)
                     candidates = pool.what_provides(package_requirement)
@@ -176,7 +176,7 @@ class Transaction(object):
                 continue
 
             dep_strings = sorted(
-                install_requires_to_pretty_strings(package.install_requires))
+                constraints_to_pretty_strings(package.install_requires))
             for dependency in dep_strings:
                 requirement = Requirement._from_string(dependency)
                 candidates = pool.what_provides(requirement)

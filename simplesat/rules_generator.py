@@ -2,7 +2,7 @@ import collections
 import enum
 
 from .constraints import Requirement
-from .constraints.package_parser import install_requires_to_pretty_strings
+from .constraints.package_parser import constraints_to_pretty_strings
 from .errors import NoPackageFound, SolverException
 from .request import JobType
 
@@ -247,7 +247,7 @@ class RulesGenerator(object):
 
     def _add_install_requires_rules(self, package, work_queue):
         dep_strings = sorted(
-            install_requires_to_pretty_strings(package.install_requires))
+            constraints_to_pretty_strings(package.install_requires))
         for dependency in dep_strings:
             print(package, dependency)
             requirement = Requirement._from_string(dependency)

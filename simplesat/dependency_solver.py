@@ -3,8 +3,7 @@ import collections
 import six
 
 from simplesat.constraints import Requirement
-from simplesat.constraints.package_parser import (
-    install_requires_to_pretty_strings)
+from simplesat.constraints.package_parser import constraints_to_pretty_strings
 from simplesat.errors import NoPackageFound
 from simplesat.request import JobType
 from simplesat.rules_generator import RulesGenerator
@@ -117,7 +116,7 @@ def _connected_packages(solution, root_ids, pool):
     def neighborfunc(pkg_id):
         """ Given a pkg id, return the pkg ids of the immediate dependencies
         that appeared in our solution. """
-        dep_strings = sorted(install_requires_to_pretty_strings(
+        dep_strings = sorted(constraints_to_pretty_strings(
                 pool._id_to_package[pkg_id].install_requires))
         pkg_names = (
             Requirement._from_string(d).name
