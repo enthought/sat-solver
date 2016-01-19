@@ -117,7 +117,7 @@ def _connected_packages(solution, root_ids, pool):
         """ Given a pkg id, return the pkg ids of the immediate dependencies
         that appeared in our solution. """
         dep_strings = sorted(constraints_to_pretty_strings(
-                pool._id_to_package[pkg_id].install_requires))
+            pool._id_to_package[pkg_id].install_requires))
         pkg_names = (
             Requirement._from_string(d).name
             for d in dep_strings

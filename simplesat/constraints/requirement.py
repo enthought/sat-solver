@@ -6,7 +6,7 @@ from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.errors import InvalidDependencyString, SolverException
 
-from .kinds import Any, EnpkgUpstreamMatch, Equal
+from .kinds import Any, Equal
 from .multi import MultiConstraints
 from .parser import _RawRequirementParser
 

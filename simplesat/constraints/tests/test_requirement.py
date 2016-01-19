@@ -4,7 +4,7 @@ from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.errors import InvalidDependencyString, SolverException
 
-from ..kinds import Any, EnpkgUpstreamMatch, Equal
+from ..kinds import Equal
 from ..multi import MultiConstraints
 from ..requirement import Requirement, parse_package_full_name
 
@@ -68,7 +68,7 @@ class TestRequirement(unittest.TestCase):
         requirement_string = "numpy >= 1.8.1-3, scipy < 1.9.0"
 
         # When
-        with self.assertRaises(SolverException):
+        with self.assertRaises(InvalidDependencyString):
             Requirement._from_string(requirement_string)
 
     def test_from_package_string(self):
@@ -93,9 +93,10 @@ class TestRequirement(unittest.TestCase):
         ]
 
         # When/Then
-        for requirement, has_any_version_constraint in requirements:
+        for pretty_string, has_any_version_constraint in requirements:
+            requirement = Requirement._from_string(pretty_string)
             self.assertEqual(
-                Requirement._from_string(requirement).has_any_version_constraint,
+                requirement.has_any_version_constraint,
                 has_any_version_constraint
             )
 

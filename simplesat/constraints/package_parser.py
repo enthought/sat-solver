@@ -1,10 +1,7 @@
 import re
 
-from okonomiyaki.versions import EnpkgVersion
-
 from simplesat.package import PackageMetadata
-from .kinds import Any, EnpkgUpstreamMatch, Equal
-from .parser import _DISTRIBUTION_R, _VERSION_R, _WS_R, _RawRequirementParser
+from .parser import _DISTRIBUTION_R, _VERSION_R, _WS_R
 
 
 DEPENDS_RE = re.compile("depends\s*\((.*)\)")
