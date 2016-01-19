@@ -1,0 +1,13 @@
+packages:
+  - quark 1.0.1-2
+  - atom 1.0.0-1; depends (quark ^= 1.0.1); conflicts (gdata ^= 1.0.0)
+  - gdata 1.0.0-1; conflicts (atom ^= 1.0.0)
+
+request:
+  - operation: "install"
+    requirement: "atom"
+  - operation: "install"
+    requirement: "gdata"
+
+failure:
+  - "atom 1.0.0-1 conflicts with gdata 1.0.0-1"
