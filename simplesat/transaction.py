@@ -145,7 +145,7 @@ class Transaction(object):
             else:
                 queue.append(package)
                 # We use sorted for determinism
-                for dependency in sorted(package.dependencies):
+                for dependency in sorted(package.install_requires):
                     package_requirement = \
                         Requirement.from_legacy_requirement_string(dependency)
                     candidates = pool.what_provides(package_requirement)
@@ -173,7 +173,7 @@ class Transaction(object):
             if package_id not in roots:
                 continue
 
-            for dependency in package.dependencies:
+            for dependency in package.install_requires:
                 candidates = pool.what_provides(
                     Requirement.from_legacy_requirement_string(dependency)
                 )

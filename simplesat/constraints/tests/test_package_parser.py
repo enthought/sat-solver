@@ -123,11 +123,11 @@ class TestPrettyPackageStringParser(unittest.TestCase):
 class TestLegacyDependenciesToPrettyString(unittest.TestCase):
     def test_simple(self):
         # Given
-        dependencies = ["MKL 10.3-1", "nose 1.3.4"]
+        install_requires = ["MKL 10.3-1", "nose 1.3.4"]
         r_pretty_string = "MKL == 10.3-1, nose ^= 1.3.4"
 
         # When
-        pretty_string = legacy_dependencies_to_pretty_string(dependencies)
+        pretty_string = legacy_dependencies_to_pretty_string(install_requires)
 
         # Then
         self.assertEqual(pretty_string, r_pretty_string)
@@ -170,4 +170,4 @@ class TestToPackage(unittest.TestCase):
 
         # Then
         self.assertEqual(package.name, "numpy")
-        self.assertEqual(package.dependencies, ("MKL 10.3",))
+        self.assertEqual(package.install_requires, ("MKL 10.3",))

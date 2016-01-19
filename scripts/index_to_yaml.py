@@ -36,12 +36,12 @@ def dependency_to_string(dependency):
 def requirements_string(package):
     name = package.key.split("-")[0]
     template = "{name} {version}"
-    if len(package.dependencies) > 0:
-        template += "; depends ({dependencies})"
-    dependencies = ', '.join(
-        dependency_to_string(dep) for dep in package.dependencies)
+    if len(package.install_requires) > 0:
+        template += "; depends ({install_requires})"
+    install_requires = ', '.join(
+        dependency_to_string(dep) for dep in package.install_requires)
     return template.format(
-        name=name, version=package.version, dependencies=dependencies)
+        name=name, version=package.version, install_requires=install_requires)
 
 
 def main(argv=None):

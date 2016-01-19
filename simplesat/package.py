@@ -51,12 +51,12 @@ class PackageMetadata(object):
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
         return parser.parse_to_package(s)
 
-    def __init__(self, name, version, dependencies=None):
+    def __init__(self, name, version, install_requires=None):
         self._name = name
         self._version = version
-        self._dependencies = dependencies or tuple()
+        self._install_requires = install_requires or tuple()
 
-        self._key = (name, version, self._dependencies)
+        self._key = (name, version, self._install_requires)
         self._hash = hash(self._key)
 
     @property
@@ -68,8 +68,8 @@ class PackageMetadata(object):
         return self._version
 
     @property
-    def dependencies(self):
-        return self._dependencies
+    def install_requires(self):
+        return self._install_requires
 
     def __repr__(self):
         return "PackageMetadata('{0}-{1}')".format(self._name, self._version)
@@ -106,8 +106,8 @@ class RepositoryPackageMetadata(object):
         return self._package.version
 
     @property
-    def dependencies(self):
-        return self._package.dependencies
+    def install_requires(self):
+        return self._package.install_requires
 
     @property
     def repository_info(self):

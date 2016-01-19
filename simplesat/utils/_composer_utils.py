@@ -52,7 +52,7 @@ def repository_to_composer_json_dict(repository):
     for package in repository.iter_packages():
         version_normalized = _normalize_php_version(package.version)
         requires = [Requirement.from_legacy_requirement_string(p) for
-                    p in package.dependencies]
+                    p in package.install_requires]
         yield {
             "name": package.name,
             "version": _fix_php_version(package.version),
