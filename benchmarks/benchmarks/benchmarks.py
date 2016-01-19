@@ -2,11 +2,10 @@ import enum
 import io
 import pkgutil
 
-from enstaller.new_solver import Pool
-
 from simplesat.dependency_solver import (
     create_rules_and_initialize_policy, compute_solution_ids)
 from simplesat.errors import SatisfiabilityError
+from simplesat.pool import Pool
 from simplesat.sat import MiniSATSolver
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.test_utils import Scenario
