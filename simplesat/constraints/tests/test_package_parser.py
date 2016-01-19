@@ -74,8 +74,6 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertTrue("nose" in install_requires)
         self.assertEqual(install_requires["nose"], (('== 1.3.4-1',),))
 
-    # FIXME: MORE OF THESE. SCARY SCARY SCARY!
-
     def test_unversioned(self):
         # Given
         parse = PrettyPackageStringParser(V).parse
@@ -192,7 +190,21 @@ class TestPackagePrettyString(unittest.TestCase):
 
 
 class TestToPackage(unittest.TestCase):
+
     def test_simple(self):
+        # Given
+        s = u"zope.deprecated_ 2"
+        parser = PrettyPackageStringParser(V)
+
+        # When
+        package = parser.parse_to_package(s)
+
+        # Then
+        self.assertEqual(package.name, "zope.deprecated_")
+        self.assertEqual(package.version, V('2'))
+        self.assertEqual(package.install_requires, ())
+
+    def test_with_depends(self):
         # Given
         s = u"numpy 1.8.1; depends (MKL ^= 10.3)"
         parser = PrettyPackageStringParser(V)
