@@ -156,7 +156,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
         self.assertTrue("nose" in install_requires)
-        self.assertEqual(install_requires["nose"], (('=> 1.3', '< 1.4'),))
+        self.assertEqual(install_requires["nose"], (('< 1.4', '=> 1.3'),))
 
     def test_no_dependencies(self):
         # Given

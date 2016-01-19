@@ -82,7 +82,7 @@ class PackageMetadata(object):
         """
         self._name = name
         self._version = version
-        self._install_requires = install_requires or tuple()
+        self._install_requires = tuple(sorted(install_requires or ()))
 
         self._key = (name, version, self._install_requires)
         self._hash = hash(self._key)
