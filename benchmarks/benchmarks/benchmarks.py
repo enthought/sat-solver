@@ -15,6 +15,7 @@ from simplesat.transaction import Transaction
 
 EPD_IRIS_CONFLICT = 'epd_iris_conflict.yaml'
 IRIS = 'iris.yaml'
+SLOW_BLAZE_BOKEH = 'simplesat/tests/slow_blaze_bokeh_chaco_iris.yaml'
 
 
 class STAGE(enum.Enum):
@@ -38,7 +39,7 @@ class STAGE(enum.Enum):
 
 class GraduatedSuite(object):
 
-    scenario_names = (EPD_IRIS_CONFLICT, IRIS)
+    scenario_names = (SLOW_BLAZE_BOKEH, EPD_IRIS_CONFLICT, IRIS)
     params = (scenario_names, list(STAGE))
     param_names = ("Scenario", "Stage")
 
