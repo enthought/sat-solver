@@ -27,7 +27,7 @@ CONSTRAINT_SYNONYMS = {
 }
 
 
-class PrettyPackageStringParser2(object):
+class PrettyPackageStringParser(object):
 
     def __init__(self, version_factory):
         self._version_factory = version_factory
@@ -95,7 +95,7 @@ class PrettyPackageStringParser2(object):
         return PackageMetadata(distribution, version, **pkg_dict)
 
 
-class PrettyPackageStringParser(object):
+class LegacyPrettyPackageStringParser(object):
     """ Parser for pretty package strings.
 
     Pretty package strings are of the form::
@@ -231,11 +231,40 @@ def legacy_dependencies_to_pretty_string(install_requires):
     return constraints_to_pretty_string(constraints_mapping)
 
 
-def package_to_pretty_string(package):
+def legacy_package_to_pretty_string(package):
     """ Given a PackageMetadata instance, returns a pretty string."""
     template = "{0.name} {0.version}"
     if len(package.install_requires) > 0:
         string = legacy_dependencies_to_pretty_string(package.install_requires)
+        template += "; depends ({0})".format(string)
+    return template.format(package)
+
+
+def install_requires_to_pretty_strings(install_requires):
+    """ Convert a sequence of legacy dependency strings to a pretty constraint
+    string.
+
+    Parameters
+    ----------
+    install_requires : seq
+        Sequence of legacy dependency string (e.g. 'MKL 10.3')
+    """
+    flat_strings = [
+        "{} {}".format(dist, constraint_string).strip()
+        for dist, constraint_string_disjunction in install_requires
+        for constraint_string_conjunction in constraint_string_disjunction
+        for constraint_string in constraint_string_conjunction
+    ]
+
+    return flat_strings
+
+
+def package_to_pretty_string(package):
+    """ Given a PackageMetadata instance, returns a pretty string."""
+    template = "{0.name} {0.version}"
+    if len(package.install_requires) > 0:
+        string = ' '.join(
+            install_requires_to_pretty_strings(package.install_requires))
         template += "; depends ({0})".format(string)
     return template.format(package)
 
