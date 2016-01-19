@@ -249,7 +249,6 @@ class RulesGenerator(object):
         dep_strings = sorted(
             constraints_to_pretty_strings(package.install_requires))
         for dependency in dep_strings:
-            print(package, dependency)
             requirement = Requirement._from_string(dependency)
             dependency_candidates = self._pool.what_provides(requirement)
 
