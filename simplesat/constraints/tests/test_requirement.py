@@ -2,7 +2,9 @@ import unittest
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.errors import InvalidDependencyString, SolverException
+from simplesat.errors import (
+    InvalidConstraint, InvalidDependencyString, SolverException
+)
 
 from ..kinds import Equal
 from ..multi import MultiConstraints
@@ -12,7 +14,92 @@ from ..requirement import Requirement, parse_package_full_name
 V = EnpkgVersion.from_string
 
 
-class TestRequirement(unittest.TestCase):
+class TestRequirementFromConstraint(unittest.TestCase):
+    def test_comparison(self):
+        # Given
+        constraints0 = ("numpy", ((">= 1.8.1-3", "< 1.9.0"),))
+        constraints1 = ("numpy", ((">= 1.8.1-3", "< 1.9.1"),))
+
+        # When
+        requirement0 = Requirement.from_constraints(constraints0)
+        requirement1 = Requirement.from_constraints(constraints1)
+
+        # Then
+        self.assertTrue(requirement0 != requirement1)
+
+    def test_hashing(self):
+        # Given
+        constraints0 = ("numpy", ((">= 1.8.1-3", "< 1.9.1"),))
+
+        # When
+        requirement0 = Requirement.from_constraints(constraints0)
+        requirement1 = Requirement.from_constraints(constraints0)
+
+        # Then
+        self.assertEqual(requirement0, requirement1)
+        self.assertEqual(hash(requirement0), hash(requirement1))
+
+    def test_any(self):
+        # Given
+        constraints0 = ("numpy", ((),))
+
+        # When
+        requirement = Requirement.from_constraints(constraints0)
+
+        # Then
+        self.assertTrue(requirement.matches(V("1.8.1-2")))
+        self.assertTrue(requirement.matches(V("1.8.1-3")))
+        self.assertTrue(requirement.matches(V("1.8.2-1")))
+        self.assertTrue(requirement.matches(V("1.9.0-1")))
+
+    def test_simple(self):
+        # Given
+        constraints0 = ("numpy", ((">= 1.8.1-3", "< 1.9.0"),))
+
+        # When
+        requirement = Requirement.from_constraints(constraints0)
+
+        # Then
+        self.assertFalse(requirement.matches(V("1.8.1-2")))
+        self.assertTrue(requirement.matches(V("1.8.1-3")))
+        self.assertTrue(requirement.matches(V("1.8.2-1")))
+        self.assertFalse(requirement.matches(V("1.9.0-1")))
+
+    def test_multiple_fails(self):
+        # Given
+        constraints0 = (("numpy", ((">= 1.8.1-3",),)),
+                        ("scipy", (("< 1.9.0",),)))
+
+        # Then
+        with self.assertRaises(InvalidConstraint):
+            Requirement.from_constraints(constraints0)
+
+    def test_disjunction_fails(self):
+        constraints0 = ("numpy", (("< 1.8.0",), (">= 1.8.1-3",)))
+
+        # Then
+        with self.assertRaises(InvalidConstraint):
+            Requirement.from_constraints(constraints0)
+
+    def test_has_any_version_constraint(self):
+        # Given
+        requirements = [
+            (("numpy", ((),)), False),
+            (("numpy", (("< 1.8.1",),)), True),
+            (("numpy", (("== 1.8.1-1",),)), True),
+            (("numpy", (("^= 1.8.1",),)), True),
+        ]
+
+        # When/Then
+        for pretty_string, has_any_version_constraint in requirements:
+            requirement = Requirement.from_constraints(pretty_string)
+            self.assertEqual(
+                requirement.has_any_version_constraint,
+                has_any_version_constraint
+            )
+
+
+class TestRequirementFromString(unittest.TestCase):
     def test_comparison(self):
         # Given
         requirement_string1 = "numpy >= 1.8.1-3, numpy < 1.9.0"

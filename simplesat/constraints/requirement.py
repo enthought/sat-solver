@@ -4,11 +4,13 @@ import six
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.errors import InvalidDependencyString, SolverException
+from simplesat.errors import (
+    InvalidConstraint, InvalidDependencyString, SolverException
+)
 
 from .kinds import Any, Equal
 from .multi import MultiConstraints
-from .parser import _RawRequirementParser
+from .parser import _RawConstraintsParser, _RawRequirementParser
 
 
 _FULL_PACKAGE_RE = re.compile("""\
@@ -46,6 +48,41 @@ class Requirement(object):
     specs: seq
         Sequence of constraints
     """
+
+    @classmethod
+    def from_constraints(cls, constraint_tuple):
+        """ Return a Requirement object from a PackageMetadata constraint
+        tuple.
+
+        Parameters
+        ----------
+        constraints : constraints tuple
+            A tuple of constraints like (
+                'nose', ( # disjuncitons
+                    ('=> 1.3', '< 1.4'),  # conjunction
+                )
+            )
+        """
+        try:
+            name, disjunction = constraint_tuple
+        except ValueError:
+            msg = "Invalid constraint tuple: {}"
+            raise InvalidConstraint(msg.format(constraint_tuple))
+
+        if len(disjunction) > 1:
+            msg = "Disjunction (OR) is not yet supported in constraints: {}"
+            raise InvalidConstraint(msg.format(disjunction))
+
+        parse = _RawConstraintsParser().parse
+
+        constraints = set(
+            constraint
+            for conjunction in disjunction
+            for constraint_str in conjunction
+            for constraint in parse(constraint_str, EnpkgVersion.from_string))
+
+        return cls(name, constraints)
+
     @classmethod
     def _from_string(cls, string,
                      version_factory=EnpkgVersion.from_string):
@@ -82,7 +119,6 @@ class Requirement(object):
 
     def __init__(self, name, constraints=None):
         self.name = name
-
         self._constraints = MultiConstraints(constraints)
 
     def matches(self, version_candidate):
