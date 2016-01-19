@@ -24,7 +24,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         package_string = ""
         r_message = "Invalid preamble: "
 
-        # When
+        # Then
         with self.assertRaisesRegexp(ValueError, r_message):
             parse(package_string)
 
@@ -32,7 +32,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         package_string = "numpy"
         r_message = "Invalid preamble: 'numpy'"
 
-        # When
+        # Then
         with self.assertRaisesRegexp(ValueError, r_message):
             parse(package_string)
 
@@ -40,16 +40,28 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         package_string = "numpy1.8.0-1"
         r_message = ("Invalid preamble: ")
 
-        # When
+        # Then
         with self.assertRaisesRegexp(ValueError, r_message):
             parse(package_string)
 
         # Given
-        package_string = "numpy 1.8.0-1; depends (nose 1.3.2)"
-        r_message = "Invalid requirement block: "
+        package_string = "numpy 1.8.0-1 depends (nose >= 1.3.2)"
+        r_message = ("Invalid preamble: ")
+
+        # Then
+        with self.assertRaisesRegexp(ValueError, r_message):
+            parse(package_string)
 
         # Given
-        package_string = "numpy 1.8.0-1; conflicts (nose 1.3.2)"
+        package_string = "numpy; depends (nose >= 1.3.2)"
+        r_message = ("Invalid preamble: ")
+
+        # Then
+        with self.assertRaisesRegexp(ValueError, r_message):
+            parse(package_string)
+
+        # Given
+        package_string = "numpy 1.8.0-1; conflicts (nose >= 1.3.2)"
         r_message = ("Invalid package string. "
                      "Unknown constraint kind: 'conflicts'")
 
