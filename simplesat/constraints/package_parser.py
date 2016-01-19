@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 
 from simplesat.package import PackageMetadata
 from .parser import _DISTRIBUTION_R, _VERSION_R, _WS_R
@@ -53,11 +54,11 @@ class PrettyPackageStringParser(object):
             if kind not in VALID_CONSTRAINT_KINDS:
                 msg = "Invalid package string. Unknown constraint kind: {!r}"
                 raise ValueError(msg.format(kind))
-            constraints = {}
+            constraints = defaultdict(lambda: [[]])
             for match in CONSTRAINT_RC.finditer(constraints_str):
                 dist = match.group('distribution')
                 constraint_str = match.group('constraint')
-                constraints.setdefault(dist, [[]])[0].append(constraint_str)
+                constraints[dist][0].append(constraint_str)
             pkg[kind] = constraints
 
         # Turn constraints into immutable nested tuples

@@ -58,8 +58,8 @@ class Requirement(object):
         ----------
         constraints : constraints tuple
             A tuple of constraints like (
-                'nose', ( # disjuncitons
-                    ('=> 1.3', '< 1.4'),  # conjunction
+                'nose', ( # disjunctions
+                    ('< 1.4', '>= 1.3'),  # conjunction
                 )
             )
         """
