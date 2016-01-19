@@ -23,7 +23,8 @@ class PackageRule(object):
     @classmethod
     def _from_string(cls, rule_string, pool):
         """
-        Creates a PackageRule from a rule string, e.g. '-numpy-1.6.0 | numpy-1.7.0'
+        Creates a PackageRule from a rule string,
+            e.g. '-numpy-1.6.0 | numpy-1.7.0'
 
         Because package full name -> id is not 1-to-1 mapping, this may fail
         when a package has multiple ids. This is mostly used for testing, to
@@ -131,10 +132,10 @@ class RulesGenerator(object):
     # ------------------------------
     # API to create individual rules
     # ------------------------------
-    def _create_dependency_rule(self, package, dependencies, reason,
+    def _create_dependency_rule(self, package, install_requires, reason,
                                 reason_details=""):
         """
-        Create the rule for the dependencies of a package.
+        Create the rule for the install_requires of a package.
 
         This dependency is of the form (-A | R1 | R2 | R3) where R* are
         the set of packages provided by the dependency requirement.
@@ -143,7 +144,7 @@ class RulesGenerator(object):
         ----------
         package: PackageInfo
             The package with a requirement
-        dependencies: sequence
+        install_requires: sequence
             Sequence of packages that fulfill the requirement.
         reason: str
             A valid PackageRule.reason value
@@ -156,7 +157,7 @@ class RulesGenerator(object):
         """
         literals = [-self._pool.package_id(package)]
 
-        for dependency in dependencies:
+        for dependency in install_requires:
             if dependency != package:
                 literals.append(self._pool.package_id(dependency))
 
@@ -243,8 +244,8 @@ class RulesGenerator(object):
         if rule is not None and rule not in self._rules_set:
             self._rules_set[rule] = None
 
-    def _add_dependencies_rules(self, package, work_queue):
-        for dependency in sorted(package.dependencies):
+    def _add_install_requires_rules(self, package, work_queue):
+        for dependency in sorted(package.install_requires):
             requirement = Requirement.from_legacy_requirement_string(dependency)
             dependency_candidates = self._pool.what_provides(requirement)
 
@@ -273,7 +274,7 @@ class RulesGenerator(object):
             p_id = self._pool.package_id(p)
             if p_id not in self.added_package_ids:
                 self.added_package_ids.add(p_id)
-                self._add_dependencies_rules(p, work_queue)
+                self._add_install_requires_rules(p, work_queue)
 
                 requirement = Requirement.from_legacy_requirement_string(p.name)
                 obsolete_providers = self._pool.what_provides(requirement)

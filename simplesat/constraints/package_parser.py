@@ -36,7 +36,7 @@ class PrettyPackageStringParser(object):
             The package name
         version : version object
             The package version
-        dependencies : dict
+        install_requires : dict
             A dict mapping a package name to a set of constraints mapping.
         """
         version_factory = self._version_factory
@@ -50,7 +50,7 @@ class PrettyPackageStringParser(object):
         for part in parts[1:]:
             part = part.lstrip()
 
-            for kind, r in (("dependencies", DEPENDS_RE),):
+            for kind, r in (("install_requires", DEPENDS_RE),):
                 m = r.search(part)
                 if m is not None:
                     break
@@ -63,7 +63,7 @@ class PrettyPackageStringParser(object):
             )
 
         return (name, version_factory(version_string),
-                constraints.get("dependencies", {}))
+                constraints.get("install_requires", {}))
 
     def parse_to_package(self, package_string):
         """ Parse the given pretty package string.
@@ -78,9 +78,9 @@ class PrettyPackageStringParser(object):
         -------
         package : PackageMetadata
         """
-        name, version, dependencies = \
+        name, version, install_requires = \
             self.parse_to_legacy_constraints(package_string)
-        return PackageMetadata(name, version, dependencies)
+        return PackageMetadata(name, version, install_requires)
 
     def parse_to_legacy_constraints(self, package_string):
         """ Parse the given package string into a name, version and a set of
@@ -88,10 +88,10 @@ class PrettyPackageStringParser(object):
         for exact dependency to MKL 10.3-1).
 
         """
-        name, version, dependencies = self.parse(package_string)
+        name, version, install_requires = self.parse(package_string)
 
         legacy_constraints = []
-        for dependency_name, constraints in dependencies.items():
+        for dependency_name, constraints in install_requires.items():
             assert len(constraints) == 1, constraints
             constraint = next(iter(constraints))
             assert isinstance(constraint,
@@ -125,18 +125,18 @@ def constraints_to_pretty_string(constraints):
     return ", ".join(data)
 
 
-def legacy_dependencies_to_pretty_string(dependencies):
+def legacy_dependencies_to_pretty_string(install_requires):
     """ Convert a sequence of legacy dependency strings to a pretty constraint
     string.
 
     Parameters
     ----------
-    dependencies : seq
+    install_requires : seq
         Sequence of legacy dependency string (e.g. 'MKL 10.3')
     """
     constraints_mapping = []
 
-    for dependency in dependencies:
+    for dependency in install_requires:
         name, constraint = _legacy_requirement_string_to_name_constraints(
             dependency
         )
@@ -149,8 +149,8 @@ def legacy_dependencies_to_pretty_string(dependencies):
 def package_to_pretty_string(package):
     """ Given a PackageMetadata instance, returns a pretty string."""
     template = "{0.name} {0.version}"
-    if len(package.dependencies) > 0:
-        string = legacy_dependencies_to_pretty_string(package.dependencies)
+    if len(package.install_requires) > 0:
+        string = legacy_dependencies_to_pretty_string(package.install_requires)
         template += "; depends ({0})".format(string)
     return template.format(package)
 

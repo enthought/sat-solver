@@ -95,7 +95,7 @@ def _connected_packages(solution, root_ids, pool):
     """ Return packages in `solution` which are associated with `root_ids`. """
 
     # Our strategy is as follows:
-    # ... -> pkg.dependencies -> pkg strings -> ids -> _id_to_package -> ...
+    # ... -> pkg.install_requires -> pkg names -> ids -> _id_to_package -> ...
 
     def get_name(pkg_id):
         return pool._id_to_package[abs(pkg_id)].name
@@ -115,7 +115,7 @@ def _connected_packages(solution, root_ids, pool):
     def neighborfunc(pkg_id):
         """ Given a pkg id, return the pkg ids of the immediate dependencies
         that appeared in our solution. """
-        dep_strings = pool._id_to_package[pkg_id].dependencies
+        dep_strings = pool._id_to_package[pkg_id].install_requires
         pkg_names = (
             Requirement.from_legacy_requirement_string(d).name
             for d in dep_strings
