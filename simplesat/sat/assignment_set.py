@@ -111,3 +111,7 @@ class AssignmentSet(object):
     @property
     def num_assigned(self):
         return len(self._assigned_literals)
+
+    @property
+    def assigned_literals(self):
+        return self._assigned_literals
