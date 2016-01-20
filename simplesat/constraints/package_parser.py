@@ -23,10 +23,6 @@ CONSTRAINT_SYNONYMS = {
 }
 
 
-def sortuple(iterable):
-    return tuple(sorted(iterable))
-
-
 class PrettyPackageStringParser(object):
 
     def __init__(self, version_factory):
@@ -63,10 +59,10 @@ class PrettyPackageStringParser(object):
 
         # Turn constraints into immutable nested tuples
         pkg = {
-            kind: sortuple(
-                (dist, sortuple(sortuple(clist) for clist in constraint_lists))
-                for dist, constraint_lists in sorted(dist_constraints.items())
-            )
+            kind: tuple(sorted(
+                (dist, tuple(sorted(tuple(clist) for clist in constraints)))
+                for dist, constraints in sorted(dist_constraints.items())
+            ))
             for kind, dist_constraints in pkg.items()
         }
 
