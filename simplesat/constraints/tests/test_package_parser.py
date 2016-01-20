@@ -104,6 +104,22 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertEqual(install_requires["nose"], (('',),))
         self.assertEqual(install_requires["matplotlib"], (('== 1.3.2-1',),))
 
+        # Given
+        package_string = "numpy 1.8.0-1; depends (nose *, zope == 1.3.2-1)"
+
+        # When
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        install_requires = dict(package['install_requires'])
+
+        # Then
+        self.assertEqual(name, "numpy")
+        self.assertEqual(version, V("1.8.0-1"))
+        self.assertTrue("nose" in install_requires)
+        self.assertEqual(install_requires["nose"], (('*',),))
+        self.assertEqual(install_requires["zope"], (('== 1.3.2-1',),))
+
     def test_special_characters(self):
         # Given
         parse = PrettyPackageStringParser(V).parse
@@ -156,7 +172,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
         self.assertTrue("nose" in install_requires)
-        self.assertEqual(install_requires["nose"], (('< 1.4', '=> 1.3'),))
+        self.assertEqual(install_requires["nose"], (('=> 1.3', '< 1.4'),))
 
     def test_no_dependencies(self):
         # Given
