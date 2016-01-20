@@ -138,12 +138,12 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         parse = PrettyPackageStringParser(V).parse
         package_string = '; '.join((
             "scikits.image 0.10.0-1",
-            "depends (scipy ^= 0.14.0, pil, zope.distribution)"
+            "depends (scipy ^= 0.14.0, pil, zope.distribution *)"
         ))
         r_install_requires = (
             ('pil', (('',),)),
             ('scipy', (('^= 0.14.0',),)),
-            ('zope.distribution', (('',),))
+            ('zope.distribution', (('*',),))
         )
 
         # When
