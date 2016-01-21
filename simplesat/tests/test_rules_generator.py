@@ -53,3 +53,50 @@ class TestRulesGenerator(unittest.TestCase):
 
         # Then
         self.assertIs(package, installed_repo_package)
+
+    def test_conflicts(self):
+        # Given
+        yaml = u"""
+            packages:
+              - quark 1.0.1-2
+              - atom 1.0.0-1; depends (quark > 1.0); conflicts (gdata ^= 1.0.0)
+              - atom 1.0.1-1; depends (quark)
+              - gdata 1.0.0-1; conflicts (atom >= 1.0.1)
+
+            request:
+              - operation: "install"
+                requirement: "atom"
+              - operation: "install"
+                requirement: "gdata"
+        """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+
+        # When
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_map = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rules = list(rules_generator.iter_rules())
+
+        # Then
+        for r in rules:
+            print(str(r.to_string(pool)))
+        self.assertEqual(len(rules), 7)
+
+        # Given/When
+        conflict = rules[2]
+        r_literals = [-3, -1]
+
+        # Then
+        self.assertEqual(conflict.reason, RuleType.package_conflicts)
+        self.assertCountEqual(conflict.literals, r_literals)
+
+        # Given/When
+        conflict = rules[5]
+        r_literals = [-3, -2]
+
+        # Then
+        self.assertEqual(conflict.reason, RuleType.package_conflicts)
+        self.assertCountEqual(conflict.literals, r_literals)

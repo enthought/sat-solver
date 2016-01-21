@@ -196,3 +196,6 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_multiple_jobs(self):
         self._check_solution("multiple_jobs.yaml")
+
+    def test_conflicts_simple(self):
+        self._check_solution("explicit_conflict.yaml")
