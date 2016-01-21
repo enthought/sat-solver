@@ -81,8 +81,6 @@ class TestRulesGenerator(unittest.TestCase):
         rules = list(rules_generator.iter_rules())
 
         # Then
-        for r in rules:
-            print(str(r.to_string(pool)))
         self.assertEqual(len(rules), 7)
 
         # Given/When
