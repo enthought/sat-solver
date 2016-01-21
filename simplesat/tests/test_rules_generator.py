@@ -87,16 +87,16 @@ class TestRulesGenerator(unittest.TestCase):
 
         # Given/When
         conflict = rules[2]
-        r_literals = [-3, -1]
+        r_literals = (-3, -1)
 
         # Then
         self.assertEqual(conflict.reason, RuleType.package_conflicts)
-        self.assertCountEqual(conflict.literals, r_literals)
+        self.assertEqual(conflict.literals, r_literals)
 
         # Given/When
         conflict = rules[5]
-        r_literals = [-3, -2]
+        r_literals = (-3, -2)
 
         # Then
         self.assertEqual(conflict.reason, RuleType.package_conflicts)
-        self.assertCountEqual(conflict.literals, r_literals)
+        self.assertEqual(conflict.literals, r_literals)
