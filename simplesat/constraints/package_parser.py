@@ -38,7 +38,7 @@ class PrettyPackageStringParser(object):
         pkg = {}
 
         try:
-            preamble, constraints_blocks = pretty_string.rsplit(";", 1)
+            preamble, constraints_blocks = pretty_string.split(";", 1)
         except ValueError:
             preamble = pretty_string
             constraints_blocks = ''
