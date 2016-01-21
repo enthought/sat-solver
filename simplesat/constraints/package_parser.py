@@ -59,8 +59,8 @@ class PrettyPackageStringParser(object):
         # Turn constraints into immutable nested tuples
         pkg = {
             kind: tuple(sorted(
-                (dist, tuple(sorted(tuple(clist) for clist in constraints)))
-                for dist, constraints in sorted(dist_constraints.items())
+                (dist, tuple(tuple(clist) for clist in constraints))
+                for dist, constraints in dist_constraints.items()
             ))
             for kind, dist_constraints in pkg.items()
         }

@@ -204,7 +204,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        self.assertNotIn('install_requires', package)
+        self.assertEqual(len(package), 2)
 
     def test_complicated(self):
         # Given
