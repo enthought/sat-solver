@@ -34,6 +34,10 @@ class RepositoryInfo(IRepositoryInfo):
 
 
 class PackageMetadata(object):
+    """ PackageMetadata represents an immutable, versioned Python distribution
+    and its relationship with other packages.
+    """
+
     @classmethod
     def _from_pretty_string(cls, s):
         """ Create an instance from a pretty string.
@@ -52,9 +56,33 @@ class PackageMetadata(object):
         return parser.parse_to_package(s)
 
     def __init__(self, name, version, install_requires=None):
+        """ Return a new PackageMetdata object.
+
+        Parameters
+        ----------
+        name : str
+            The name of the Python distribution, e.g. "numpy"
+        version : EnpkgVersion
+            An EnpkgVersion object describing the version of this package.
+        install_requires : tuple(tuple(str, tuple(tuple(str))))
+            A tuple of tuples mapping distribution names to disjunctions of
+            conjunctions of version constraints.
+
+            For example, a consider a package that depends on the following:
+                - nose
+                - six (> 1.2, <= 1.2.3), or >= 1.2.5-2
+                    Written as intervals, (1.2, 1.2.3] or [1.2.5-2, \infty)
+                - MKL >= 10.1, < 11
+
+            The constraint tuple representing this would be:
+                (("MKL", ((">= 10.1", "< 11"),)),
+                 ("nose", (("*",),)),
+                 ("six", (("> 1.2", "<= 1.2.3"), (">= 1.2.5-2",)))
+
+        """
         self._name = name
         self._version = version
-        self._install_requires = install_requires or tuple()
+        self._install_requires = install_requires or ()
 
         self._key = (name, version, self._install_requires)
         self._hash = hash(self._key)

@@ -3,6 +3,7 @@ from collections import OrderedDict
 from attr import attr, attributes
 
 from .constraints import Requirement
+from .constraints.package_parser import constraints_to_pretty_strings
 
 
 @attributes
@@ -144,11 +145,9 @@ class Transaction(object):
                     self.update(operation.source, operation.package)
             else:
                 queue.append(package)
-                # We use sorted for determinism
-                for dependency in sorted(package.install_requires):
-                    package_requirement = \
-                        Requirement.from_legacy_requirement_string(dependency)
-                    candidates = pool.what_provides(package_requirement)
+                for constraints in package.install_requires:
+                    requirement = Requirement.from_constraints(constraints)
+                    candidates = pool.what_provides(requirement)
                     queue.extend(candidates)
 
                 visited_ids.add(package_id)
@@ -173,10 +172,11 @@ class Transaction(object):
             if package_id not in roots:
                 continue
 
-            for dependency in package.install_requires:
-                candidates = pool.what_provides(
-                    Requirement.from_legacy_requirement_string(dependency)
-                )
+            dep_strings = sorted(
+                constraints_to_pretty_strings(package.install_requires))
+            for dependency in dep_strings:
+                requirement = Requirement._from_string(dependency)
+                candidates = pool.what_provides(requirement)
                 for candidate in candidates:
                     candidate_id = pool.package_id(candidate)
                     roots.pop(candidate_id, None)

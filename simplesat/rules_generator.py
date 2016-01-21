@@ -2,6 +2,7 @@ import collections
 import enum
 
 from .constraints import Requirement
+from .constraints.package_parser import constraints_to_pretty_strings
 from .errors import NoPackageFound, SolverException
 from .request import JobType
 
@@ -245,17 +246,17 @@ class RulesGenerator(object):
             self._rules_set[rule] = None
 
     def _add_install_requires_rules(self, package, work_queue):
-        for dependency in sorted(package.install_requires):
-            requirement = Requirement.from_legacy_requirement_string(dependency)
+        for constraints in package.install_requires:
+            requirement = Requirement.from_constraints(constraints)
             dependency_candidates = self._pool.what_provides(requirement)
 
             assert len(dependency_candidates) > 0, \
                 ("No candidates found for requirement {0!r}, needed for "
                  "dependency {1!r}".format(requirement.name, package))
 
-            rule = self._create_dependency_rule(package, dependency_candidates,
-                                                RuleType.package_requires,
-                                                str(dependency))
+            rule = self._create_dependency_rule(
+                package, dependency_candidates, RuleType.package_requires,
+                constraints_to_pretty_strings([constraints]))
             self._add_rule(rule, "package")
 
             for candidate in dependency_candidates:
@@ -276,7 +277,7 @@ class RulesGenerator(object):
                 self.added_package_ids.add(p_id)
                 self._add_install_requires_rules(p, work_queue)
 
-                requirement = Requirement.from_legacy_requirement_string(p.name)
+                requirement = Requirement._from_string(p.name)
                 obsolete_providers = self._pool.what_provides(requirement)
                 for provider in obsolete_providers:
                     if provider != p:

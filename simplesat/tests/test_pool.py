@@ -57,7 +57,7 @@ class TestPool(unittest.TestCase):
             for line in packages_definition.splitlines()
         ]
 
-    def test_what_provides_tilde(self):
+    def test_what_provides_caret(self):
         # Given
         repository = Repository(self.packages_from_definition(NUMPY_PACKAGES))
         requirement = Requirement._from_string("numpy ^= 1.8.1")
