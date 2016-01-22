@@ -29,6 +29,9 @@ class RepositoryInfo(IRepositoryInfo):
     def __ne__(self, other):
         return self._key != other._key
 
+    def __repr__(self):
+        return "Repository(<{0.name}>)".format(self)
+
 
 class PackageMetadata(object):
     @classmethod
@@ -37,7 +40,7 @@ class PackageMetadata(object):
 
         A pretty string looks as follows::
 
-            'numpy 1.8.1-1; depends (MKL ~= 10.3)'
+            'numpy 1.8.1-1; depends (MKL ^= 10.3)'
 
         Note
         ----
@@ -68,6 +71,9 @@ class PackageMetadata(object):
     def dependencies(self):
         return self._dependencies
 
+    def __repr__(self):
+        return "PackageMetadata('{0}-{1}')".format(self._name, self._version)
+
     def __hash__(self):
         return self._hash
 
@@ -81,7 +87,7 @@ class PackageMetadata(object):
 class RepositoryPackageMetadata(object):
     @classmethod
     def _from_pretty_string(cls, s, repository_info):
-        package = PackageMetadata._from_pretty_string(s) 
+        package = PackageMetadata._from_pretty_string(s)
         return cls(package, repository_info)
 
     def __init__(self, package, repository_info):
@@ -106,6 +112,12 @@ class RepositoryPackageMetadata(object):
     @property
     def repository_info(self):
         return self._repository_info
+
+    def __repr__(self):
+        return (
+            "RepositoryPackageMetadata('{pkg._name}-{pkg._version}'"
+            ", repo={repository_info!r})".format(
+                pkg=self._package, repository_info=self._repository_info))
 
     def __hash__(self):
         return self._hash

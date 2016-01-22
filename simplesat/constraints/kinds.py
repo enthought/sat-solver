@@ -9,7 +9,7 @@ class IConstraint(six.with_metaclass(abc.ABCMeta)):
     @abc.abstractmethod
     def matches(self, version):
         """Returns True if the version object matches this constraint.
-        
+
         Parameters
         ==========
         version : Version
@@ -108,7 +108,7 @@ class EnpkgUpstreamMatch(IVersionConstraint):
         super(EnpkgUpstreamMatch, self).__init__(version)
 
     def __str__(self):
-        return "~= " + str(self.version.upstream)
+        return "^= " + str(self.version.upstream)
 
     def matches(self, candidate_version):
         return candidate_version.upstream == self.version.upstream

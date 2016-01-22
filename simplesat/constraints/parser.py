@@ -8,14 +8,14 @@ from simplesat.constraints.kinds import (
 from simplesat.errors import SolverException
 
 
-_VERSION_R = "[^=><!,\s~][^,\s]+"
+_VERSION_R = "[^=><!,\s^][^,\s]+"
 _EQUAL_R = "=="
 _GEQ_R = ">="
 _GT_R = r">"
 _LEQ_R = r"<="
 _LT_R = r"<"
 _NOT_R = r"!="
-_ENPKG_UPSTREAM_MATCH_R = r"~="
+_ENPKG_UPSTREAM_MATCH_R = r"\^="
 _ANY_R = r"\*"
 _WS_R = " +"
 

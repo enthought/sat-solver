@@ -51,7 +51,7 @@ def parse_package_list(packages):
     ----------
     packages : iterator
         An iterator of package strings (e.g.
-        'numpy 1.8.1-1; depends (MKL ~= 10.3)').
+        'numpy 1.8.1-1; depends (MKL ^= 10.3)').
     """
     parser = PrettyPackageStringParser(EnpkgVersion.from_string)
 

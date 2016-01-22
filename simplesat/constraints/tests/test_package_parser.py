@@ -98,7 +98,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertEqual(constraints, ("nose 1.3.4-1",))
 
         # Given
-        package_string = "numpy 1.8.0-1; depends (nose ~= 1.3.4)"
+        package_string = "numpy 1.8.0-1; depends (nose ^= 1.3.4)"
 
         # When
         name, version, constraints = parser.parse_to_legacy_constraints(package_string)
@@ -124,7 +124,7 @@ class TestLegacyDependenciesToPrettyString(unittest.TestCase):
     def test_simple(self):
         # Given
         dependencies = ["MKL 10.3-1", "nose 1.3.4"]
-        r_pretty_string = "MKL == 10.3-1, nose ~= 1.3.4"
+        r_pretty_string = "MKL == 10.3-1, nose ^= 1.3.4"
 
         # When
         pretty_string = legacy_dependencies_to_pretty_string(dependencies)
@@ -162,7 +162,7 @@ class TestPackagePrettyString(unittest.TestCase):
 class TestToPackage(unittest.TestCase):
     def test_simple(self):
         # Given
-        s = u"numpy 1.8.1; depends (MKL ~= 10.3)"
+        s = u"numpy 1.8.1; depends (MKL ^= 10.3)"
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
 
         # When
