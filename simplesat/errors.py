@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 class SolverException(Exception):
     pass
 
 
-class InvalidDependencyString(SolverException):
+class InvalidConstraint(SolverException):
+    pass
+
+
+class InvalidDependencyString(InvalidConstraint):
     pass
 
 

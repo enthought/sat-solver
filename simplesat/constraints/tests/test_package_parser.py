@@ -1,17 +1,12 @@
 import sys
 import unittest
 
-import six
-
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints.kinds import Equal
 from simplesat.constraints.package_parser import (
-    PrettyPackageStringParser, legacy_dependencies_to_pretty_string,
-    package_to_pretty_string
+    PrettyPackageStringParser, package_to_pretty_string
 )
-from simplesat.errors import SolverException
 from simplesat.package import PackageMetadata
 
 
@@ -25,118 +20,181 @@ V = EnpkgVersion.from_string
 class TestPrettyPackageStringParser(unittest.TestCase):
     def test_invalid_formats(self):
         # Given
-        parser = PrettyPackageStringParser(V)
+        parse = PrettyPackageStringParser(V).parse
         package_string = ""
         r_message = "Invalid preamble: "
 
-        # When
+        # Then
         with self.assertRaisesRegexp(ValueError, r_message):
-            parser.parse(package_string)
+            parse(package_string)
 
         # Given
         package_string = "numpy"
         r_message = "Invalid preamble: 'numpy'"
 
-        # When
+        # Then
         with self.assertRaisesRegexp(ValueError, r_message):
-            parser.parse(package_string)
+            parse(package_string)
 
         # Given
-        package_string = "numpy 1.8.0-1; depends (nose 1.3.2)"
-        r_message = "Invalid requirement block: "
+        package_string = "numpy1.8.0-1"
+        r_message = ("Invalid preamble: ")
 
-        # When
-        with self.assertRaisesRegexp(SolverException, r_message):
-            parser.parse(package_string)
+        # Then
+        with self.assertRaisesRegexp(ValueError, r_message):
+            parse(package_string)
 
         # Given
-        package_string = "numpy 1.8.0-1; conflicts (nose 1.3.2)"
-        r_message = "Invalid constraint block: 'conflicts \(nose 1.3.2\)'"
+        package_string = "numpy 1.8.0-1 depends (nose >= 1.3.2)"
+        r_message = ("Invalid preamble: ")
+
+        # Then
+        with self.assertRaisesRegexp(ValueError, r_message):
+            parse(package_string)
+
+        # Given
+        package_string = "numpy; depends (nose >= 1.3.2)"
+        r_message = ("Invalid preamble: ")
+
+        # Then
+        with self.assertRaisesRegexp(ValueError, r_message):
+            parse(package_string)
+
+        # Given
+        package_string = "numpy 1.8.0-1; conflicts (nose >= 1.3.2)"
+        r_message = ("Invalid package string. "
+                     "Unknown constraint kind: 'conflicts'")
 
         # When
         with self.assertRaisesRegexp(ValueError, r_message):
-            parser.parse(package_string)
+            parse(package_string)
 
     def test_simple(self):
         # Given
-        parser = PrettyPackageStringParser(V)
+        parse = PrettyPackageStringParser(V).parse
         package_string = "numpy 1.8.0-1; depends (nose == 1.3.4-1)"
 
         # When
-        name, version, constraints = parser.parse(package_string)
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        install_requires = dict(package['install_requires'])
 
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        self.assertTrue("nose" in constraints)
-        self.assertEqual(constraints["nose"], set((Equal(V("1.3.4-1")),)))
+        self.assertTrue("nose" in install_requires)
+        self.assertEqual(install_requires["nose"], (('== 1.3.4-1',),))
+
+    def test_unversioned(self):
+        # Given
+        parse = PrettyPackageStringParser(V).parse
+        package_string = "numpy 1.8.0-1; depends (nose, matplotlib == 1.3.2-1)"
+
+        # When
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        install_requires = dict(package['install_requires'])
+
+        # Then
+        self.assertEqual(name, "numpy")
+        self.assertEqual(version, V("1.8.0-1"))
+        self.assertTrue("nose" in install_requires)
+        self.assertEqual(install_requires["nose"], (('',),))
+        self.assertEqual(install_requires["matplotlib"], (('== 1.3.2-1',),))
+
+        # Given
+        package_string = "numpy 1.8.0-1; depends (nose *, zope == 1.3.2-1)"
+
+        # When
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        install_requires = dict(package['install_requires'])
+
+        # Then
+        self.assertEqual(name, "numpy")
+        self.assertEqual(version, V("1.8.0-1"))
+        self.assertTrue("nose" in install_requires)
+        self.assertEqual(install_requires["nose"], (('*',),))
+        self.assertEqual(install_requires["zope"], (('== 1.3.2-1',),))
+
+    def test_special_characters(self):
+        # Given
+        parse = PrettyPackageStringParser(V).parse
+        package_string = "shiboken_debug 1.2.2-5"
+
+        # When
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+
+        # Then
+        self.assertEqual(name, "shiboken_debug")
+        self.assertEqual(version, V("1.2.2-5"))
+
+        # Given
+        parse = PrettyPackageStringParser(V).parse
+        package_string = '; '.join((
+            "scikits.image 0.10.0-1",
+            "depends (scipy ^= 0.14.0, pil, zope.distribution *)"
+        ))
+        r_install_requires = (
+            ('pil', (('',),)),
+            ('scipy', (('^= 0.14.0',),)),
+            ('zope.distribution', (('*',),))
+        )
+
+        # When
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        install_requires = package['install_requires']
+
+        # Then
+        self.assertEqual(name, "scikits.image")
+        self.assertEqual(version, V("0.10.0-1"))
+        self.assertEqual(install_requires, r_install_requires)
+
+    def test_multiple(self):
+        # Given
+        parse = PrettyPackageStringParser(V).parse
+        package_string = "numpy 1.8.0-1; depends (nose => 1.3, nose < 1.4)"
+
+        # When
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        install_requires = dict(package['install_requires'])
+
+        # Then
+        self.assertEqual(name, "numpy")
+        self.assertEqual(version, V("1.8.0-1"))
+        self.assertTrue("nose" in install_requires)
+        self.assertEqual(install_requires["nose"], (('=> 1.3', '< 1.4'),))
 
     def test_no_dependencies(self):
         # Given
-        parser = PrettyPackageStringParser(V)
+        parse = PrettyPackageStringParser(V).parse
         package_string = "numpy 1.8.0-1"
 
         # When
-        name, version, constraints = parser.parse(package_string)
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
 
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        six.assertCountEqual(self, constraints, set())
-
-    def test_to_legacy_constraints(self):
-        # Given
-        parser = PrettyPackageStringParser(V)
-        package_string = "numpy 1.8.0-1; depends (nose == 1.3.4-1)"
-
-        # When
-        name, version, constraints = parser.parse_to_legacy_constraints(package_string)
-
-        # Then
-        self.assertEqual(name, "numpy")
-        self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ("nose 1.3.4-1",))
-
-        # Given
-        package_string = "numpy 1.8.0-1; depends (nose ^= 1.3.4)"
-
-        # When
-        name, version, constraints = parser.parse_to_legacy_constraints(package_string)
-
-        # Then
-        self.assertEqual(name, "numpy")
-        self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ("nose 1.3.4",))
-
-        # Given
-        package_string = "numpy 1.8.0-1; depends (nose)"
-
-        # When
-        name, version, constraints = parser.parse_to_legacy_constraints(package_string)
-
-        # Then
-        self.assertEqual(name, "numpy")
-        self.assertEqual(version, V("1.8.0-1"))
-        self.assertEqual(constraints, ("nose",))
-
-
-class TestLegacyDependenciesToPrettyString(unittest.TestCase):
-    def test_simple(self):
-        # Given
-        dependencies = ["MKL 10.3-1", "nose 1.3.4"]
-        r_pretty_string = "MKL == 10.3-1, nose ^= 1.3.4"
-
-        # When
-        pretty_string = legacy_dependencies_to_pretty_string(dependencies)
-
-        # Then
-        self.assertEqual(pretty_string, r_pretty_string)
+        self.assertEqual(len(package), 2)
 
 
 class TestPackagePrettyString(unittest.TestCase):
     def test_simple(self):
         # Given
-        package = PackageMetadata(u"numpy", V("1.8.1-1"), ("MKL 10.3-1",))
+        install_requires = (("MKL", (("== 10.3-1",),)),)
+        package = PackageMetadata(u"numpy", V("1.8.1-1"), install_requires)
 
         r_pretty_string = u"numpy 1.8.1-1; depends (MKL == 10.3-1)"
 
@@ -147,8 +205,8 @@ class TestPackagePrettyString(unittest.TestCase):
         self.assertEqual(pretty_string, r_pretty_string)
 
         # Given
-        key = "numpy-1.8.1-1.egg"
-        package = PackageMetadata(u"numpy", V("1.8.1-1"), ("nose",))
+        install_requires = (("nose", (("",),)),)
+        package = PackageMetadata(u"numpy", V("1.8.1-1"), install_requires)
 
         r_pretty_string = "numpy 1.8.1-1; depends (nose)"
 
@@ -160,14 +218,29 @@ class TestPackagePrettyString(unittest.TestCase):
 
 
 class TestToPackage(unittest.TestCase):
+
     def test_simple(self):
         # Given
+        s = u"zope.deprecated_ 2"
+        parser = PrettyPackageStringParser(V)
+
+        # When
+        package = parser.parse_to_package(s)
+
+        # Then
+        self.assertEqual(package.name, "zope.deprecated_")
+        self.assertEqual(package.version, V('2'))
+        self.assertEqual(package.install_requires, ())
+
+    def test_with_depends(self):
+        # Given
         s = u"numpy 1.8.1; depends (MKL ^= 10.3)"
-        parser = PrettyPackageStringParser(EnpkgVersion.from_string)
+        parser = PrettyPackageStringParser(V)
 
         # When
         package = parser.parse_to_package(s)
 
         # Then
         self.assertEqual(package.name, "numpy")
-        self.assertEqual(package.dependencies, ("MKL 10.3",))
+        self.assertEqual(package.version, V('1.8.1'))
+        self.assertEqual(package.install_requires, (("MKL", (("^= 10.3",),)),))

@@ -4,12 +4,13 @@ import six
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.errors import InvalidDependencyString, SolverException
+from simplesat.errors import (
+    InvalidConstraint, InvalidDependencyString, SolverException
+)
 
-from .kinds import Any, EnpkgUpstreamMatch, Equal
+from .kinds import Any, Equal
 from .multi import MultiConstraints
-from .package_parser import _legacy_requirement_string_to_name_constraints
-from .parser import _RawRequirementParser
+from .parser import _RawConstraintsParser, _RawRequirementParser
 
 
 _FULL_PACKAGE_RE = re.compile("""\
@@ -47,6 +48,41 @@ class Requirement(object):
     specs: seq
         Sequence of constraints
     """
+
+    @classmethod
+    def from_constraints(cls, constraint_tuple):
+        """ Return a Requirement object from a PackageMetadata constraint
+        tuple.
+
+        Parameters
+        ----------
+        constraints : constraints tuple
+            A tuple of constraints like (
+                'nose', ( # disjunctions
+                    ('< 1.4', '>= 1.3'),  # conjunction
+                )
+            )
+        """
+        try:
+            name, disjunction = constraint_tuple
+        except ValueError:
+            msg = "Invalid constraint tuple: {}"
+            raise InvalidConstraint(msg.format(constraint_tuple))
+
+        if len(disjunction) > 1:
+            msg = "Disjunction (OR) is not yet supported in constraints: {}"
+            raise InvalidConstraint(msg.format(disjunction))
+
+        parse = _RawConstraintsParser().parse
+
+        constraints = set(
+            constraint
+            for conjunction in disjunction
+            for constraint_str in conjunction
+            for constraint in parse(constraint_str, EnpkgVersion.from_string))
+
+        return cls(name, constraints)
+
     @classmethod
     def _from_string(cls, string,
                      version_factory=EnpkgVersion.from_string):
@@ -68,22 +104,6 @@ class Requirement(object):
         return cls(name, named_constraints[name])
 
     @classmethod
-    def from_legacy_requirement_string(cls, requirement_string,
-                                       version_factory=EnpkgVersion.from_string):
-        """ Creates a requirement from a legacy requirement string (as
-        found in our current egg metadata, format < 2).
-
-        Parameters
-        ----------
-        requirement_string : str
-            The legacy requirement string, e.g. 'MKL 10.3'
-        """
-        name, constraint = _legacy_requirement_string_to_name_constraints(
-            requirement_string
-        )
-        return cls(name, [constraint])
-
-    @classmethod
     def from_package_string(cls, package_string,
                             version_factory=EnpkgVersion.from_string):
         """ Creates a requirement from a package full version.
@@ -99,7 +119,6 @@ class Requirement(object):
 
     def __init__(self, name, constraints=None):
         self.name = name
-
         self._constraints = MultiConstraints(constraints)
 
     def matches(self, version_candidate):
