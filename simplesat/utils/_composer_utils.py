@@ -5,12 +5,11 @@ don't use this in enstaller itself.
 import collections
 import json
 
-from enstaller.new_solver.constraint_types import (
+from ..constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT
 )
-from enstaller.new_solver.requirement import Requirement
-from enstaller.solver import JobType
-
+from ..request import JobType
+from ..requirement import Requirement
 
 # We ignore alpha/rc/etc... as composer does not allow to combine those with
 # patch versions, which we use to emulate build numbers.
@@ -53,7 +52,7 @@ def repository_to_composer_json_dict(repository):
     for package in repository.iter_packages():
         version_normalized = _normalize_php_version(package.version)
         requires = [Requirement.from_legacy_requirement_string(p) for
-                    p in package.dependencies]
+                    p in package.install_requires]
         yield {
             "name": package.name,
             "version": _fix_php_version(package.version),

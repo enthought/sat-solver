@@ -5,12 +5,12 @@ from collections import Counter, defaultdict
 
 import six
 
-from enstaller.collections import DefaultOrderedDict
-from enstaller.new_solver.requirement import Requirement
-from simplesat.utils.graph import toposort, transitive_neighbors
+import logging
+from simplesat.constraints.requirement import Requirement
+from simplesat.utils import DefaultOrderedDict, toposort, transitive_neighbors
 from .priority_queue import PriorityQueue, GroupPrioritizer
 
-import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,10 +42,13 @@ class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
 class PolicyLogger(IPolicy):
 
-    def __init__(self, policy):
+    def __init__(self, policy, extra_args=None, extra_kwargs=None):
         self._policy = policy
         self._log_pool = policy._pool
         self._log_installed = policy._installed_ids.copy()
+        self._log_preferred = getattr(policy, '_preferred_ids', set()).copy()
+        self._log_extra_args = extra_args
+        self._log_extra_kwargs = extra_kwargs
         self._log_required = []
         self._log_suggestions = []
         self._log_assignment_changes = []
@@ -147,13 +150,22 @@ class UndeterminedClausePolicy(IPolicy):
     truth value is not yet known and suggests them in descending order by
     package version number. """
 
-    def __init__(self, pool, installed_repository):
+    def __init__(self, pool, installed_repository, prefer_installed=True):
         self._pool = pool
+        self.prefer_installed = prefer_installed
         self._installed_ids = set(
             pool.package_id(package) for package in installed_repository
         )
-        self._decision_set = self._installed_ids.copy()
+        self._preferred_package_ids = {
+            self._package_key(package_id): package_id
+            for package_id in self._installed_ids
+        }
+        self._decision_set = set()
         self._requirements = set()
+
+    def _package_key(self, package_id):
+        package = self._pool._id_to_package[package_id]
+        return (package.name, package.version)
 
     def add_requirements(self, package_ids):
         self._requirements.update(package_ids)
@@ -161,8 +173,14 @@ class UndeterminedClausePolicy(IPolicy):
     def get_next_package_id(self, assignments, clauses):
         """Get the next unassigned package.
         """
+        candidate_id = None
+        best = self._best_candidate
+
+        if self.prefer_installed:
+            candidate_id = best(self._installed_ids, assignments)
+
         candidate_id = (
-            self._best_candidate(self._installed_ids, assignments) or
+            candidate_id or
             self._best_candidate(self._requirements, assignments) or
             self._best_candidate(self._decision_set, assignments)
         )
@@ -177,15 +195,20 @@ class UndeterminedClausePolicy(IPolicy):
                     assignments
                 )
 
-        assert assignments[candidate_id] is None, \
+        assert assignments.get(candidate_id) is None, \
             "Trying to assign to a variable which is already assigned."
+
+        if not self.prefer_installed:
+            # If this exact package version is available locally, use that one
+            key = self._package_key(candidate_id)
+            candidate_id = self._preferred_package_ids.get(key, candidate_id)
 
         return candidate_id
 
     def _without_assigned(self, package_ids, assignments):
-        return package_ids.difference(
-            pkg_id for pkg_id in package_ids.copy()
-            if assignments[pkg_id] is not None
+        return set(
+            pkg_id for pkg_id in package_ids
+            if assignments.get(pkg_id) is None
         )
 
     def _best_candidate(self, package_ids, assignments):
@@ -329,15 +352,15 @@ class PriorityQueuePolicy(IPolicy):
         unit propagation in the solver to be preferred.
         """
         pool = self._pool
+        R = Requirement
 
         # The direct dependencies of each package
         dependencies = defaultdict(set)
-        R = Requirement.from_legacy_requirement_string
         for package_id in package_ids:
             dependencies[package_id].update(
                 pool.package_id(package)
-                for dep_str in pool._id_to_package[package_id].dependencies
-                for package in pool.what_provides(R(dep_str))
+                for cons in pool._id_to_package[package_id].install_requires
+                for package in pool.what_provides(R.from_constraints(cons))
             )
 
         # This is a flattened version of `dependencies` above
@@ -377,7 +400,7 @@ class PriorityQueuePolicy(IPolicy):
         # they will come out first in the toposort
         for package_id in package_ids:
             package = pool._id_to_package[package_id]
-            others = pool.what_provides(R(package.name))
+            others = pool.what_provides(R._from_string(package.name))
             other_older = (pool.package_id(other) for other in others
                            if other.version < package.version)
             dependencies[package_id].update(other_older)
@@ -443,11 +466,21 @@ class PriorityQueuePolicy(IPolicy):
         assert ours == theirs, "We failed to track variable assignments"
 
 
-def LoggedPriorityInstalledFirstPolicty(pool, installed_repository):
-    return PolicyLogger(PriorityQueuePolicy(pool, installed_repository))
+def LoggedPriorityInstalledFirstPolicty(pool, installed_repository,
+                                        *args, **kwargs):
+    policy = PriorityQueuePolicy(
+        pool, installed_repository, *args, **kwargs
+    )
+    logger = PolicyLogger(policy, extra_args=args, extra_kwargs=kwargs)
+    return logger
 
 
-def LoggedUndeterminedClausePolicy(pool, installed_repository):
-    return PolicyLogger(UndeterminedClausePolicy(pool, installed_repository))
+def LoggedUndeterminedClausePolicy(pool, installed_repository,
+                                   *args, **kwargs):
+    policy = UndeterminedClausePolicy(
+        pool, installed_repository, *args, **kwargs
+    )
+    logger = PolicyLogger(policy, extra_args=args, extra_kwargs=kwargs)
+    return logger
 
 InstalledFirstPolicy = LoggedPriorityInstalledFirstPolicty

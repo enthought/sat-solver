@@ -1,5 +1,5 @@
 *.pyc
-*index.json
+./*index.json
 *.egg-info
 .coverage
 .tox

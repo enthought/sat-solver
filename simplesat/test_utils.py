@@ -4,16 +4,13 @@ import os
 import six
 import yaml
 
-from enstaller import Repository
-from enstaller.new_solver import Requirement
-from enstaller.new_solver.package_parser import PrettyPackageStringParser
-from enstaller.package import RepositoryPackageMetadata
-from enstaller.repository_info import BroodRepositoryInfo
-from enstaller.solver import Request
-
 from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
+from simplesat.constraints import PrettyPackageStringParser, Requirement
+from simplesat.package import RepositoryInfo, RepositoryPackageMetadata
+from simplesat.repository import Repository
+from simplesat.request import Request
 from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import (
     InstallOperation, RemoveOperation, UpdateOperation
@@ -54,14 +51,13 @@ def parse_package_list(packages):
     ----------
     packages : iterator
         An iterator of package strings (e.g.
-        'numpy 1.8.1-1; depends (MKL ~= 10.3)').
+        'numpy 1.8.1-1; depends (MKL ^= 10.3)').
     """
     parser = PrettyPackageStringParser(EnpkgVersion.from_string)
-    python = PythonImplementation.from_running_python()
 
     for package_str in packages:
-        package = parser.parse_to_package(package_str, python)
-        full_name = "{0} {1}".format(package.name, package.full_version)
+        package = parser.parse_to_package(package_str)
+        full_name = "{0} {1}".format(package.name, str(package.version))
         yield full_name, package
 
 
@@ -69,19 +65,19 @@ def repository_factory(package_names, repository_info, reference_packages):
     repository = Repository()
     for package_name in package_names:
         package = reference_packages[package_name]
-        package = RepositoryPackageMetadata.from_package(package, repository_info)
+        package = RepositoryPackageMetadata(package, repository_info)
         repository.add_package(package)
     return repository
 
 
 def remote_repository(yaml_data, packages):
-    repository_info = BroodRepositoryInfo("http://acme.come", "remote")
+    repository_info = RepositoryInfo(u"remote")
     package_names = yaml_data.get("remote", packages.keys())
     return repository_factory(package_names, repository_info, packages)
 
 
 def installed_repository(yaml_data, packages):
-    repository_info = BroodRepositoryInfo("http://acme.come", "installed")
+    repository_info = RepositoryInfo(u"installed")
     package_names = yaml_data.get("installed", [])
     return repository_factory(package_names, repository_info, packages)
 
@@ -92,9 +88,9 @@ class Scenario(object):
     def from_yaml(cls, file_or_filename):
         if isinstance(file_or_filename, six.string_types):
             with open(file_or_filename) as fp:
-                data = yaml.load(fp)
+                data = yaml.load(fp, Loader=_UnicodeLoader)
         else:
-            data = yaml.load(file_or_filename)
+            data = yaml.load(file_or_filename, Loader=_UnicodeLoader)
 
         packages = collections.OrderedDict(
             parse_package_list(data.get("packages", []))
@@ -105,8 +101,13 @@ class Scenario(object):
 
         request = Request()
 
+        update_all = False
+
         for s_request in scenario_requests:
             kind = s_request["operation"]
+            if kind == 'update_all':
+                update_all = True
+                continue
             requirement = Requirement._from_string(s_request["requirement"])
             try:
                 marked.remove(requirement.name)
@@ -114,8 +115,13 @@ class Scenario(object):
                 pass
             getattr(request, kind)(requirement)
 
+        if update_all:
+            request_job = request.update
+        else:
+            request_job = request.install
+
         for package_str in marked:
-            request.install(Requirement._from_string(package_str))
+            request_job(Requirement._from_string(package_str))
 
         decisions = data.get("decisions", {})
 
@@ -160,3 +166,16 @@ class Scenario(object):
             package = pool._id_to_package[package_id]
             print("{}: {} {}".format(package_id, package.name,
                                      package.full_version))
+
+
+def construct_yaml_str(self, node):
+    # Override the default string handling function to always
+    # return unicode objects
+    return self.construct_scalar(node)
+
+
+class _UnicodeLoader(yaml.Loader):
+    pass
+
+
+_UnicodeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)

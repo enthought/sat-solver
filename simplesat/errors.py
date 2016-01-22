@@ -1,7 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from egginst.errors import SolverException
+
+class SolverException(Exception):
+    pass
+
+
+class InvalidConstraint(SolverException):
+    pass
+
+
+class InvalidDependencyString(InvalidConstraint):
+    pass
+
+
+class NoPackageFound(SolverException):
+    pass
 
 
 class SatisfiabilityError(SolverException):

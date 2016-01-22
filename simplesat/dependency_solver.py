@@ -1,15 +1,12 @@
 import collections
-from operator import attrgetter
 
 import six
 
-from egginst.errors import NoPackageFound
-from enstaller.solver import JobType
-from enstaller.new_solver import Requirement
-
+from simplesat.errors import NoPackageFound
+from simplesat.request import JobType
+from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
-from simplesat.rules_generator import RulesGenerator
 from simplesat.transaction import Transaction
 from simplesat.utils import timed_context
 
@@ -76,7 +73,9 @@ class DependencySolver(object):
 
             if job.kind == JobType.update:
                 # An update request *must* install the latest package version
-                providers = [max(providers, key=attrgetter('version'))]
+                def key(package):
+                    return (package.version, package in installed_repository)
+                providers = [max(providers, key=key)]
 
             requirement_ids = [pool.package_id(p) for p in providers]
             self._policy.add_requirements(requirement_ids)
@@ -95,7 +94,7 @@ def _connected_packages(solution, root_ids, pool):
     """ Return packages in `solution` which are associated with `root_ids`. """
 
     # Our strategy is as follows:
-    # ... -> pkg.dependencies -> pkg strings -> ids -> _id_to_package -> ...
+    # ... -> pkg.install_requires -> pkg names -> ids -> _id_to_package -> ...
 
     def get_name(pkg_id):
         return pool._id_to_package[abs(pkg_id)].name
@@ -115,12 +114,8 @@ def _connected_packages(solution, root_ids, pool):
     def neighborfunc(pkg_id):
         """ Given a pkg id, return the pkg ids of the immediate dependencies
         that appeared in our solution. """
-        dep_strings = pool._id_to_package[pkg_id].dependencies
-        pkg_names = (
-            Requirement.from_legacy_requirement_string(d).name
-            for d in dep_strings
-        )
-        neighbors = set(solution_name_to_id[name] for name in pkg_names)
+        constraints = pool._id_to_package[pkg_id].install_requires
+        neighbors = set(solution_name_to_id[name] for name, _ in constraints)
         return neighbors
 
     # Each package can root its own independent graph, so we must start at

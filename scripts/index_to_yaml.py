@@ -5,18 +5,20 @@ import sys
 
 import yaml
 
-from enstaller.new_solver.tests.common import repository_from_index
-from enstaller.new_solver.requirement import Requirement
-from enstaller.new_solver.constraint_types import (
+from okonomiyaki.versions import EnpkgVersion
+
+from simplesat.constraints import Requirement
+from simplesat.constraints.package_parser import constraints_to_pretty_strings
+from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal
 )
-from enstaller.versions.enpkg import EnpkgVersion
+from simplesat.test_utils import repository_from_index
 
 
 # TODO Can use new enstaller pretty printer here...
 
 def dependency_to_string(dependency):
-    req = Requirement.from_legacy_requirement_string(dependency)
+    req = Requirement._from_string(dependency)
     constraints = list(req._constraints._constraints)
     assert len(constraints) == 1
     assert isinstance(constraints[0],
@@ -34,12 +36,13 @@ def dependency_to_string(dependency):
 def requirements_string(package):
     name = package.key.split("-")[0]
     template = "{name} {version}"
-    if len(package.dependencies) > 0:
-        template += "; depends ({dependencies})"
-    dependencies = ', '.join(
-        dependency_to_string(dep) for dep in package.dependencies)
+    if len(package.install_requires) > 0:
+        template += "; depends ({install_requires})"
+    install_requires = ', '.join(
+        dependency_to_string(dep)
+        for dep in constraints_to_pretty_strings(package.install_requires))
     return template.format(
-        name=name, version=package.version, dependencies=dependencies)
+        name=name, version=package.version, install_requires=install_requires)
 
 
 def main(argv=None):
@@ -60,7 +63,7 @@ def main(argv=None):
 
     data = dict(data)
     yaml.safe_dump(data, sys.stdout, allow_unicode=True,
-                   default_flow_style=False)
+                   width=100000, default_flow_style=False)
 
 
 if __name__ == "__main__":

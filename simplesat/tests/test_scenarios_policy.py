@@ -3,11 +3,10 @@ from unittest import TestCase, expectedFailure
 
 import six
 
-from egginst.errors import NoPackageFound
-from enstaller.new_solver import Pool
-
-from simplesat.errors import SatisfiabilityError
+from simplesat.errors import NoPackageFound, SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
+from simplesat.pool import Pool
+from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.test_utils import Scenario
 from simplesat.transaction import (
     InstallOperation, RemoveOperation, UpdateOperation
@@ -54,7 +53,7 @@ def _pretty_delta(pkg_delta):
 
 class ScenarioTestAssistant(object):
 
-    def _check_solution(self, filename):
+    def _check_solution(self, filename, prefer_installed=True):
         # Test that the solution described in the scenario file matches with
         # what the SAT solver computes.
 
@@ -67,8 +66,11 @@ class ScenarioTestAssistant(object):
         # When
         pool = Pool(scenario.remote_repositories)
         pool.add_repository(scenario.installed_repository)
+        policy = InstalledFirstPolicy(pool, scenario.installed_repository,
+                                      prefer_installed=prefer_installed)
         solver = DependencySolver(
-            pool, scenario.remote_repositories, scenario.installed_repository
+            pool, scenario.remote_repositories, scenario.installed_repository,
+            policy=policy,
         )
 
         # Then
@@ -91,10 +93,6 @@ class ScenarioTestAssistant(object):
         pairs = zip(operations, scenario_operations)
         delta = _pretty_delta(_pkg_delta(operations, scenario_operations))
         for i, (left, right) in enumerate(pairs):
-            if not type(left) == type(right):
-                msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}\n{3}"
-                self.fail(msg.format(i, type(left), type(right), delta))
-
             left_s = "{0} {1}".format(left.package.name,
                                       left.package.version)
             right_s = "{0} {1}".format(right.package.name,
@@ -104,6 +102,10 @@ class ScenarioTestAssistant(object):
                 msg = "Item {0!r}: {1!r} vs {2!r}\n{3}".format(
                     i, left_s, right_s, delta)
                 self.fail(msg)
+
+            if not type(left) == type(right):
+                msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}\n{3}"
+                self.fail(msg.format(i, left, right, delta))
 
         if len(operations) != len(scenario_operations):
             self.fail("Length of operations differ.\n{0}".format(delta))
@@ -136,6 +138,21 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_update_single(self):
         self._check_solution("update_single.yaml")
 
+    def test_no_prefer_installed(self):
+        self._check_solution("no_prefer_installed.yaml", prefer_installed=False)
+
+    def test_update_all(self):
+        self._check_solution("update_all.yaml")
+
+    def test_update_all_conflict(self):
+        self._check_solution("update_all_conflict.yaml")
+
+    def test_update_all_noop(self):
+        self._check_solution("update_all_noop.yaml")
+
+    def test_ipython_upgrade(self):
+        self._check_solution("ipython_upgrade.yaml")
+
     def test_simple_numpy(self):
         self._check_solution("simple_numpy_installed.yaml")
 
@@ -165,10 +182,17 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_remove_marked_packages(self):
         self._check_solution("remove_marked_package.yaml")
 
-    # We haven't clearly laid out how this should behave yet
-    @expectedFailure
     def test_update_reverse_dependencies(self):
-        self._check_solution("update_reverse_dependencies.yaml")
+        self._check_solution(
+            "update_reverse_dependencies.yaml",
+            prefer_installed=True
+        )
+
+    def test_update_reverse_dependencies_no_prefer_installed(self):
+        self._check_solution(
+            "update_reverse_dependencies_no_prefer_installed.yaml",
+            prefer_installed=False
+        )
 
     def test_multiple_jobs(self):
         self._check_solution("multiple_jobs.yaml")
