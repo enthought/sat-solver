@@ -304,8 +304,8 @@ class PriorityQueuePolicy(IPolicy):
             self.INSTALLED = -2
             self.REQUIRED = -1
         else:
-            self.REQUIRED = -2
-            self.INSTALLED = -1
+            self.REQUIRED = -1
+            self.INSTALLED = self.DEFAULT
 
         self._prioritizer = GroupPrioritizer(key_func)
         self._add_packages(self._installed_ids.copy(), self.INSTALLED)
