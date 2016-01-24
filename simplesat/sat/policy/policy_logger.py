@@ -11,7 +11,7 @@ class PolicyLogger(IPolicy):
         self._policy = policy
         self._log_pool = args[0]
         self._log_installed = set(getattr(policy, '_installed_ids', ()))
-        self._log_preferred = getattr(policy, '_preferred_ids', set()).copy()
+        self._log_preferred = set(getattr(policy, '_preferred_ids', ()))
         self._log_args = args
         self._log_kwargs = kwargs
         self._log_required = []
@@ -77,11 +77,11 @@ class PolicyLogger(IPolicy):
             R = 'R' if sugg in required else ' '
             I = 'I' if sugg in installed else ' '
             change_str = ""
-            if with_assignments:
-                try:
+            try:
+                items = self._log_assignment_changes[i + 1].items()
+                sorted_items = sorted(items, key=lambda p: pkg_key(p[0]))
+                if with_assignments:
                     changes = []
-                    items = self._log_assignment_changes[i + 1].items()
-                    sorted_items = sorted(items, key=lambda p: pkg_key(p[0]))
                     for pkg, change in sorted_items:
                         if pkg_name(pkg) != pkg_name(sugg):
                             _pretty = self._log_pretty_pkg_id(pkg)
@@ -90,27 +90,9 @@ class PolicyLogger(IPolicy):
                             changes.append(msg.format(fro, to, _pretty))
                     if changes:
                         change_str = '\n\t'.join([''] + changes)
-                except IndexError:
-                    pass
-            msg = "{:>4} {}{} - {}{}"
-            report.append(msg.format(i, R, I, pretty, change_str))
-            try:
-                change_items = self._log_assignment_changes[i + 1].items()
-                if detailed:
-                    change_items = sorted(
-                        change_items, key=lambda p: pkg_key(p[0]))
-                    for pkg, change in change_items:
-                        if pkg_name(pkg) != pkg_name(sugg):
-                            _pretty = self._log_pretty_pkg_id(pkg)
-                            fro, to = map(str, change)
-                            msg = "{:10} - {:10} : {}"
-                            changes.append(msg.format(fro, to, _pretty))
-                if changes:
-                    changes = '\n\t\t'.join([''] + changes)
-                else:
-                    changes = ""
-                if any(v[1] is None
-                       for v in self._log_assignment_changes[i + 1].values()):
+                msg = "{:>4} {}{} - {}{}"
+                report.append(msg.format(i, R, I, pretty, change_str))
+                if any(v[1] is None for _, v in sorted_items):
                     report.append("BACKTRACKED\n")
             except IndexError:
                 pass
