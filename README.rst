@@ -56,8 +56,8 @@ First, clone composer's somewhere on your machine::
 Then, use the `scripts/scenario_to_php.py` script to write a php file that will
 print the composer's solution for a given scenario::
 
-    python --composer-root <path to composer github checkout> \
-        scripts/scenario_to_php.php \
+    python scripts/scenario_to_php.py \
+        --composer-root <path to composer github checkout> \
         simplesat/tests/simple_numpy.yaml \
         scripts/print_operations.php.in
 
