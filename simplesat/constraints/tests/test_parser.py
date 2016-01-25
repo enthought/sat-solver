@@ -30,7 +30,7 @@ class Test_RawConstraintsParser(unittest.TestCase):
         constraints = self._parse(constraints_string)
 
         # Then
-        self.assertEqual(constraints, ())
+        self.assertEqual(constraints, (Any(),))
 
     def test_simple(self):
         # Given
@@ -149,7 +149,7 @@ class Test_RawRequirementParser(unittest.TestCase):
     def test_no_version(self):
         # Given
         requirement_string = "numpy"
-        r_constraints = {"numpy": tuple()}
+        r_constraints = {"numpy": tuple([Any()])}
 
         # When
         constraints = self._parse(requirement_string)
@@ -159,7 +159,7 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "MKL == 10.3-1, numpy"
-        r_constraints = {"numpy": tuple(),
+        r_constraints = {"numpy": tuple([Any()]),
                          "MKL": tuple([Equal(V("10.3-1"))])}
 
         # When
@@ -170,7 +170,7 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "scikits.statsmodels"
-        r_constraints = {"scikits.statsmodels": tuple()}
+        r_constraints = {"scikits.statsmodels": tuple([Any()])}
 
         # When
         constraints = self._parse(requirement_string)
@@ -180,7 +180,7 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "special_package.123"
-        r_constraints = {"special_package.123": tuple()}
+        r_constraints = {"special_package.123": tuple([Any()])}
 
         # When
         constraints = self._parse(requirement_string)

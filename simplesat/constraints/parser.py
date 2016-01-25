@@ -129,17 +129,21 @@ def _spec_factory(comparison_token):
 
 
 def _tokenize(scanner, requirement_string):
-    tokens = []
+    requirement_string = requirement_string.strip()
 
-    parts = requirement_string.split(",")
-    for part in parts:
-        scanned, remaining = scanner.scan(part.strip())
-        if len(remaining) > 0:
-            msg = "Invalid requirement string: {0!r}"
-            raise SolverException(msg.format(requirement_string))
-        elif len(scanned) > 0:
-            tokens.append(scanned)
-    return tokens
+    if len(requirement_string) == 0:
+        return [[AnyToken()]]
+    else:
+        tokens = []
+
+        for part in requirement_string.split(","):
+            scanned, remaining = scanner.scan(part.strip())
+            if len(remaining) > 0:
+                msg = "Invalid requirement string: {0!r}"
+                raise SolverException(msg.format(requirement_string))
+            elif len(scanned) > 0:
+                tokens.append(scanned)
+        return tokens
 
 
 def _operator_factory(operator, version, version_factory):
@@ -158,6 +162,9 @@ class _RawConstraintsParser(object):
             if len(requirement_block) == 2:
                 operator, version = requirement_block
                 return _operator_factory(operator, version, version_factory)
+            elif len(requirement_block) == 1:
+                assert isinstance(requirement_block[0], AnyToken)
+                return Any()
             else:
                 msg = ("Invalid requirement string: {0!r}".
                        format(requirement_string))
@@ -187,7 +194,7 @@ class _RawRequirementParser(object):
                 )
             elif len(requirement_block) == 1:
                 name = requirement_block[0].value
-                return name, tuple()
+                return name, tuple([Any()])
             else:
                 msg = ("Invalid requirement block: {0!r}".
                        format(requirement_block))

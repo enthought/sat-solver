@@ -51,6 +51,10 @@ class TestRequirementFromConstraint(unittest.TestCase):
         self.assertTrue(requirement.matches(V("1.8.1-3")))
         self.assertTrue(requirement.matches(V("1.8.2-1")))
         self.assertTrue(requirement.matches(V("1.9.0-1")))
+        self.assertEqual(
+            requirement,
+            Requirement.from_constraints(("numpy", (("*"),)))
+        )
 
     def test_simple(self):
         # Given
@@ -127,6 +131,8 @@ class TestRequirementFromString(unittest.TestCase):
     def test_any(self):
         # Given
         requirement_string = "numpy"
+        r_requirement = Requirement.from_constraints(("numpy", (("*"),)))
+        r_requirement_empty = Requirement.from_constraints(("numpy", ((),)))
 
         # When
         requirement = Requirement._from_string(requirement_string)
@@ -136,6 +142,9 @@ class TestRequirementFromString(unittest.TestCase):
         self.assertTrue(requirement.matches(V("1.8.1-3")))
         self.assertTrue(requirement.matches(V("1.8.2-1")))
         self.assertTrue(requirement.matches(V("1.9.0-1")))
+        self.assertEqual(requirement, r_requirement)
+        self.assertEqual(requirement, r_requirement_empty)
+        self.assertEqual(requirement, r_requirement_empty)
 
     def test_simple(self):
         # Given

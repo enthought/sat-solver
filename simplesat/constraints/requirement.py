@@ -75,10 +75,13 @@ class Requirement(object):
 
         parse = _RawConstraintsParser().parse
 
+        def insert_star(conjunction):
+            return conjunction if len(conjunction) > 0 else ("*",)
+
         constraints = tuple(
             constraint
             for conjunction in disjunction
-            for constraint_str in conjunction
+            for constraint_str in insert_star(conjunction)
             for constraint in parse(constraint_str, EnpkgVersion.from_string))
 
         return cls(name, constraints)
