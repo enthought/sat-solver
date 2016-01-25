@@ -75,7 +75,7 @@ class Requirement(object):
 
         parse = _RawConstraintsParser().parse
 
-        constraints = set(
+        constraints = tuple(
             constraint
             for conjunction in disjunction
             for constraint_str in conjunction
@@ -115,7 +115,7 @@ class Requirement(object):
         """
         name, version_string = parse_package_full_name(package_string)
         version = version_factory(version_string)
-        return cls(name, [Equal(version)])
+        return cls(name, (Equal(version),))
 
     def __init__(self, name, constraints=None):
         self.name = name
