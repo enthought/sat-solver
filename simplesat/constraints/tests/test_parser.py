@@ -149,7 +149,7 @@ class Test_RawRequirementParser(unittest.TestCase):
     def test_no_version(self):
         # Given
         requirement_string = "numpy"
-        r_constraints = {"numpy": set([Any()])}
+        r_constraints = {"numpy": set()}
 
         # When
         constraints = self._parse(requirement_string)
@@ -159,7 +159,7 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "MKL == 10.3-1, numpy"
-        r_constraints = {"numpy": set([Any()]),
+        r_constraints = {"numpy": set(),
                          "MKL": set([Equal(V("10.3-1"))])}
 
         # When
@@ -170,7 +170,7 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "scikits.statsmodels"
-        r_constraints = {"scikits.statsmodels": set([Any()])}
+        r_constraints = {"scikits.statsmodels": set()}
 
         # When
         constraints = self._parse(requirement_string)
@@ -180,7 +180,7 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "special_package.123"
-        r_constraints = {"special_package.123": set([Any()])}
+        r_constraints = {"special_package.123": set()}
 
         # When
         constraints = self._parse(requirement_string)

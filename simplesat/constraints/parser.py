@@ -186,7 +186,7 @@ class _RawRequirementParser(object):
             elif len(requirement_block) == 1:
                 name = requirement_block[0].value
                 # Force name to exist in constraints
-                constraints[name].add(Any())
+                _ = constraints[name]
             else:
                 msg = ("Invalid requirement block: {0!r}".
                        format(requirement_block))
