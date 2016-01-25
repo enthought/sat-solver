@@ -200,6 +200,14 @@ class TestMultiConstraints(unittest.TestCase):
 
     def test_comparison(self):
         # Given
+        versions = (
+            V("1.2-3"),
+            V("1.3.0"),
+            V("1.3.0-1"),
+            V("1.3.0-3"),
+            V("1.4.0-1"),
+            V("2.0-1")
+        )
         constraints_string1 = ">= 1.3, < 2.0"
         constraints_string2 = "< 2.0, >= 1.3"
 
@@ -208,5 +216,7 @@ class TestMultiConstraints(unittest.TestCase):
         constraints2 = MultiConstraints._from_string(constraints_string2)
 
         # Then
-        self.assertEqual(constraints1, constraints2)
-        self.assertFalse(constraints1 != constraints2)
+        for version in versions:
+            self.assertEqual(
+                constraints1.matches(version), constraints2.matches(version)
+            )
