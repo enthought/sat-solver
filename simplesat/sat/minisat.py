@@ -21,12 +21,34 @@ class UNSAT(object):
     """An unsatisfiable set of boolean clauses."""
 
     def __init__(self, conflict, learned, assignments, trails):
+        """
+        Create a new UNSAT object.
+
+        Parameters
+        ----------
+        conflict : Clause
+            The clause which has been found to be unsatisfiable.
+        learned : Clause
+            The implied change needed to satisfiy the conflict.
+
+            This clause is always a learned clause and should always have
+            exactly one literal associated with it; the conflicting assignment.
+        assignments : AssignmentSet
+            The assignments of the literals.
+        trails : dict
+            A mapping from clauses to the trail of clauses that generated them.
+            Only learned clauses should have trails of non-zero length
+        """
 
         self._conflict = conflict
         self._learned = learned
         self._assignments = assignments
         self._clause_trails = trails
+
+        # A flattened version of `self._clause_trails`
         self._flat_clause_trails = {}
+
+        # A mapping from clauses to the requirements that generated them
         self._clause_requirements = {}
         self._conflict_details = []
 
@@ -42,22 +64,43 @@ class UNSAT(object):
         return sorted(abs(l) for l in clause.lits)
 
     def clause_requirements(self, clause, ignore=None):
+        """
+        Return the user requirements that led to the creation of `clause`.
+
+        If the clause hasn't been requested before, we search it and its
+        parents recursively.
+        """
         ignore = ignore or set()
         if clause in ignore:
             return []
         ignore.add(clause)
         if clause not in self._clause_requirements:
+            # We haven't searched this clause before. Do so now.
             reqs = []
             if clause.rule and clause.rule._requirement:
+                # This clause came directly from a rule that came from a
+                # user requirement.
                 reqs.append(clause)
             if clause.learned:
+                # This clause is a learned synthesis of many other clauses. We
+                # must follow them to find their requirements.
                 trail = self.clause_trail(clause)
                 reqs.extend(r for c in trail
                             for r in self.clause_requirements(c, ignore))
+            # Memoize our result to avoid combinatorial explosion on recursive
+            # calls
             self._clause_requirements[clause] = reqs
         return self._clause_requirements[clause]
 
     def clause_trail(self, clause, ignore=None):
+        """
+        Return the entire flattened list of clauses in this clause's trail.
+
+        A learned clause has a "trail" of clauses which led to the learned
+        clause being created. Clauses in this trail might also be learned
+        clauses. This method recursively builds up all of non-learned clauses
+        found by expanding these trails.
+        """
         ignore = ignore or set()
         if clause in ignore:
             return []
@@ -80,12 +123,18 @@ class UNSAT(object):
         details = OrderedDict()
 
         def add(clause):
+            """
+            Add a clause or container of clauses to out explanation.
+            """
             if not isinstance(clause, Clause):
+                # For convenience, `clause` might be a container of clauses
                 for c in clause:
                     add(c)
                 return
 
             if clause.learned:
+                # Learned clauses have no meaningful explanation
+                # Instead, we grab the clauses from which it is derived.
                 clauses = self.clause_trail(clause)
             else:
                 clauses = (clause,)
