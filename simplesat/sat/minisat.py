@@ -226,6 +226,14 @@ class MiniSATSolver(object):
 
     def add_clause(self, clause, rule=None):
         """ Add a new clause to the solver.
+
+        Parameters
+        ----------
+        clause : Clause
+            The clause to add to the SAT problem
+        rule : PackageRule
+            An optional rule to associate with this clause. This is typically
+            the rule from which the clause was derived.
         """
         # TODO: Do some simplifications, and check whether clause contains p
         # and -p at the same time.
@@ -286,6 +294,14 @@ class MiniSATSolver(object):
 
     def enqueue(self, lit, cause=None):
         """ Enqueue a new true literal.
+
+        Parameters
+        ----------
+        lit : literal (a signed integer)
+            A literal to mark as True.
+        cause : Clause
+            An optional clause to associate with this assignment. This is
+            typically the clause which forced the assignment via propagation.
         """
         status = self.assignments.value(lit)
         if status is not None:
