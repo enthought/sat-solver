@@ -206,3 +206,42 @@ class TestParsePackageFullName(unittest.TestCase):
         # When/Then
         with self.assertRaises(SolverException):
             parse_package_full_name(package_s)
+
+
+class TestRequirement(unittest.TestCase):
+    def test_repr(self):
+        # Given
+        constraints = (
+            "numpy", (("^= 1.8.0",),)
+        )
+        r_repr = "Requirement('numpy ^= 1.8.0')"
+
+        # When
+        requirement = Requirement.from_constraints(constraints)
+
+        # Then
+        self.assertMultiLineEqual(repr(requirement), r_repr)
+
+        # Given
+        constraints = (
+            "numpy", ((">= 1.8.0", "< 1.10.0"),)
+        )
+        r_repr = "Requirement('numpy >= 1.8.0-0, < 1.10.0-0')"
+
+        # When
+        requirement = Requirement.from_constraints(constraints)
+
+        # Then
+        self.assertMultiLineEqual(repr(requirement), r_repr)
+
+        # Given
+        constraints = (
+            "numpy", ((">= 1.8.0-0", "< 1.10.0-0"),)
+        )
+        r_repr = "Requirement('numpy >= 1.8.0-0, < 1.10.0-0')"
+
+        # When
+        requirement = Requirement.from_constraints(constraints)
+
+        # Then
+        self.assertMultiLineEqual(repr(requirement), r_repr)

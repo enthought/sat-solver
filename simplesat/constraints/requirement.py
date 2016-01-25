@@ -154,6 +154,9 @@ class Requirement(object):
         else:
             return self.name + " " + ", ".join(parts)
 
+    def __repr__(self):
+        return "Requirement('" + str(self) + "')"
+
     @property
     def has_any_version_constraint(self):
         """ True if there is any version constraint."""
