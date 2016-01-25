@@ -14,8 +14,8 @@ from ..request import JobType
 # We ignore alpha/rc/etc... as composer does not allow to combine those with
 # patch versions, which we use to emulate build numbers.
 _TO_NORMALIZE = {
-    "1.0a3": "1.0.0.alpha1",
-    "1.0b1": "1.0.0.beta1",
+    "1.0a3": "1.0.0",
+    "1.0b1": "1.0.0",
     "2010o": "2010.15.0.0",
     "2011n": "2011.14.0.0",
     "2011g": "2011.7.0.0",
