@@ -54,6 +54,25 @@ class Transaction(object):
 
         return "\n".join(lines)
 
+    def to_simple_string(self):
+        S = "{0.name} ({0.version})".format
+        lines = []
+        for operation in self.operations:
+            if isinstance(operation, InstallOperation):
+                lines.append("Installing {}".format(S(operation.package)))
+            elif isinstance(operation, UpdateOperation):
+                lines.append(
+                    "Updating {} to {}".format(S(operation.source),
+                                               S(operation.package))
+                )
+            elif isinstance(operation, RemoveOperation):
+                lines.append("Removing {}".format(S(operation.package)))
+            else:
+                msg = "Unknown operation: {!r}".format(operation)
+                raise ValueError(msg)
+
+        return "\n".join(lines)
+
     def _compute_transaction(self, pool, decisions, installed_map):
         installed_means_update_map = \
             self._compute_means_update_map(pool, decisions, installed_map)
