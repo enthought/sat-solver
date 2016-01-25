@@ -10,6 +10,19 @@ class Constraint(object):
 class Clause(Constraint):
 
     def __init__(self, lits, learned=False, rule=None):
+        """
+        Create a new Clause.
+
+        Parameters
+        ----------
+        lits : list of literals
+            The literals in this clause.
+        learned : bool
+            A flag indicated whether this clause was learned during solving.
+        rule : PackageRule
+            A package rule associated with the clause. Typically the rule from
+            which this clause was created.
+        """
         self.learned = learned
         self.rule = rule
         # This maintains the ordering while removing duplicate values
