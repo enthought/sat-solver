@@ -20,7 +20,9 @@ class NoPackageFound(SolverException):
 
 class SatisfiabilityError(SolverException):
     def __init__(self, unsat):
-        reason = unsat.to_string()
-        self.reason = reason
         self.unsat = unsat
-        super(SatisfiabilityError, self).__init__(reason)
+        super(SatisfiabilityError, self).__init__(self.reason)
+
+    @property
+    def reason(self):
+        return self.unsat.to_string()
