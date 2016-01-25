@@ -5,18 +5,26 @@ don't use this in enstaller itself.
 import collections
 import json
 
+from ..constraints import Requirement
 from ..constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT
 )
 from ..request import JobType
-from ..requirement import Requirement
 
 # We ignore alpha/rc/etc... as composer does not allow to combine those with
 # patch versions, which we use to emulate build numbers.
 _TO_NORMALIZE = {
-    "1.0a3": "1.0.0",
+    "1.0a3": "1.0.0.alpha1",
+    "1.0b1": "1.0.0.beta1",
+    "2010o": "2010.15.0.0",
     "2011n": "2011.14.0.0",
+    "2011g": "2011.7.0.0",
     "0.14.1rc1": "0.14.1.0",
+    "0.11rc1": "0.11.0.0",
+    "0.9.0rc2": "0.9.0",
+    "2.3b1.dev4669": "2.3.0",
+    "1.2.dev213": "1.2.0",
+    "0.4.2.dev2": "0.4.2",
 }
 
 
@@ -49,9 +57,9 @@ def repository_to_composer_json_dict(repository):
     repository : Repository
         The repository to convert
     """
-    for package in repository.iter_packages():
+    for package in repository:
         version_normalized = _normalize_php_version(package.version)
-        requires = [Requirement.from_legacy_requirement_string(p) for
+        requires = [Requirement.from_constraints(p) for
                     p in package.install_requires]
         yield {
             "name": package.name,
@@ -64,12 +72,8 @@ def repository_to_composer_json_dict(repository):
 def request_to_php_parts(request):
     parts = []
     for job in request.jobs:
-        name, constraints = _requirement_to_php_constraints(
+        name, php_constraints = _requirement_to_php_constraints(
             job.requirement
-        )
-        php_constraints = ", ".join(
-            "{0} {1}".format(kind, version)
-            for kind, version in constraints
         )
         parts.append((JOB_KIND_TO_PHP_METHOD[job.kind], name, php_constraints))
     return parts
@@ -139,11 +143,13 @@ def _requirement_to_php_constraints(requirement):
         if isinstance(constraint, constraint_types):
             constraint_string = constraint_to_string[constraint.__class__]
             version = _normalize_php_version_constraint(constraint.version)
-            parts.append((constraint_string, version))
-        elif not isinstance(constraint, Any):
+            parts.append(" ".join((constraint_string, version)))
+        elif isinstance(constraint, Any):
+            parts.append("*")
+        else:
             raise ValueError("Unsupported constraint: %s" % constraint)
 
-    return requirement.name, parts
+    return requirement.name, ", ".join(parts)
 
 
 def _requirement_to_php_string(requirement):
