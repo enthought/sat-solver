@@ -30,12 +30,12 @@ class Test_RawConstraintsParser(unittest.TestCase):
         constraints = self._parse(constraints_string)
 
         # Then
-        self.assertEqual(constraints, set())
+        self.assertEqual(constraints, ())
 
     def test_simple(self):
         # Given
         constraints_string = "> 1.2.0-1"
-        r_constraints = set([GT(V("1.2.0-1"))])
+        r_constraints = (GT(V("1.2.0-1")),)
 
         # When
         constraints = self._parse(constraints_string)
@@ -45,7 +45,7 @@ class Test_RawConstraintsParser(unittest.TestCase):
 
         # Given
         constraints_string = ">= 1.2.0-1"
-        r_constraints = set([GEQ(V("1.2.0-1"))])
+        r_constraints = (GEQ(V("1.2.0-1")),)
 
         # When
         constraints = self._parse(constraints_string)
@@ -55,7 +55,7 @@ class Test_RawConstraintsParser(unittest.TestCase):
 
         # Given
         constraints_string = "<= 1.2.0-1"
-        r_constraints = set([LEQ(V("1.2.0-1"))])
+        r_constraints = (LEQ(V("1.2.0-1")),)
 
         # When
         constraints = self._parse(constraints_string)
@@ -65,7 +65,7 @@ class Test_RawConstraintsParser(unittest.TestCase):
 
         # Given
         constraints_string = "< 1.2.0-1"
-        r_constraints = set([LT(V("1.2.0-1"))])
+        r_constraints = (LT(V("1.2.0-1")),)
 
         # When
         constraints = self._parse(constraints_string)
@@ -75,7 +75,7 @@ class Test_RawConstraintsParser(unittest.TestCase):
 
         # Given
         constraints_string = "^= 1.2.0-1"
-        r_constraints = set([EnpkgUpstreamMatch(V("1.2.0-1"))])
+        r_constraints = (EnpkgUpstreamMatch(V("1.2.0-1")),)
 
         # When
         constraints = self._parse(constraints_string)
@@ -86,8 +86,9 @@ class Test_RawConstraintsParser(unittest.TestCase):
     def test_multiple(self):
         # Given
         constraints_string = ">= 1.2.0-1, < 1.4, != 1.3.8-1"
-        r_constraints = set([GEQ(V("1.2.0-1")), LT(V("1.4")),
-                             Not(V("1.3.8-1"))])
+        r_constraints = (
+            GEQ(V("1.2.0-1")), LT(V("1.4")), Not(V("1.3.8-1"))
+        )
 
         # When
         constraints = self._parse(constraints_string)
@@ -114,7 +115,7 @@ class Test_RawRequirementParser(unittest.TestCase):
     def test_simple(self):
         # Given
         requirement_string = "numpy == 1.8.1-1"
-        r_constraints = {"numpy": set([Equal(V("1.8.1-1"))])}
+        r_constraints = {"numpy": tuple([Equal(V("1.8.1-1"))])}
 
         # When
         constraints = self._parse(requirement_string)
@@ -125,8 +126,7 @@ class Test_RawRequirementParser(unittest.TestCase):
     def test_multiple(self):
         # Given
         requirement_string = "numpy >= 1.8.1, numpy < 1.9.0"
-        r_constraints = {"numpy": set([GEQ(V("1.8.1-0")),
-                                       LT(V("1.9.0"))])}
+        r_constraints = {"numpy": (GEQ(V("1.8.1-0")), LT(V("1.9.0")))}
 
         # When
         constraints = self._parse(requirement_string)
@@ -137,8 +137,8 @@ class Test_RawRequirementParser(unittest.TestCase):
     def test_multiple_names(self):
         # Given
         requirement_string = "numpy >= 1.8.1, scipy >= 0.14.0"
-        r_constraints = {"numpy": set([GEQ(V("1.8.1-0"))]),
-                         "scipy": set([GEQ(V("0.14.0"))])}
+        r_constraints = {"numpy": (GEQ(V("1.8.1-0")),),
+                         "scipy": (GEQ(V("0.14.0")),)}
 
         # When
         constraints = self._parse(requirement_string)
@@ -149,7 +149,7 @@ class Test_RawRequirementParser(unittest.TestCase):
     def test_no_version(self):
         # Given
         requirement_string = "numpy"
-        r_constraints = {"numpy": set()}
+        r_constraints = {"numpy": tuple()}
 
         # When
         constraints = self._parse(requirement_string)
@@ -159,8 +159,8 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "MKL == 10.3-1, numpy"
-        r_constraints = {"numpy": set(),
-                         "MKL": set([Equal(V("10.3-1"))])}
+        r_constraints = {"numpy": tuple(),
+                         "MKL": tuple([Equal(V("10.3-1"))])}
 
         # When
         constraints = self._parse(requirement_string)
@@ -170,7 +170,7 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "scikits.statsmodels"
-        r_constraints = {"scikits.statsmodels": set()}
+        r_constraints = {"scikits.statsmodels": tuple()}
 
         # When
         constraints = self._parse(requirement_string)
@@ -180,7 +180,7 @@ class Test_RawRequirementParser(unittest.TestCase):
 
         # Given
         requirement_string = "special_package.123"
-        r_constraints = {"special_package.123": set()}
+        r_constraints = {"special_package.123": tuple()}
 
         # When
         constraints = self._parse(requirement_string)

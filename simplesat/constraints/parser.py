@@ -1,6 +1,8 @@
 import collections
 import re
 
+import six
+
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT, Not
 )
@@ -152,23 +154,22 @@ class _RawConstraintsParser(object):
         self._scanner = _CONSTRAINTS_SCANNER
 
     def parse(self, requirement_string, version_factory):
-        def add_constraint(constraints, requirement_block):
+        def compute_constraint(requirement_block):
             if len(requirement_block) == 2:
                 operator, version = requirement_block
-                constraints.add(_operator_factory(operator, version,
-                                                  version_factory))
+                return _operator_factory(operator, version, version_factory)
             else:
                 msg = ("Invalid requirement string: {0!r}".
                        format(requirement_string))
                 raise SolverException(msg)
 
-        constraints = set()
+        constraints = []
         tokens_blocks = _tokenize(self._scanner, requirement_string)
 
         for requirement_block in tokens_blocks:
-            add_constraint(constraints, requirement_block)
+            constraints.append(compute_constraint(requirement_block))
 
-        return constraints
+        return tuple(constraints)
 
 
 class _RawRequirementParser(object):
@@ -177,25 +178,29 @@ class _RawRequirementParser(object):
         self._scanner = _REQUIREMENTS_SCANNER
 
     def parse(self, requirement_string, version_factory):
-        def add_constraint(constraints, requirement_block):
+        def compute_constraint(requirement_block):
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
                 name = distribution.value
-                constraints[name].add(_operator_factory(operator, version,
-                                                        version_factory))
+                return (
+                    name, (_operator_factory(operator, version, version_factory),)
+                )
             elif len(requirement_block) == 1:
                 name = requirement_block[0].value
-                # Force name to exist in constraints
-                _ = constraints[name]
+                return name, tuple()
             else:
                 msg = ("Invalid requirement block: {0!r}".
                        format(requirement_block))
                 raise SolverException(msg)
 
-        constraints = collections.defaultdict(set)
+        named_constraints = collections.defaultdict(list)
         tokens_blocks = _tokenize(self._scanner, requirement_string)
 
         for requirement_block in tokens_blocks:
-            add_constraint(constraints, requirement_block)
+            name, constraint = compute_constraint(requirement_block)
+            named_constraints[name].extend(constraint)
 
-        return constraints
+        return dict(
+            (name, tuple(constraints))
+            for name, constraints in six.iteritems(named_constraints)
+        )
