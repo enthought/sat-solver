@@ -20,7 +20,7 @@ class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
 
-    def __init__(self, conflict, learned, assignments, trails):
+    def __init__(self, conflict, learned_clause, assignments, trails):
         """
         Create a new UNSAT object.
 
@@ -28,7 +28,7 @@ class UNSAT(object):
         ----------
         conflict : Clause
             The clause which has been found to be unsatisfiable.
-        learned : Clause
+        learned_clause : Clause
             The implied change needed to satisfiy the conflict.
 
             This clause is always a learned clause and should always have
@@ -41,7 +41,7 @@ class UNSAT(object):
         """
 
         self._conflict = conflict
-        self._learned = learned
+        self._learned_clause = learned_clause
         self._assignments = assignments
         self._clause_trails = trails
 
@@ -55,9 +55,9 @@ class UNSAT(object):
         self._find_requirement_time = None
         with timed_context("Find Requirements") as self._find_requirement_time:
             # What conflict is implied?
-            assert len(learned.lits) == 1
-            self._implicand = -learned[0]
-            requirement_clauses = self.clause_requirements(learned)
+            assert len(learned_clause.lits) == 1
+            self._implicand = -learned_clause[0]
+            requirement_clauses = self.clause_requirements(learned_clause)
             self._conflict_details.append(requirement_clauses)
 
     def _key(self, clause):
@@ -118,7 +118,7 @@ class UNSAT(object):
         return self._flat_clause_trails[clause]
 
     def to_string(self, pool=None, detailed=False):
-        learned_clauses = self.clause_requirements(self._learned)
+        learned_clauses = self.clause_requirements(self._learned_clause)
 
         details = OrderedDict()
 
