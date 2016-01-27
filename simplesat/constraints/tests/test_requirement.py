@@ -144,7 +144,18 @@ class TestRequirementFromString(unittest.TestCase):
         self.assertTrue(requirement.matches(V("1.9.0-1")))
         self.assertEqual(requirement, r_requirement)
         self.assertEqual(requirement, r_requirement_empty)
+        self.assertEqual(r_requirement, r_requirement_empty)
+
+        # Given
+        requirement_string = "numpy *"
+
+        # When
+        requirement = Requirement._from_string(requirement_string)
+
+        # Then
+        self.assertEqual(requirement, r_requirement)
         self.assertEqual(requirement, r_requirement_empty)
+        self.assertEqual(r_requirement, r_requirement_empty)
 
     def test_simple(self):
         # Given
