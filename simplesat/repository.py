@@ -32,6 +32,12 @@ class Repository(object):
             len(packages) for packages in six.itervalues(self._name_to_packages)
         )
 
+    def __contains__(self, package_metadata):
+        return (
+            package_metadata in
+            self._name_to_packages.get(package_metadata.name, ())
+        )
+
     def __iter__(self):
         for name in self._names:
             for package in self._name_to_packages[name]:
