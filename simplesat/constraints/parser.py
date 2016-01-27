@@ -186,18 +186,25 @@ class _RawRequirementParser(object):
 
     def parse(self, requirement_string, version_factory):
         def compute_constraint(requirement_block):
+            msg = "Invalid requirement {0!r}".format(requirement_string)
+
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
                 name = distribution.value
                 return (
                     name, (_operator_factory(operator, version, version_factory),)
                 )
+            elif len(requirement_block) == 2:
+                distribution, operator = requirement_block
+                name = distribution.value
+                if isinstance(operator, AnyToken):
+                    return name, (Any(),)
+                else:
+                    raise SolverException(msg)
             elif len(requirement_block) == 1:
                 name = requirement_block[0].value
-                return name, tuple([Any()])
+                return name, (Any(),)
             else:
-                msg = ("Invalid requirement block: {0!r}".
-                       format(requirement_block))
                 raise SolverException(msg)
 
         named_constraints = collections.defaultdict(list)
