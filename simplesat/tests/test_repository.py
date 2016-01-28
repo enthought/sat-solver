@@ -169,6 +169,9 @@ class TestRepository(unittest.TestCase):
 
     def test_contains(self):
         # Given
+        repository_info1 = RepositoryInfo("repo1")
+        repository_info2 = RepositoryInfo("repo2")
+
         packages_definition = textwrap.dedent(u"""\
         dummy 1.0.1-1
         dummy_with_appinst 1.0.0-1
@@ -180,7 +183,9 @@ class TestRepository(unittest.TestCase):
         nose 1.3.0-1
         nose 1.3.0-2\
         """)
-        packages = self.packages_from_definition(packages_definition)
+        packages = self.packages_from_definition(
+            packages_definition, repository_info1
+        )
         repository = Repository(packages)
 
         # When/Then
@@ -194,3 +199,16 @@ class TestRepository(unittest.TestCase):
 
         # When/Then
         self.assertFalse(package in repository)
+
+        # Given
+        dummy_repository1 = self.packages_from_definition(
+            "dummy 1.0.1-1", repository_info1
+        )[0]
+
+        dummy_repository2 = self.packages_from_definition(
+            "dummy 1.0.1-1", repository_info2
+        )[0]
+
+        # When/Then
+        self.assertTrue(dummy_repository1 in repository)
+        self.assertFalse(dummy_repository2 in repository)
