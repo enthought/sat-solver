@@ -4,7 +4,8 @@
 import six
 
 from simplesat.utils import DefaultOrderedDict
-from .policy import IPolicy, PolicyLogger, pkg_id_to_version
+from .policy import IPolicy, pkg_id_to_version
+from .policy_logger import PolicyLogger
 
 
 class UndeterminedClausePolicy(IPolicy):
