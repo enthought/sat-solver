@@ -6,6 +6,7 @@ from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser
 from simplesat.errors import NoPackageFound
+from simplesat.package import RepositoryInfo, RepositoryPackageMetadata
 from simplesat.repository import Repository
 
 
@@ -13,11 +14,15 @@ V = EnpkgVersion.from_string
 
 
 class TestRepository(unittest.TestCase):
-    def packages_from_definition(self, packages_definition):
+    def packages_from_definition(self, packages_definition,
+                                 repository_info=None):
+        repository_info = repository_info or RepositoryInfo("dummy")
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
 
         return [
-            parser.parse_to_package(line)
+            RepositoryPackageMetadata(
+                parser.parse_to_package(line), repository_info
+            )
             for line in packages_definition.splitlines()
         ]
 
@@ -161,3 +166,49 @@ class TestRepository(unittest.TestCase):
 
         # Then
         self.assertEqual(len(packages), 0)
+
+    def test_contains(self):
+        # Given
+        repository_info1 = RepositoryInfo("repo1")
+        repository_info2 = RepositoryInfo("repo2")
+
+        packages_definition = textwrap.dedent(u"""\
+        dummy 1.0.1-1
+        dummy_with_appinst 1.0.0-1
+        dummy_with_entry_points 1.0.0-1
+        dummy_with_proxy 1.3.40-3
+        dummy_with_proxy_scripts 1.0.0-1
+        dummy_with_proxy_softlink 1.0.0-1
+        nose 1.2.1-1
+        nose 1.3.0-1
+        nose 1.3.0-2\
+        """)
+        packages = self.packages_from_definition(
+            packages_definition, repository_info1
+        )
+        repository = Repository(packages)
+
+        # When/Then
+        for package in repository:
+            self.assertTrue(package in repository)
+
+        # Given
+        package = RepositoryPackageMetadata._from_pretty_string(
+            "dummy 1.0.1-1", RepositoryInfo("another")
+        )
+
+        # When/Then
+        self.assertFalse(package in repository)
+
+        # Given
+        dummy_repository1 = self.packages_from_definition(
+            "dummy 1.0.1-1", repository_info1
+        )[0]
+
+        dummy_repository2 = self.packages_from_definition(
+            "dummy 1.0.1-1", repository_info2
+        )[0]
+
+        # When/Then
+        self.assertTrue(dummy_repository1 in repository)
+        self.assertFalse(dummy_repository2 in repository)
