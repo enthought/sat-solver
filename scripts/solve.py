@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import argparse
+import logging
 import sys
 
 
@@ -48,6 +49,13 @@ def main(argv=None):
                    help="Show a simpler description of the transaction.")
 
     ns = p.parse_args(argv)
+
+    fmt = '%(asctime)s %(levelname)-8.8s [%(name)s:%(lineno)s] %(message)s'
+    logging.basicConfig(
+        format=fmt,
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level='INFO' if ns.debug else 'WARNING'
+    )
 
     scenario = Scenario.from_yaml(ns.scenario)
     solve_and_print(scenario.request, scenario.remote_repositories,
