@@ -278,7 +278,7 @@ class TestMiniSATSolver(unittest.TestCase):
 
         # Then
         self.assertIsNone(conflict)
-        self.assertEqual(s.assignments._data,
+        self.assertEqual(s.assignments.to_dict(),
                          {1: True, 2: False, 3: None, 4: None})
         self.assertEqual(s.trail, [-2, 1])
         six.assertCountEqual(self, s.watches[-1], [cl1, cl2])
@@ -302,7 +302,7 @@ class TestMiniSATSolver(unittest.TestCase):
 
         # Then
         self.assertIsNone(conflict)
-        self.assertEqual(s.assignments._data,
+        self.assertEqual(s.assignments.to_dict(),
                          {1: False, 2: False, 3: False, 4: False})
         self.assertEqual(s.trail, [-1, -2, -3, -4])
 
@@ -377,7 +377,7 @@ class TestMiniSATSolver(unittest.TestCase):
         s.undo_one()
 
         # Then
-        self.assertEqual(s.assignments._data, {1: None, 2: None, 3: None})
+        self.assertEqual(s.assignments.to_dict(), {1: None, 2: None, 3: None})
         self.assertEqual(s.trail, [1, 2])
 
     def test_cancel(self):

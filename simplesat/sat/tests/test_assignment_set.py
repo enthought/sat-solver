@@ -3,7 +3,7 @@
 
 import unittest
 
-from ..assignment_set import AssignmentSet, MISSING
+from ..assignment_set import AssignmentSet
 
 
 class TestAssignmentSet(unittest.TestCase):
@@ -66,7 +66,7 @@ class TestAssignmentSet(unittest.TestCase):
         del AS[5]
         self.assertNotIn(5, AS)
 
-        expected = [(1, True), (2, False), (4, None), (3, True)]
+        expected = [(1, True), (2, False), (3, True), (4, None)]
 
         manual_result = list(zip(AS.keys(), AS.values()))
         self.assertEqual(AS.items(), expected)
@@ -94,9 +94,9 @@ class TestAssignmentSet(unittest.TestCase):
         copied = AS.copy()
 
         self.assertIsNot(copied._data, AS._data)
-        self.assertEqual(copied._data, expected)
+        self.assertEqual(copied.to_dict(), expected)
 
-        expected = {k: MISSING for k in expected}
+        expected = {k: None for k, v in expected.items() if v is not None}
 
         self.assertIsNot(copied._orig, AS._orig)
         self.assertEqual(copied._orig, expected)
@@ -121,6 +121,22 @@ class TestAssignmentSet(unittest.TestCase):
 
         self.assertIs(AS.value(3), None)
         self.assertIs(AS.value(-3), None)
+
+        del AS[2]
+        self.assertIs(AS.value(-2), None)
+        self.assertIs(AS.value(2), None)
+
+        AS[1] = None
+        self.assertIs(AS.value(-1), None)
+        self.assertIs(AS.value(1), None)
+
+        AS[3] = True
+        self.assertIs(AS.value(-3), False)
+        self.assertIs(AS.value(3), True)
+
+        AS[3] = False
+        self.assertIs(AS.value(-3), True)
+        self.assertIs(AS.value(3), False)
 
     def test_getitem(self):
         AS = AssignmentSet()
@@ -147,15 +163,15 @@ class TestAssignmentSet(unittest.TestCase):
 
         AS[1] = None
 
-        expected = {1: (MISSING, None)}
+        expected = {}
         self.assertEqual(AS.get_changelog(), expected)
 
         AS[2] = True
-        expected[2] = (MISSING, True)
+        expected[2] = (None, True)
         self.assertEqual(AS.get_changelog(), expected)
 
         AS[2] = False
-        expected[2] = (MISSING, False)
+        expected[2] = (None, False)
         self.assertEqual(AS.get_changelog(), expected)
 
         del AS[2]
@@ -177,5 +193,5 @@ class TestAssignmentSet(unittest.TestCase):
         self.assertEqual(AS.get_changelog(), expected)
 
         del AS[1]
-        expected = {1: (None, MISSING)}
+        expected = {}
         self.assertEqual(AS.get_changelog(), expected)
