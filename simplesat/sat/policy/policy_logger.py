@@ -10,7 +10,7 @@ class PolicyLogger(IPolicy):
     def __init__(self, policy, args=None, kwargs=None):
         self._policy = policy
         self._log_pool = args[0]
-        self._log_installed = getattr(policy, '_installed_ids', set()).copy()
+        self._log_installed = set(getattr(policy, '_installed_ids', ()))
         self._log_preferred = getattr(policy, '_preferred_ids', set()).copy()
         self._log_args = args
         self._log_kwargs = kwargs
@@ -27,7 +27,6 @@ class PolicyLogger(IPolicy):
 
     def add_requirements(self, package_ids):
         self._log_required.extend(package_ids)
-        self._log_preferred.difference_update(package_ids)
         self._log_installed.difference_update(package_ids)
         self._policy.add_requirements(package_ids)
 
@@ -36,7 +35,7 @@ class PolicyLogger(IPolicy):
             pkg_ids = map(abs, self._log_suggestions)
         c = Counter(pkg_ids)
         lines = (
-            "{:>25} {}".format(self._log_pretty_pkg_id(k), v)
+            "{:>25} {:>5}".format(self._log_pretty_pkg_id(k), v)
             for k, v in c.most_common()
         )
         pretty = '\n'.join(lines)
@@ -52,7 +51,7 @@ class PolicyLogger(IPolicy):
             repo = 'installed'
         return "{:{fill}<30} {:3} {}".format(name_ver, pkg_id, repo, fill=fill)
 
-    def _log_report(self, detailed=True):
+    def _log_report(self, detailed=True, with_assignments=True):
 
         def pkg_name(pkg_id):
             return pkg_key(pkg_id)[0]
@@ -64,7 +63,7 @@ class PolicyLogger(IPolicy):
         ids = map(abs, self._log_suggestions)
         report = []
         changes = []
-        if self._log_assignment_changes:
+        if self._log_assignment_changes and with_assignments:
             for pkg, change in self._log_assignment_changes[0].items():
                 name = self._log_pretty_pkg_id(pkg)
                 if change[1] is not None:
@@ -72,14 +71,29 @@ class PolicyLogger(IPolicy):
             report.append('\n'.join(changes))
 
         required = set(self._log_required)
-        preferred = set(self._log_preferred)
         installed = set(self._log_installed)
         for (i, sugg) in enumerate(ids):
             pretty = self._log_pretty_pkg_id(sugg)
             R = 'R' if sugg in required else ' '
-            P = 'P' if sugg in preferred else ' '
             I = 'I' if sugg in installed else ' '
-            changes = []
+            change_str = ""
+            if with_assignments:
+                try:
+                    changes = []
+                    items = self._log_assignment_changes[i + 1].items()
+                    sorted_items = sorted(items, key=lambda p: pkg_key(p[0]))
+                    for pkg, change in sorted_items:
+                        if pkg_name(pkg) != pkg_name(sugg):
+                            _pretty = self._log_pretty_pkg_id(pkg)
+                            fro, to = map(str, change)
+                            msg = "{:10} - {:10} : {}"
+                            changes.append(msg.format(fro, to, _pretty))
+                    if changes:
+                        change_str = '\n\t'.join([''] + changes)
+                except IndexError:
+                    pass
+            msg = "{:>4} {}{} - {}{}"
+            report.append(msg.format(i, R, I, pretty, change_str))
             try:
                 change_items = self._log_assignment_changes[i + 1].items()
                 if detailed:
@@ -95,10 +109,11 @@ class PolicyLogger(IPolicy):
                     changes = '\n\t\t'.join([''] + changes)
                 else:
                     changes = ""
+                if any(v[1] is None
+                       for v in self._log_assignment_changes[i + 1].values()):
+                    report.append("BACKTRACKED\n")
             except IndexError:
-                changes = ""
-            msg = "{:>4} {}{}{} - {}{}"
-            report.append(msg.format(i, R, P, I, pretty, changes))
+                pass
         return '\n'.join(report)
 
 
