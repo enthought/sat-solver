@@ -51,6 +51,10 @@ class TestRequirementFromConstraint(unittest.TestCase):
         self.assertTrue(requirement.matches(V("1.8.1-3")))
         self.assertTrue(requirement.matches(V("1.8.2-1")))
         self.assertTrue(requirement.matches(V("1.9.0-1")))
+        self.assertEqual(
+            requirement,
+            Requirement.from_constraints(("numpy", (("*"),)))
+        )
 
     def test_simple(self):
         # Given
@@ -127,6 +131,8 @@ class TestRequirementFromString(unittest.TestCase):
     def test_any(self):
         # Given
         requirement_string = "numpy"
+        r_requirement = Requirement.from_constraints(("numpy", (("*"),)))
+        r_requirement_empty = Requirement.from_constraints(("numpy", ((),)))
 
         # When
         requirement = Requirement._from_string(requirement_string)
@@ -136,6 +142,20 @@ class TestRequirementFromString(unittest.TestCase):
         self.assertTrue(requirement.matches(V("1.8.1-3")))
         self.assertTrue(requirement.matches(V("1.8.2-1")))
         self.assertTrue(requirement.matches(V("1.9.0-1")))
+        self.assertEqual(requirement, r_requirement)
+        self.assertEqual(requirement, r_requirement_empty)
+        self.assertEqual(r_requirement, r_requirement_empty)
+
+        # Given
+        requirement_string = "numpy *"
+
+        # When
+        requirement = Requirement._from_string(requirement_string)
+
+        # Then
+        self.assertEqual(requirement, r_requirement)
+        self.assertEqual(requirement, r_requirement_empty)
+        self.assertEqual(r_requirement, r_requirement_empty)
 
     def test_simple(self):
         # Given
@@ -206,3 +226,42 @@ class TestParsePackageFullName(unittest.TestCase):
         # When/Then
         with self.assertRaises(SolverException):
             parse_package_full_name(package_s)
+
+
+class TestRequirement(unittest.TestCase):
+    def test_repr(self):
+        # Given
+        constraints = (
+            "numpy", (("^= 1.8.0",),)
+        )
+        r_repr = "Requirement('numpy ^= 1.8.0')"
+
+        # When
+        requirement = Requirement.from_constraints(constraints)
+
+        # Then
+        self.assertMultiLineEqual(repr(requirement), r_repr)
+
+        # Given
+        constraints = (
+            "numpy", ((">= 1.8.0", "< 1.10.0"),)
+        )
+        r_repr = "Requirement('numpy >= 1.8.0-0, < 1.10.0-0')"
+
+        # When
+        requirement = Requirement.from_constraints(constraints)
+
+        # Then
+        self.assertMultiLineEqual(repr(requirement), r_repr)
+
+        # Given
+        constraints = (
+            "numpy", ((">= 1.8.0-0", "< 1.10.0-0"),)
+        )
+        r_repr = "Requirement('numpy >= 1.8.0-0, < 1.10.0-0')"
+
+        # When
+        requirement = Requirement.from_constraints(constraints)
+
+        # Then
+        self.assertMultiLineEqual(repr(requirement), r_repr)

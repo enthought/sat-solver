@@ -30,9 +30,9 @@ class MultiConstraints(object):
 
     def __init__(self, constraints=None):
         if constraints is None:
-            self._constraints = frozenset()
+            self._constraints = tuple()
         else:
-            self._constraints = frozenset(constraints)
+            self._constraints = tuple(constraints)
 
     def matches(self, version_candidate):
         """ Returns True if the given version matches this set of

@@ -75,10 +75,13 @@ class Requirement(object):
 
         parse = _RawConstraintsParser().parse
 
-        constraints = set(
+        def insert_star(conjunction):
+            return conjunction if len(conjunction) > 0 else ("*",)
+
+        constraints = tuple(
             constraint
             for conjunction in disjunction
-            for constraint_str in conjunction
+            for constraint_str in insert_star(conjunction)
             for constraint in parse(constraint_str, EnpkgVersion.from_string))
 
         return cls(name, constraints)
@@ -115,7 +118,7 @@ class Requirement(object):
         """
         name, version_string = parse_package_full_name(package_string)
         version = version_factory(version_string)
-        return cls(name, [Equal(version)])
+        return cls(name, (Equal(version),))
 
     def __init__(self, name, constraints=None):
         self.name = name
@@ -153,6 +156,9 @@ class Requirement(object):
             return self.name
         else:
             return self.name + " " + ", ".join(parts)
+
+    def __repr__(self):
+        return "Requirement('" + str(self) + "')"
 
     @property
     def has_any_version_constraint(self):
