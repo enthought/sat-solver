@@ -59,6 +59,14 @@ class UNSAT(object):
     def _key(self, clause):
         return sorted(abs(l) for l in clause.lits)
 
+    @property
+    def rules(self):
+        return [c.rule for problem in self._conflict_details for c in problem]
+
+    @property
+    def requirements(self):
+        return [rule._requirement for rule in self.rules]
+
     def clause_requirements(self, clause, ignore=None):
         """
         Return the user requirements that led to the creation of `clause`.
