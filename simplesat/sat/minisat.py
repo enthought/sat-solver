@@ -5,7 +5,6 @@ A SAT solver which follows the Minisat approach.
 from __future__ import absolute_import
 
 from collections import defaultdict, deque, OrderedDict
-from itertools import count
 
 from six.moves import range
 
@@ -20,7 +19,7 @@ class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
 
-    def __init__(self, conflict, learned_clause, assignments, trails):
+    def __init__(self, conflict, learned_clause, trails):
         """
         Create a new UNSAT object.
 
@@ -33,8 +32,6 @@ class UNSAT(object):
 
             This clause is always a learned clause and should always have
             exactly one literal associated with it; the conflicting assignment.
-        assignments : AssignmentSet
-            The assignments of the literals.
         trails : dict
             A mapping from clauses to the trail of clauses that generated them.
             Only learned clauses should have trails of non-zero length
@@ -42,7 +39,6 @@ class UNSAT(object):
 
         self._conflict = conflict
         self._learned_clause = learned_clause
-        self._assignments = assignments
         self._clause_trails = trails
 
         # A flattened version of `self._clause_trails`
@@ -194,9 +190,6 @@ class MiniSATSolver(object):
 
         self.assignments = AssignmentSet()
 
-        # The most recent (non-None) assigned value of each literal
-        self.most_recent_assignments = {}
-
         # The trail of clauses used to learn each new clause
         self.clause_trails = {}
 
@@ -217,7 +210,6 @@ class MiniSATSolver(object):
         # For each variable assignment, a reference to the clause that forced
         # this assignment.
         self.assigning_clause = {}
-        self._assignment_seq = count()
 
         # Whether the system is satisfiable.
         self.status = None
@@ -316,9 +308,6 @@ class MiniSATSolver(object):
             self.trail.append(lit)
             self.levels[abs(lit)] = self.decision_level
             self.assigning_clause[abs(lit)] = cause
-            seq = next(self._assignment_seq)
-            self.most_recent_assignments[abs(lit)] = ((lit > 0), cause, seq)
-
             return True
 
     def search(self):
@@ -345,7 +334,6 @@ class MiniSATSolver(object):
                 if root_level == self.decision_level:
                     conflict = UNSAT(
                         conflict_clause, learned_clause,
-                        self.most_recent_assignments,
                         self.clause_trails)
                     raise SatisfiabilityError(conflict)
 
