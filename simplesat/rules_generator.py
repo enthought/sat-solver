@@ -7,6 +7,9 @@ from .errors import NoPackageFound, SolverException
 from .request import JobType
 
 
+INDENT = 4
+
+
 class RuleType(enum.Enum):
     internal_allow_update = 1
     job_install = 2
@@ -107,8 +110,8 @@ class PackageRule(object):
             rule_desc = s
 
         if self._requirement is not None:
-            rule_desc = "Requirement: '{}'\n\t{}".format(
-                self._requirement, rule_desc)
+            rule_desc = "Requirement: '{req}'\n{indent}{rule}".format(
+                req=self._requirement, rule=rule_desc, indent=" " * INDENT)
 
         return rule_desc
 
