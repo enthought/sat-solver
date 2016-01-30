@@ -4,6 +4,7 @@ from attr import attr, attributes
 
 from .constraints import Requirement
 from .constraints.package_parser import constraints_to_pretty_strings
+from simplesat.utils.graph import toposort, package_lit_dependency_graph
 
 
 @attributes
@@ -29,16 +30,20 @@ class RemoveOperation(Operation):
 class Transaction(object):
 
     def __init__(self, pool, decisions, installed_map):
-        self.operations = []
-
+        self.operations = self._safe_operations(pool, decisions, installed_map)
+        self.pretty_operations = []
         self._compute_transaction(pool, decisions, installed_map)
 
     def __iter__(self):
-        return iter(self.operations)
+        return iter(self.pretty_operations)
 
     def __str__(self):
+        return self.to_string(pretty=False)
+
+    def to_string(self, pretty=False):
         lines = []
-        for operation in self.operations:
+        operations = self.pretty_operations if pretty else self.operations
+        for operation in operations:
             if isinstance(operation, InstallOperation):
                 lines.append("Installing:\n\t{}".format(operation.package))
             elif isinstance(operation, UpdateOperation):
@@ -72,6 +77,44 @@ class Transaction(object):
                 raise ValueError(msg)
 
         return "\n".join(lines)
+
+    def install(self, package):
+        self.pretty_operations.append(InstallOperation(package))
+
+    def remove(self, package):
+        self.pretty_operations.append(RemoveOperation(package))
+
+    def update(self, from_package, to_package):
+        operation = UpdateOperation(to_package, from_package)
+        self.pretty_operations.append(operation)
+
+    def _safe_operations(self, pool, decisions, installed_map):
+        graph = package_lit_dependency_graph(pool, decisions, closed=True)
+        removals = []
+        installs = []
+        operations = []
+
+        # This builds from the bottom (no dependencies) up
+        for group in toposort(graph):
+            # Sort the set of independent packages for determinism
+            for package_id in sorted(group):
+                assert package_id in decisions
+                if package_id < 0 and -package_id in installed_map:
+                    removals.append(-package_id)
+                elif package_id > 0 and package_id not in installed_map:
+                    installs.append(package_id)
+
+        # Removals should happen top down
+        for package_id in reversed(removals):
+            package = pool._id_to_package[package_id]
+            operations.append(RemoveOperation(package))
+
+        # Installations should happen bottom up
+        for package_id in installs:
+            package = pool._id_to_package[package_id]
+            operations.append(InstallOperation(package))
+
+        return operations
 
     def _compute_transaction(self, pool, decisions, installed_map):
         installed_means_update_map = \
@@ -111,15 +154,6 @@ class Transaction(object):
 
         return self._compute_transaction_from_maps(pool, install_map,
                                                    update_map, remove_map)
-
-    def install(self, package):
-        self.operations.append(InstallOperation(package))
-
-    def remove(self, package):
-        self.operations.append(RemoveOperation(package))
-
-    def update(self, from_package, to_package):
-        self.operations.append(UpdateOperation(to_package, from_package))
 
     def _find_updates(self, pool, package):
         requirement = Requirement._from_string(package.name)
