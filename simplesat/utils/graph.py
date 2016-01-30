@@ -18,13 +18,13 @@ def toposort(nodes_to_edges):
     each subsequent set consists of items that depend upon items in the
     preceeding sets.
 
-    >>> print '\\n'.join(repr(sorted(x)) for x in toposort2({
+    >>> print('\\n'.join(repr(sorted(x)) for x in toposort2({
         ...     2: set([11]),
         ...     9: set([11,8]),
         ...     10: set([11,3]),
         ...     11: set([7,5]),
         ...     8: set([7,3]),
-        ...     }))
+        ...     })))
     [3, 5, 7]
     [8, 11]
     [2, 9, 10]
