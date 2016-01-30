@@ -1,6 +1,8 @@
 import collections
 import re
 
+import six
+
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT, Not
 )
@@ -127,17 +129,21 @@ def _spec_factory(comparison_token):
 
 
 def _tokenize(scanner, requirement_string):
-    tokens = []
+    requirement_string = requirement_string.strip()
 
-    parts = requirement_string.split(",")
-    for part in parts:
-        scanned, remaining = scanner.scan(part.strip())
-        if len(remaining) > 0:
-            msg = "Invalid requirement string: {0!r}"
-            raise SolverException(msg.format(requirement_string))
-        elif len(scanned) > 0:
-            tokens.append(scanned)
-    return tokens
+    if len(requirement_string) == 0:
+        return [[AnyToken()]]
+    else:
+        tokens = []
+
+        for part in requirement_string.split(","):
+            scanned, remaining = scanner.scan(part.strip())
+            if len(remaining) > 0:
+                msg = "Invalid requirement string: {0!r}"
+                raise SolverException(msg.format(requirement_string))
+            elif len(scanned) > 0:
+                tokens.append(scanned)
+        return tokens
 
 
 def _operator_factory(operator, version, version_factory):
@@ -152,23 +158,25 @@ class _RawConstraintsParser(object):
         self._scanner = _CONSTRAINTS_SCANNER
 
     def parse(self, requirement_string, version_factory):
-        def add_constraint(constraints, requirement_block):
+        def compute_constraint(requirement_block):
             if len(requirement_block) == 2:
                 operator, version = requirement_block
-                constraints.add(_operator_factory(operator, version,
-                                                  version_factory))
+                return _operator_factory(operator, version, version_factory)
+            elif len(requirement_block) == 1:
+                assert isinstance(requirement_block[0], AnyToken)
+                return Any()
             else:
                 msg = ("Invalid requirement string: {0!r}".
                        format(requirement_string))
                 raise SolverException(msg)
 
-        constraints = set()
+        constraints = []
         tokens_blocks = _tokenize(self._scanner, requirement_string)
 
         for requirement_block in tokens_blocks:
-            add_constraint(constraints, requirement_block)
+            constraints.append(compute_constraint(requirement_block))
 
-        return constraints
+        return tuple(constraints)
 
 
 class _RawRequirementParser(object):
@@ -177,25 +185,36 @@ class _RawRequirementParser(object):
         self._scanner = _REQUIREMENTS_SCANNER
 
     def parse(self, requirement_string, version_factory):
-        def add_constraint(constraints, requirement_block):
+        def compute_constraint(requirement_block):
+            msg = "Invalid requirement {0!r}".format(requirement_string)
+
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
                 name = distribution.value
-                constraints[name].add(_operator_factory(operator, version,
-                                                        version_factory))
+                return (
+                    name, (_operator_factory(operator, version, version_factory),)
+                )
+            elif len(requirement_block) == 2:
+                distribution, operator = requirement_block
+                name = distribution.value
+                if isinstance(operator, AnyToken):
+                    return name, (Any(),)
+                else:
+                    raise SolverException(msg)
             elif len(requirement_block) == 1:
                 name = requirement_block[0].value
-                # Force name to exist in constraints
-                constraints[name].add(Any())
+                return name, (Any(),)
             else:
-                msg = ("Invalid requirement block: {0!r}".
-                       format(requirement_block))
                 raise SolverException(msg)
 
-        constraints = collections.defaultdict(set)
+        named_constraints = collections.defaultdict(list)
         tokens_blocks = _tokenize(self._scanner, requirement_string)
 
         for requirement_block in tokens_blocks:
-            add_constraint(constraints, requirement_block)
+            name, constraint = compute_constraint(requirement_block)
+            named_constraints[name].extend(constraint)
 
-        return constraints
+        return dict(
+            (name, tuple(constraints))
+            for name, constraints in six.iteritems(named_constraints)
+        )

@@ -1,15 +1,25 @@
 Prototype for SAT-based dependency handling. This is a work in progress,
 do not expect any API not to change at this point.
 
-To set things up, inside a virtualenv::
+Installation
+============
+
+To install the python package, simple do as follows::
 
     git clone --recursive https://github.com/enthought/sat-solver
     cd sat-solver
-    (cd dependencies/enstaller && python setup.py develop)
-    python setup.py develop
+    pip install -e .
 
-To try things out, you need to write a scenario file (yaml format), see
-simplesat/tests/simple_numpy.yaml for a simple example.
+Example usage
+=============
+
+TODO
+
+Usage from the CLI
+==================
+
+To try things out from the CLI, you need to write a scenario file (yaml
+format), see simplesat/tests/simple_numpy.yaml for a simple example.
 
 To print the rules::
 
@@ -18,6 +28,10 @@ To print the rules::
 To print the operations::
 
     python scripts/solve.py simplesat/tests/simple_numpy.yaml
+
+
+Status
+======
 
 What is known to work:
 
@@ -32,7 +46,28 @@ Known not to work:
 * remove/upgrade: not handled yet
 * update: slow and solution often subobtimal.
 
-Bibliography:
+Comparing with php's composer
+=============================
+
+First, clone composer's somewhere on your machine::
+
+    git clone https://github.com/composer/composer
+
+Then, use the `scripts/scenario_to_php.py` script to write a php file that will
+print the composer's solution for a given scenario::
+
+    python scripts/scenario_to_php.py \
+        --composer-root <path to composer github checkout> \
+        simplesat/tests/simple_numpy.yaml \
+        scripts/print_operations.php.in
+
+This will create a `scripts/print_operations.php` script you can simply execute w/
+php::
+
+    php scripts/print_operations.php
+
+Bibliography
+============
 
 - Niklas Eén, Niklas Sörensson: `An Extensible SAT-solver
   <http://minisat.se/downloads/MiniSat.pdf>`_. SAT 2003
@@ -55,6 +90,3 @@ On the use of SAT solvers for managing packages:
   Package Install/Uninstall Manager
   <https://cseweb.ucsd.edu/~lerner/papers/opium.pdf>`_. Proc. ICSE 2007,
   pp. 178-188
-  
-
-  
