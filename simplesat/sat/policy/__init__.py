@@ -8,4 +8,5 @@ from .priority_queue_policy import (
     LoggedPriorityQueuePolicty, PriorityQueuePolicy
 )
 
-InstalledFirstPolicy = LoggedUndeterminedClausePolicy
+#  InstalledFirstPolicy = LoggedUndeterminedClausePolicy
+InstalledFirstPolicy = LoggedPriorityQueuePolicty
