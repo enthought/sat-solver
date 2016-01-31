@@ -5,7 +5,7 @@ import six
 
 from simplesat.utils import DefaultOrderedDict
 from .policy import IPolicy, pkg_id_to_version
-from .policy_logger import PolicyLogger
+from .policy_logger import LoggedPolicy
 
 
 class UndeterminedClausePolicy(IPolicy):
@@ -133,10 +133,4 @@ class UndeterminedClausePolicy(IPolicy):
             return None
 
 
-def LoggedUndeterminedClausePolicy(pool, installed_repository,
-                                   *args, **kwargs):
-    policy = UndeterminedClausePolicy(
-        pool, installed_repository, *args, **kwargs
-    )
-    logger = PolicyLogger(policy, extra_args=args, extra_kwargs=kwargs)
-    return logger
+LoggedUndeterminedClausePolicy = LoggedPolicy(UndeterminedClausePolicy)

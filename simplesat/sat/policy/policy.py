@@ -9,6 +9,9 @@ def pkg_id_to_version(pool, package_id):
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
 
+    def __init__(self, *args):
+        pass
+
     @abc.abstractmethod
     def add_requirements(self, package_ids):
         """ Submit packages to the policy for consideration.
