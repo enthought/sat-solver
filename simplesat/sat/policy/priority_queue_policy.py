@@ -8,7 +8,7 @@ from simplesat.constraints.requirement import Requirement
 from simplesat.utils import DefaultOrderedDict, toposort, transitive_neighbors
 from simplesat.priority_queue import PriorityQueue, GroupPrioritizer
 from .policy import IPolicy
-from .policy_logger import PolicyLogger
+from .policy_logger import LoggedPolicy
 
 
 class PriorityQueuePolicy(IPolicy):
@@ -218,7 +218,4 @@ class PriorityQueuePolicy(IPolicy):
         assert ours == theirs, msg.format(ours, theirs, has_new_keys)
 
 
-def LoggedPriorityQueuePolicty(pool, installed_repository, *args, **kwargs):
-    policy = PriorityQueuePolicy(pool, installed_repository, *args, **kwargs)
-    logger = PolicyLogger(policy, extra_args=args, extra_kwargs=kwargs)
-    return logger
+LoggedPriorityQueuePolicty = LoggedPolicy(PriorityQueuePolicy)
