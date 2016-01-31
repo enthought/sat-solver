@@ -8,6 +8,7 @@ import shutil
 import tempfile
 
 from .timed_context import timed_context
+from .graph import connected_nodes
 from ._collections import DefaultOrderedDict
 
 

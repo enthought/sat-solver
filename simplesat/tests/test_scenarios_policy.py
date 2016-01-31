@@ -1,5 +1,5 @@
 import os.path
-from unittest import TestCase, expectedFailure
+from unittest import TestCase
 
 import six
 
@@ -77,17 +77,31 @@ class ScenarioTestAssistant(object):
         try:
             transaction = solver.solve(request)
         except SatisfiabilityError as failure:
-            if not scenario.failed:
-                msg = "Solver unexpectedly failed"
-                if failure.reason:
-                    msg += " because {0}".format(failure.reason)
-                self.fail(msg)
+            self.assertEqualFailure(pool, failure, scenario)
         else:
             if scenario.failed:
                 msg = "Solver unexpectedly succeeded, but {0}."
                 self.fail(msg.format(scenario.failure))
             self.assertEqualOperations(transaction.operations,
                                        scenario.operations)
+
+    def assertEqualFailure(self, pool, failure, scenario):
+        if not scenario.failed:
+            msg = "Solver unexpectedly failed"
+            if failure.unsat:
+                reason = failure.unsat.to_string(pool=pool)
+                msg += ":\n{0}".format(reason)
+                reason = failure.unsat.to_string(pool=pool, detailed=True)
+                msg += "\n\nDetailed:\n{0}".format(reason)
+            self.fail(msg)
+
+        req_names = [str(r) for r in failure.unsat.requirements]
+        r_names = scenario.failure['requirements']
+        self.assertEqual(req_names, r_names)
+
+        message = failure.unsat.to_string(pool=pool)
+        r_message = scenario.failure['raw']
+        self.assertEqual(message, r_message)
 
     def assertEqualOperations(self, operations, scenario_operations):
         pairs = zip(operations, scenario_operations)
@@ -139,7 +153,8 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
         self._check_solution("update_single.yaml")
 
     def test_no_prefer_installed(self):
-        self._check_solution("no_prefer_installed.yaml", prefer_installed=False)
+        self._check_solution("no_prefer_installed.yaml",
+                             prefer_installed=False)
 
     def test_update_all(self):
         self._check_solution("update_all.yaml")
