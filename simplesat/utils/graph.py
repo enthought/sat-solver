@@ -72,7 +72,7 @@ def package_lit_dependency_graph(pool, package_lits, closed=True):
                 for package_id in package_lits}
 
     R = Requirement.from_constraints
-    nodes_to_edges = defaultdict(set)
+    nodes_to_edges = {package_id: set() for package_id in package_lits}
 
     for package_lit, package in packages.items():
         for constraints in package.install_requires:
