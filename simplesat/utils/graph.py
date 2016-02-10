@@ -6,6 +6,7 @@ from __future__ import division, print_function
 from collections import defaultdict
 
 import six
+import itertools
 
 from simplesat.constraints.requirement import Requirement
 
@@ -37,7 +38,8 @@ def toposort(nodes_to_edges):
         v.discard(k)
 
     # Find all items that don't depend on anything.
-    extra_items_in_deps = six.functools.reduce(set.union, six.itervalues(data))
+    extra_items_in_deps = set(
+        itertools.chain.from_iterable(six.itervalues(data)))
     extra_items_in_deps.difference_update(set(six.iterkeys(data)))
 
     # Add empty dependences where needed
