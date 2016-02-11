@@ -37,3 +37,13 @@ installed:
 request:
   - operation: "install"
     requirement: "pillow"
+
+transaction:
+  - kind: remove
+    package: pil 1.1.7-14
+  - kind: install
+    package: libopenjpeg 2.1.0-2
+  - kind: install
+    package: pil_remove 1.0.0-2
+  - kind: install
+    package: pillow 2.9.0-3

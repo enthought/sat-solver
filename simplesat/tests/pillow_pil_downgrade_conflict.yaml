@@ -39,3 +39,9 @@ installed:
 request:
   - operation: "install"
     requirement: "pil"
+
+transaction:
+  - kind: remove
+    package: pillow 2.9.0-3
+  - kind: install
+    package: pil 1.1.7-14

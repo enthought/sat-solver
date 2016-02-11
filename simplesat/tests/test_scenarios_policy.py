@@ -204,3 +204,9 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_conflicts_simple(self):
         self._check_solution("explicit_conflict.yaml")
+
+    def test_upgrade_conflict(self):
+        self._check_solution("pil_pillow_upgrade_conflict.yaml")
+
+    def test_downgrade_conflict(self):
+        self._check_solution("pillow_pil_downgrade_conflict.yaml")
