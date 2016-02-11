@@ -9,6 +9,7 @@ from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, Requirement
 from simplesat.package import RepositoryInfo, RepositoryPackageMetadata
+from simplesat.pool import Pool
 from simplesat.repository import Repository
 from simplesat.request import Request
 from simplesat.rules_generator import RulesGenerator
@@ -41,6 +42,21 @@ def generate_rules_for_requirement(pool, requirement, installed_map=None):
     rules_generator = RulesGenerator(pool, request, installed_map)
     rules = list(rules_generator.iter_rules())
     return rules
+
+
+def packages_from_definition(packages_definition):
+    parser = PrettyPackageStringParser(EnpkgVersion.from_string)
+
+    return [
+        parser.parse_to_package(line)
+        for line in packages_definition.splitlines()
+    ]
+
+
+def pool_and_repository_from_packages(packages):
+    repository = Repository(packages_from_definition(packages))
+    pool = Pool([repository])
+    return pool, repository
 
 
 def parse_package_list(packages):

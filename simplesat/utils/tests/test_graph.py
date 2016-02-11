@@ -6,10 +6,7 @@ from __future__ import division, print_function
 import unittest
 from textwrap import dedent
 
-from okonomiyaki.versions import EnpkgVersion
-from simplesat.repository import Repository
-from simplesat.constraints import PrettyPackageStringParser
-from simplesat.pool import Pool
+from simplesat.test_utils import pool_and_repository_from_packages
 
 from ..graph import (
     package_lit_dependency_graph, toposort, transitive_neighbors
@@ -109,17 +106,9 @@ class TestGraph(unittest.TestCase):
 
 class TestDependencyGraph(unittest.TestCase):
 
-    def packages_from_definition(self, packages_definition):
-        parser = PrettyPackageStringParser(EnpkgVersion.from_string)
-
-        return [
-            parser.parse_to_package(line)
-            for line in packages_definition.splitlines()
-        ]
-
     def test_package_lit_dependency_graph(self):
         # Given
-        packages = dedent("""\
+        package_def = dedent("""\
             A 0.0.0-1; depends (C ^= 0.0.0)
             A 3.0.0-1; depends (G ^= 1.0.0)
             B 0.0.0-1; depends (D ^= 0.0.0)
@@ -166,8 +155,7 @@ class TestDependencyGraph(unittest.TestCase):
         }
 
         # When
-        repository = Repository(self.packages_from_definition(packages))
-        pool = Pool([repository])
+        pool, _ = pool_and_repository_from_packages(package_def)
         package_lits = pool._id_to_package.keys()
         result = package_lit_dependency_graph(pool, package_lits)
 
