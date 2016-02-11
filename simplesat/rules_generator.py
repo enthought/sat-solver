@@ -7,6 +7,9 @@ from .errors import NoPackageFound, SolverException
 from .request import JobType
 
 
+INDENT = 4
+
+
 class RuleType(enum.Enum):
     internal_allow_update = 1
     job_install = 2
@@ -25,8 +28,8 @@ class PackageRule(object):
     @classmethod
     def _from_string(cls, rule_string, pool):
         """
-        Creates a PackageRule from a rule string,
-            e.g. '-numpy-1.6.0 | numpy-1.7.0'
+        Creates a PackageRule from a rule string, e.g.
+            '-numpy-1.6.0 | numpy-1.7.0'
 
         Because package full name -> id is not 1-to-1 mapping, this may fail
         when a package has multiple ids. This is mostly used for testing, to
@@ -56,11 +59,12 @@ class PackageRule(object):
                     package_literals.append(_id)
                 else:
                     package_literals.append(-_id)
-        return cls(package_literals)
+        return cls(package_literals, None, requirement)
 
-    def __init__(self, literals, reason):
+    def __init__(self, literals, reason, requirement=None):
         self.literals = tuple(sorted(literals))
         self._reason = RuleType(reason)
+        self._requirement = requirement
 
     @property
     def is_assertion(self):
@@ -70,46 +74,57 @@ class PackageRule(object):
     def reason(self):
         return self._reason
 
-    def to_string(self, pool):
-        parts = [pool.id_to_string(literal) for literal in self.literals]
-        s = " | ".join(parts)
+    def _pretty_literals(self, pool, literals, sign=True, unique=False):
+        parts = (pool.id_to_string(literal) for literal in literals)
+        if not sign:
+            parts = (p[1:] for p in parts)
+        if unique:
+            parts = collections.OrderedDict.fromkeys(parts).keys()
+        return " | ".join(parts)
+
+    def to_string(self, pool, unique=False):
+        s = self._pretty_literals(pool, self.literals, unique=unique)
 
         if self._reason == RuleType.job_install:
-            return "Install command rule ({})".format(s)
+            rule_desc = "Install command rule ({})".format(s)
         elif self._reason == RuleType.job_update:
-            return "Update to latest command rule ({})".format(s)
+            rule_desc = "Update to latest command rule ({})".format(s)
         elif self._reason == RuleType.job_remove:
-            return "Remove command rule ({})".format(s)
+            rule_desc = "Remove command rule ({})".format(s)
         elif self._reason == RuleType.package_same_name:
             parts = [pool.id_to_string(abs(literal))
                      for literal in self.literals]
             s = " | ".join(parts)
-            return "Can only install one of: ({})".format(s)
+            rule_desc = "Can only install one of: ({})".format(s)
         elif self._reason == RuleType.package_installed:
             parts = [pool.id_to_string(abs(literal))
                      for literal in self.literals]
             s = " | ".join(parts)
-            return "Should install one of: ({})".format(s)
+            rule_desc = "Should install one of: ({})".format(s)
         elif self._reason == RuleType.package_requires:
-            source_id = abs(self.literals[0])
-            source = pool._id_to_package[source_id]
-            parts = [pool.id_to_string(literal)
-                     for literal in self.literals[1:]]
-            s = " | ".join(parts)
-            return "{0.name} {0.version} requires ({1})".format(source, s)
+            source_ids = [abs(self.literals[0])]
+            source = self._pretty_literals(pool, source_ids, unique=unique)
+            source = source[1:]  # trim off +/- sign
+            s = self._pretty_literals(pool, self.literals[1:], unique=unique)
+            rule_desc = "{} requires ({1})".format(source, s)
         elif self._reason == RuleType.package_conflicts:
             left_id, right_id = self.literals
             # Trim the sign
             left = pool.id_to_string(abs(left_id))[1:]
             right = pool.id_to_string(abs(right_id))
-            msg = "{} conflicts with {}"
-            return msg.format(left, right)
+            rule_desc = "{} conflicts with {}".format(left, right)
         else:
-            return s
+            rule_desc = s
+
+        if self._requirement is not None:
+            rule_desc = "Requirement: '{req}'\n{indent}{rule}".format(
+                req=self._requirement, rule=rule_desc, indent=" " * INDENT)
+
+        return rule_desc
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__)
-                and self.literals == other.literals)
+        return (isinstance(other, self.__class__) and
+                self.literals == other.literals)
 
     def __ne__(self, other):
         return not (self == other)
@@ -155,7 +170,7 @@ class RulesGenerator(object):
             The package with a requirement
         install_requires: sequence
             Sequence of packages that fulfill the requirement.
-        reason: str
+        reason: RuleType
             A valid PackageRule.reason value
         reason_details: str
             Optional details explaining that rule origin.
@@ -172,7 +187,8 @@ class RulesGenerator(object):
 
         return PackageRule(literals, reason)
 
-    def _create_conflicts_rule(self, issuer, provider, reason, reason_details=""):
+    def _create_conflicts_rule(self, issuer, provider,
+                               reason, reason_details=""):
         """
         Create a conflict rule between issuer and provider
 
@@ -184,7 +200,7 @@ class RulesGenerator(object):
             Package declaring the conflict
         provider: PackageInfo
             Package causing the conflict
-        reason: str
+        reason: RuleType
             One of PackageRule.reason
         reason_details: str
             Optional details explaining that rule origin.
@@ -197,7 +213,7 @@ class RulesGenerator(object):
             return PackageRule([-self._pool.package_id(issuer),
                                 -self._pool.package_id(provider)], reason)
 
-    def _create_install_one_of_rule(self, packages, reason):
+    def _create_install_one_of_rule(self, packages, reason, requirement=None):
         """
         Creates a rule to Install one of the given packages.
 
@@ -207,7 +223,7 @@ class RulesGenerator(object):
         ----------
         packages: sequence
             List of packages to choose from
-        reason: str
+        reason: RuleType
             One of PackageRule.reason
 
         Returns
@@ -215,9 +231,9 @@ class RulesGenerator(object):
         rule: PackageRule
         """
         literals = [self._pool.package_id(p) for p in packages]
-        return PackageRule(literals, reason)
+        return PackageRule(literals, reason, requirement=requirement)
 
-    def _create_remove_rule(self, package, reason):
+    def _create_remove_rule(self, package, reason, requirement=None):
         """
         Create the rule to remove a package.
 
@@ -232,7 +248,8 @@ class RulesGenerator(object):
         -------
         rule: PackageRule or None
         """
-        return PackageRule((-self._pool.package_id(package),), reason)
+        return PackageRule((-self._pool.package_id(package),), reason,
+                           requirement=requirement)
 
     # -------------------------------------------------
     # API to assemble individual rules from requirement
@@ -247,8 +264,8 @@ class RulesGenerator(object):
         ----------
         rule: PackageRule or None
             The rule to add
-        rule_type: str
-            Rule's  type
+        rule_type: RuleType
+            Rule's type
         """
         if rule is not None and rule not in self._rules_set:
             self._rules_set[rule] = None
@@ -325,14 +342,15 @@ class RulesGenerator(object):
                 if package not in self.installed_map:
                     self._add_package_rules(package)
 
-            rule = self._create_install_one_of_rule(packages,
-                                                    RuleType.job_install)
+            rule = self._create_install_one_of_rule(
+                packages, RuleType.job_install, requirement=job.requirement)
             self._add_rule(rule, "job")
 
     def _add_remove_job_rules(self, job):
         packages = self._pool.what_provides(job.requirement)
         for package in packages:
-            rule = self._create_remove_rule(package, RuleType.job_remove)
+            rule = self._create_remove_rule(
+                package, RuleType.job_remove, requirement=job.requirement)
             self._add_rule(rule, "job")
 
     def _add_update_job_rules(self, job):
@@ -344,6 +362,7 @@ class RulesGenerator(object):
         packages = self._pool.what_provides(job.requirement)
         if len(packages) == 0:
             return
+
         # An update request *must* install the latest package version
         def key(package):
             installed = self._pool.package_id(package) in self.installed_map
@@ -352,7 +371,8 @@ class RulesGenerator(object):
         self._add_package_rules(package)
         rule = PackageRule(
             (self._pool.package_id(package),),
-            RuleType.job_update
+            RuleType.job_update,
+            requirement=job.requirement
         )
         self._add_rule(rule, "job")
 

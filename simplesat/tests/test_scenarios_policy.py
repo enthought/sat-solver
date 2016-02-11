@@ -77,11 +77,7 @@ class ScenarioTestAssistant(object):
         try:
             transaction = solver.solve(request)
         except SatisfiabilityError as failure:
-            if not scenario.failed:
-                msg = "Solver unexpectedly failed"
-                if failure.reason:
-                    msg += " because {0}".format(failure.reason)
-                self.fail(msg)
+            self.assertEqualFailure(pool, failure, scenario)
         else:
             if scenario.failed:
                 msg = "Solver unexpectedly succeeded, but {0}."
@@ -92,6 +88,24 @@ class ScenarioTestAssistant(object):
                     transaction.operations != transaction.pretty_operations):
                 self.assertEqualOperations(transaction.pretty_operations,
                                            scenario.pretty_operations)
+
+    def assertEqualFailure(self, pool, failure, scenario):
+        if not scenario.failed:
+            msg = "Solver unexpectedly failed"
+            if failure.unsat:
+                reason = failure.unsat.to_string(pool=pool)
+                msg += ":\n{0}".format(reason)
+                reason = failure.unsat.to_string(pool=pool, detailed=True)
+                msg += "\n\nDetailed:\n{0}".format(reason)
+            self.fail(msg)
+
+        req_names = [str(r) for r in failure.unsat.requirements]
+        r_names = scenario.failure['requirements']
+        self.assertEqual(req_names, r_names)
+
+        message = failure.unsat.to_string(pool=pool)
+        r_message = scenario.failure['raw']
+        self.assertEqual(message, r_message)
 
     def assertEqualOperations(self, operations, scenario_operations):
         pairs = zip(operations, scenario_operations)

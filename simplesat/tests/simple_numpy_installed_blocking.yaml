@@ -5,6 +5,7 @@ packages:
     - EPD_free 7.3-1; depends (MKL == 10.2-1, numpy == 1.7.1-1)
     - numpy 1.7.1-1; depends (MKL == 10.2-1)
     - numpy 1.8.1-1; depends (MKL == 10.3-1)
+    - numpy 1.8.1-2; depends (MKL == 10.3-1)
 
 marked:
     - EPD_free
@@ -19,4 +20,10 @@ installed:
     - numpy 1.7.1-1
 
 failure:
-    - "EPD_free 7.3-1 conflicts with numpy > 1.8"
+    requirements: ['EPD_free', 'numpy > 1.8-0']
+    raw: |
+        Conflicting requirements:
+        Requirement: 'EPD_free'
+            Install command rule (+EPD_free-7.3-1)
+        Requirement: 'numpy > 1.8-0'
+            Install command rule (+numpy-1.8.1-1 | +numpy-1.8.1-2)

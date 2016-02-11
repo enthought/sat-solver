@@ -10,4 +10,10 @@ request:
     requirement: "gdata"
 
 failure:
-  - "atom 1.0.0-1 conflicts with gdata 1.0.0-1"
+  requirements: ['gdata', 'atom']
+  raw: |
+    Conflicting requirements:
+    Requirement: 'gdata'
+        Install command rule (+gdata-1.0.0-1)
+    Requirement: 'atom'
+        Install command rule (+atom-1.0.0-1)

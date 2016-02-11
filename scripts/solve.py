@@ -8,6 +8,7 @@ from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.test_utils import Scenario
+from simplesat.errors import SatisfiabilityError
 
 
 def solve_and_print(request, remote_repositories, installed_repository,
@@ -21,12 +22,19 @@ def solve_and_print(request, remote_repositories, installed_repository,
     solver = DependencySolver(
         pool, remote_repositories, installed_repository,
         policy=policy, use_pruning=prune)
-    transaction = solver.solve(request)
-    if simple:
-        print(transaction.to_simple_string())
-    else:
-        print(transaction)
+
     fmt = "ELAPSED : {description:20} : {elapsed:e}"
+    try:
+        transaction = solver.solve(request)
+        if simple:
+            print(transaction.to_simple_string())
+        else:
+            print(transaction)
+    except SatisfiabilityError as e:
+        msg = "UNSATISFIABLE: {}"
+        print(msg.format(e.unsat.to_string(pool, detailed=debug)))
+        print(e.unsat._find_requirement_time.pretty(fmt), file=sys.stderr)
+
     print(solver._last_rules_time.pretty(fmt), file=sys.stderr)
     print(solver._last_solver_init_time.pretty(fmt), file=sys.stderr)
     print(solver._last_solve_time.pretty(fmt), file=sys.stderr)

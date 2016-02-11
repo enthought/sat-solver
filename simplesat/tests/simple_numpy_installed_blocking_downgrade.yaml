@@ -19,4 +19,10 @@ installed:
     - numpy 1.8.1-1
 
 failure:
-    - "EPD_free 7.4-1 conflicts with numpy < 1.8"
+    requirements: ['EPD_free', 'numpy < 1.8-0']
+    raw: |
+        Conflicting requirements:
+        Requirement: 'EPD_free'
+            Install command rule (+EPD_free-7.4-1)
+        Requirement: 'numpy < 1.8-0'
+            Install command rule (+numpy-1.7.1-1)
