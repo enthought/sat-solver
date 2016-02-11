@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 
-from simplesat.package import PackageMetadata
+from simplesat.package import PackageMetadata, ConstraintKinds
 from .parser import _DISTRIBUTION_R, _VERSION_R, _WS_R
 
 
@@ -15,11 +15,10 @@ CONSTRAINT_BLOCK_RC = re.compile("(?P<kind>\w+)\s*\((?P<constraints>.*?)\)")
 PACKAGE_RC = re.compile(_DISTRIBUTION_RS + _WS_RS + _VERSION_RS)
 CONSTRAINT_RC = re.compile(_DISTRIBUTION_RS + _MAYBE_WS_RS + _CONSTRAINT_RS)
 
-VALID_CONSTRAINT_KINDS = (
-    "install_requires",
-)
 CONSTRAINT_SYNONYMS = {
-    'depends': 'install_requires'
+    'depends': ConstraintKinds.install_requires,
+    'install_requires': ConstraintKinds.install_requires,
+    'conflicts': ConstraintKinds.conflicts,
 }
 
 
@@ -38,18 +37,18 @@ class PrettyPackageStringParser(object):
         pkg = {}
 
         try:
-            preamble, constraints_blocks = pretty_string.rsplit(";", 1)
+            preamble, constraints_blocks = pretty_string.split(";", 1)
         except ValueError:
             preamble = pretty_string
             constraints_blocks = ''
 
         for match in CONSTRAINT_BLOCK_RC.finditer(constraints_blocks):
             kind = match.group('kind')
-            kind = CONSTRAINT_SYNONYMS.get(kind, kind)
             constraints_str = match.group('constraints')
-            if kind not in VALID_CONSTRAINT_KINDS:
+            if kind not in CONSTRAINT_SYNONYMS:
                 msg = "Invalid package string. Unknown constraint kind: {!r}"
                 raise ValueError(msg.format(kind))
+            kind = CONSTRAINT_SYNONYMS[kind].value
             constraints = defaultdict(lambda: [[]])
             for match in CONSTRAINT_RC.finditer(constraints_str):
                 dist = match.group('distribution')
@@ -113,10 +112,14 @@ def constraints_to_pretty_strings(install_requires):
 def package_to_pretty_string(package):
     """ Given a PackageMetadata instance, returns a pretty string."""
     template = "{0.name} {0.version}"
-    if len(package.install_requires) > 0:
-        string = ' '.join(
-            constraints_to_pretty_strings(package.install_requires))
-        template += "; depends ({0})".format(string)
+    constraint_kinds = (
+        (ConstraintKinds.install_requires, package.install_requires),
+        (ConstraintKinds.conflicts, package.conflicts),
+    )
+    for constraint_kind, constraints in constraint_kinds:
+        if len(constraints) > 0:
+            string = ', '.join(constraints_to_pretty_strings(constraints))
+            template += "; {} ({})".format(constraint_kind.value, string)
     return template.format(package)
 
 

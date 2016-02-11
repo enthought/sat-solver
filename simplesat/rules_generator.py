@@ -16,6 +16,7 @@ class RuleType(enum.Enum):
     job_remove = 3
     job_update = 4
     package_requires = 7
+    package_conflicts = 8
     package_same_name = 10
     package_implicit_obsoletes = 11
     package_installed = 12
@@ -106,6 +107,12 @@ class PackageRule(object):
             source = source[1:]  # trim off +/- sign
             s = self._pretty_literals(pool, self.literals[1:], unique=unique)
             rule_desc = "{} requires ({})".format(source, s)
+        elif self._reason == RuleType.package_conflicts:
+            left_id, right_id = self.literals
+            # Trim the sign
+            left = pool.id_to_string(abs(left_id))[1:]
+            right = pool.id_to_string(abs(right_id))
+            rule_desc = "{} conflicts with {}".format(left, right)
         else:
             rule_desc = s
 
@@ -280,6 +287,39 @@ class RulesGenerator(object):
             for candidate in dependency_candidates:
                 work_queue.append(candidate)
 
+    def _add_conflicts_rules(self, package):
+        """
+        Create rules for each of the known conflicts with `package`.
+        """
+
+        # Conflicts due to implicit obsoletion or same-name
+        requirement = Requirement._from_string(package.name)
+        obsolete_providers = self._pool.what_provides(requirement)
+        for provider in obsolete_providers:
+            if provider != package:
+                if provider.name == package.name:
+                    reason = RuleType.package_same_name
+                else:
+                    reason = RuleType.package_implicit_obsoletes
+                rule = self._create_conflicts_rule(package, provider,
+                                                   reason, str(package))
+                self._add_rule(rule, "package")
+
+        # Explicit conflicts in package metadata
+        for constraints in package.conflicts:
+            requirement = Requirement.from_constraints(constraints)
+            conflict_providers = self._pool.what_provides(requirement)
+
+            assert len(conflict_providers) > 0, \
+                ("No candidates found for requirement {0!r}, needed for "
+                 "conflict {1!r}".format(requirement.name, package))
+
+            for provider in conflict_providers:
+                rule = self._create_conflicts_rule(
+                    package, provider, RuleType.package_conflicts,
+                    str(package))
+                self._add_rule(rule, "package")
+
     def _add_package_rules(self, package):
         """
         Create all the rules required to satisfy installing the given package.
@@ -289,23 +329,11 @@ class RulesGenerator(object):
 
         while len(work_queue) > 0:
             p = work_queue.popleft()
-
             p_id = self._pool.package_id(p)
             if p_id not in self.added_package_ids:
                 self.added_package_ids.add(p_id)
                 self._add_install_requires_rules(p, work_queue)
-
-                requirement = Requirement._from_string(p.name)
-                obsolete_providers = self._pool.what_provides(requirement)
-                for provider in obsolete_providers:
-                    if provider != p:
-                        if provider.name == p.name:
-                            reason = RuleType.package_same_name
-                        else:
-                            reason = RuleType.package_implicit_obsoletes
-                        rule = self._create_conflicts_rule(p, provider,
-                                                           reason, str(p))
-                        self._add_rule(rule, "package")
+                self._add_conflicts_rules(p)
 
     def _add_install_job_rules(self, job):
         packages = self._pool.what_provides(job.requirement)

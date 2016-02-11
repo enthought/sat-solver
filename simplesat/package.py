@@ -1,7 +1,13 @@
 import abc
 import six
+import enum
 
 from okonomiyaki.versions import EnpkgVersion
+
+
+class ConstraintKinds(enum.Enum):
+    install_requires = 'install_requires'
+    conflicts = 'conflicts'
 
 
 class IRepositoryInfo(six.with_metaclass(abc.ABCMeta)):
@@ -55,7 +61,7 @@ class PackageMetadata(object):
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
         return parser.parse_to_package(s)
 
-    def __init__(self, name, version, install_requires=None):
+    def __init__(self, name, version, install_requires=None, conflicts=None):
         """ Return a new PackageMetdata object.
 
         Parameters
@@ -83,8 +89,9 @@ class PackageMetadata(object):
         self._name = name
         self._version = version
         self._install_requires = install_requires or ()
+        self._conflicts = conflicts or ()
 
-        self._key = (name, version, self._install_requires)
+        self._key = (name, version, self._install_requires, self._conflicts)
         self._hash = hash(self._key)
 
     @property
@@ -98,6 +105,10 @@ class PackageMetadata(object):
     @property
     def install_requires(self):
         return self._install_requires
+
+    @property
+    def conflicts(self):
+        return self._conflicts
 
     def __repr__(self):
         return "PackageMetadata('{0}-{1}')".format(self._name, self._version)
@@ -136,6 +147,10 @@ class RepositoryPackageMetadata(object):
     @property
     def install_requires(self):
         return self._package.install_requires
+
+    @property
+    def conflicts(self):
+        return self._package.conflicts
 
     @property
     def repository_info(self):

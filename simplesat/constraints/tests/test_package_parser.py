@@ -61,15 +61,15 @@ class TestPrettyPackageStringParser(unittest.TestCase):
             parse(package_string)
 
         # Given
-        package_string = "numpy 1.8.0-1; conflicts (nose >= 1.3.2)"
+        package_string = "numpy 1.8.0-1; disparages (nose >= 1.3.2)"
         r_message = ("Invalid package string. "
-                     "Unknown constraint kind: 'conflicts'")
+                     "Unknown constraint kind: 'disparages'")
 
         # When
         with self.assertRaisesRegexp(ValueError, r_message):
             parse(package_string)
 
-    def test_simple(self):
+    def test_depends_simple(self):
         # Given
         parse = PrettyPackageStringParser(V).parse
         package_string = "numpy 1.8.0-1; depends (nose == 1.3.4-1)"
@@ -85,6 +85,23 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertEqual(version, V("1.8.0-1"))
         self.assertTrue("nose" in install_requires)
         self.assertEqual(install_requires["nose"], (('== 1.3.4-1',),))
+
+    def test_conflicts_simple(self):
+        # Given
+        parse = PrettyPackageStringParser(V).parse
+        package_string = "numpy 1.8.0-1; conflicts (browsey ^= 1.3.0)"
+
+        # When
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        conflicts = dict(package['conflicts'])
+
+        # Then
+        self.assertEqual(name, "numpy")
+        self.assertEqual(version, V("1.8.0-1"))
+        self.assertTrue("browsey" in conflicts)
+        self.assertEqual(conflicts["browsey"], (('^= 1.3.0',),))
 
     def test_unversioned(self):
         # Given
@@ -171,10 +188,10 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         # Then
         self.assertEqual(name, "numpy")
         self.assertEqual(version, V("1.8.0-1"))
-        self.assertTrue("nose" in install_requires)
+        self.assertIn("nose", install_requires)
         self.assertEqual(install_requires["nose"], (('=> 1.3', '< 1.4'),))
 
-    def test_no_dependencies(self):
+    def test_no_constraints(self):
         # Given
         parse = PrettyPackageStringParser(V).parse
         package_string = "numpy 1.8.0-1"
@@ -189,14 +206,69 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         self.assertEqual(version, V("1.8.0-1"))
         self.assertEqual(len(package), 2)
 
+    def test_complicated(self):
+        # Given
+        parse = PrettyPackageStringParser(V).parse
+        package_string = '; '.join((
+            "bokeh 0.2.0-3",
+            "depends (numpy ^= 1.8.0, MKL == 10.3, requests >= 0.2)",
+            # Intentional typo
+            "conflits (bokeh-git, requests ^= 0.2.5, requests > 0.4)",
+        ))
+        r_message = ("Invalid package string. "
+                     "Unknown constraint kind: 'conflits'")
+
+        # Then
+        with self.assertRaisesRegexp(ValueError, r_message):
+            parse(package_string)
+
+        # Given
+        package_string = '; '.join((
+            "bokeh 0.2.0-3",
+            "install_requires (zope *, numpy ^= 1.8.0, requests >= 0.2)",
+            "conflicts (requests ^= 0.2.5, requests > 0.4, bokeh_git)",
+        ))
+        r_install_requires = (
+            ("numpy", (("^= 1.8.0",),)),
+            ("requests", ((">= 0.2",),)),
+            ("zope", (("*",),)))
+        r_conflicts = (
+            ("bokeh_git", (('',),)),
+            ("requests", (("^= 0.2.5", "> 0.4"),)))
+
+        # When
+        package = parse(package_string)
+        name = package['distribution']
+        version = package['version']
+        install_requires = package['install_requires']
+        conflicts = package['conflicts']
+
+        # Then
+        self.assertEqual(name, "bokeh")
+        self.assertEqual(version, V("0.2.0-3"))
+        self.assertEqual(install_requires, r_install_requires)
+        self.assertEqual(conflicts, r_conflicts)
+
 
 class TestPackagePrettyString(unittest.TestCase):
+
     def test_simple(self):
+        # Given
+        package = PackageMetadata(u"numpy", V("1.8.1-1"))
+        r_pretty_string = u"numpy 1.8.1-1"
+
+        # When
+        pretty_string = package_to_pretty_string(package)
+
+        # Then
+        self.assertEqual(pretty_string, r_pretty_string)
+
+    def test_install_requires(self):
         # Given
         install_requires = (("MKL", (("== 10.3-1",),)),)
         package = PackageMetadata(u"numpy", V("1.8.1-1"), install_requires)
 
-        r_pretty_string = u"numpy 1.8.1-1; depends (MKL == 10.3-1)"
+        r_pretty_string = u"numpy 1.8.1-1; install_requires (MKL == 10.3-1)"
 
         # When
         pretty_string = package_to_pretty_string(package)
@@ -208,7 +280,58 @@ class TestPackagePrettyString(unittest.TestCase):
         install_requires = (("nose", (("",),)),)
         package = PackageMetadata(u"numpy", V("1.8.1-1"), install_requires)
 
-        r_pretty_string = "numpy 1.8.1-1; depends (nose)"
+        r_pretty_string = "numpy 1.8.1-1; install_requires (nose)"
+
+        # When
+        pretty_string = package_to_pretty_string(package)
+
+        # Then
+        self.assertEqual(pretty_string, r_pretty_string)
+
+    def test_conflicts(self):
+        # Given
+        conflicts = (("MKL", (("== 10.3-1",),)),)
+        package = PackageMetadata(u"numpy", V("1.8.1-1"), conflicts=conflicts)
+
+        r_pretty_string = u"numpy 1.8.1-1; conflicts (MKL == 10.3-1)"
+
+        # When
+        pretty_string = package_to_pretty_string(package)
+
+        # Then
+        self.assertEqual(pretty_string, r_pretty_string)
+
+        # Given
+        conflicts = (("nose", (("",),)),)
+        package = PackageMetadata(u"numpy", V("1.8.1-1"), conflicts=conflicts)
+
+        r_pretty_string = "numpy 1.8.1-1; conflicts (nose)"
+
+        # When
+        pretty_string = package_to_pretty_string(package)
+
+        # Then
+        self.assertEqual(pretty_string, r_pretty_string)
+
+    def test_complicated(self):
+        # Given
+        install_requires = (
+            ("numpy", (("^= 1.8.0",),)),
+            ("requests", ((">= 0.2",),)),
+            ("zope", (("*",),)))
+        conflicts = (
+            ("bokeh_git", (('',),)),
+            ("requests", ((">= 0.2.5", "< 0.4"),)))
+        package = PackageMetadata(
+            u"bokeh", V("0.2.0-3"),
+            install_requires=install_requires,
+            conflicts=conflicts)
+
+        r_pretty_string = '; '.join((
+            "bokeh 0.2.0-3",
+            "install_requires (numpy ^= 1.8.0, requests >= 0.2, zope *)",
+            "conflicts (bokeh_git, requests >= 0.2.5, requests < 0.4)",
+        ))
 
         # When
         pretty_string = package_to_pretty_string(package)

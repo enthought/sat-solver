@@ -1,6 +1,5 @@
 import unittest
 
-from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, Requirement
@@ -8,7 +7,9 @@ from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
 from simplesat.repository import Repository
 from simplesat.request import Request
-from simplesat.transaction import InstallOperation, UpdateOperation
+from simplesat.transaction import (
+    InstallOperation, RemoveOperation, UpdateOperation
+)
 
 
 R = Requirement._from_string
@@ -58,8 +59,8 @@ class TestSolver(unittest.TestCase):
         libgfortran = self.package_factory(u"libgfortran 3.0.0-2")
 
         r_operations = [
-            InstallOperation(mkl),
             InstallOperation(libgfortran),
+            InstallOperation(mkl),
         ]
 
         self.repository.add_package(mkl)
@@ -84,8 +85,9 @@ class TestSolver(unittest.TestCase):
         )
 
         r_operations = [
-            InstallOperation(mkl),
+            # libgfortran sorts before mkl
             InstallOperation(libgfortran),
+            InstallOperation(mkl),
             InstallOperation(numpy),
         ]
 
@@ -124,6 +126,10 @@ class TestSolver(unittest.TestCase):
 
         # Given
         r_operations = [
+            RemoveOperation(mkl1),
+            InstallOperation(mkl2),
+        ]
+        r_pretty_operations = [
             UpdateOperation(mkl2, mkl1),
         ]
 
@@ -136,3 +142,5 @@ class TestSolver(unittest.TestCase):
 
         # Then
         self.assertEqualOperations(transaction.operations, r_operations)
+        self.assertEqualOperations(
+            transaction.pretty_operations, r_pretty_operations)
