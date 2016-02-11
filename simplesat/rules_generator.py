@@ -106,7 +106,7 @@ class PackageRule(object):
             source = self._pretty_literals(pool, source_ids, unique=unique)
             source = source[1:]  # trim off +/- sign
             s = self._pretty_literals(pool, self.literals[1:], unique=unique)
-            rule_desc = "{} requires ({1})".format(source, s)
+            rule_desc = "{} requires ({})".format(source, s)
         elif self._reason == RuleType.package_conflicts:
             left_id, right_id = self.literals
             # Trim the sign
