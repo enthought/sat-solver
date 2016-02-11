@@ -92,6 +92,7 @@ class ScenarioTestAssistant(object):
     def assertEqualOperations(self, operations, scenario_operations):
         pairs = zip(operations, scenario_operations)
         delta = _pretty_delta(_pkg_delta(operations, scenario_operations))
+        import pprint; pprint.pprint(operations)
         for i, (left, right) in enumerate(pairs):
             left_s = "{0} {1}".format(left.package.name,
                                       left.package.version)
