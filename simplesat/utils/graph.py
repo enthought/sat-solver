@@ -24,7 +24,7 @@ def toposort(nodes_to_edges):
         ...     10: set([11,3]),
         ...     11: set([7,5]),
         ...     8: set([7,3]),
-        ...     }) )
+        ...     }))
     [3, 5, 7]
     [8, 11]
     [2, 9, 10]
@@ -94,7 +94,7 @@ def transitive_neighbors(nodes_to_edges):
     trans = defaultdict(set)
     for node in nodes_to_edges.keys():
         _transitive(node, nodes_to_edges, trans)
-    return trans
+    return dict(trans)
 
 
 def _transitive(node, nodes_to_edges, trans):
