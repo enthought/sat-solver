@@ -1,6 +1,5 @@
 import unittest
 
-from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, Requirement
@@ -58,8 +57,8 @@ class TestSolver(unittest.TestCase):
         libgfortran = self.package_factory(u"libgfortran 3.0.0-2")
 
         r_operations = [
-            InstallOperation(mkl),
             InstallOperation(libgfortran),
+            InstallOperation(mkl),
         ]
 
         self.repository.add_package(mkl)
@@ -84,8 +83,9 @@ class TestSolver(unittest.TestCase):
         )
 
         r_operations = [
-            InstallOperation(mkl),
+            # libgfortran sorts before mkl
             InstallOperation(libgfortran),
+            InstallOperation(mkl),
             InstallOperation(numpy),
         ]
 
