@@ -59,6 +59,16 @@ installed:
     - scipy 0.14.0-3
 
 transaction:
+    - kind: "remove"
+      package: "scipy 0.14.0-3"
+    - kind: "remove"
+      package: "numpy 1.8.1-1"
+    - kind: "install"
+      package: "numpy 1.9.2-1"
+    - kind: "install"
+      package: "scipy 0.15.1-2"
+
+pretty_transaction:
     - kind: "update"
       from: "numpy 1.8.1-1"
       to: "numpy 1.9.2-1"

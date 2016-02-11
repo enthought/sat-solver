@@ -44,7 +44,7 @@ class TestTransaction(unittest.TestCase):
     def setUp(self):
         self.pool, self.repo = pool_and_repository_from_packages(PACKAGE_DEF)
 
-    def test_safe_operations(self):
+    def test_operations(self):
 
         # Given
         installed = {1, 3, 5, 6, 7, 9, 10, 11, 12, 13, 15, 19}
@@ -59,13 +59,13 @@ class TestTransaction(unittest.TestCase):
         removals = [RemoveOperation(self.pool._id_to_package[i])
                     for i in to_remove]
         transaction = Transaction(self.pool, decisions, installed)
-        result = transaction.safe_operations
+        result = transaction.operations
         expected = removals + installs
 
         # Then
         self.assertListEqual(expected, result)
 
-    def test_operations(self):
+    def test_pretty_operations(self):
 
         # Given
         installed = {1, 3, 5, 6, 7, 9, 10, 11, 12, 13, 15}
@@ -84,7 +84,7 @@ class TestTransaction(unittest.TestCase):
         removals = [RemoveOperation(self.pool._id_to_package[i])
                     for i in to_remove]
         transaction = Transaction(self.pool, decisions, installed)
-        result = transaction.operations
+        result = transaction.pretty_operations
         expected = removals + updates + installs
 
         # Then

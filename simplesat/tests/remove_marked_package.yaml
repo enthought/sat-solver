@@ -23,6 +23,18 @@ installed:
 transaction:
     - kind: "remove"
       package: "EPD_free 7.4-1"
+    - kind: "remove"
+      package: "numpy 1.8.1-1"
+    - kind: "remove"
+      package: "MKL 10.3-1"
+    - kind: "install"
+      package: "MKL 10.2-1"
+    - kind: "install"
+      package: "numpy 1.7.1-1"
+
+pretty_transaction:
+    - kind: "remove"
+      package: "EPD_free 7.4-1"
     - kind: "update"
       from: "MKL 10.3-1"
       to: "MKL 10.2-1"

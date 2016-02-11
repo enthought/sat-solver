@@ -29,10 +29,10 @@ class RemoveOperation(Operation):
 class Transaction(object):
 
     def __init__(self, pool, decisions, installed_map):
-        self.safe_operations = self._safe_operations(
+        self.operations = self._safe_operations(
             pool, decisions, installed_map)
-        self.operations = self._as_pretty_operations(
-            pool, self.safe_operations)
+        self.pretty_operations = self._as_pretty_operations(
+            pool, self.operations)
 
     def __iter__(self):
         return iter(self.operations)

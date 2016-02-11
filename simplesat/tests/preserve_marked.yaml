@@ -16,6 +16,14 @@ request:
 
 transaction:
   - kind: "remove"
+    package: "browsey 1.2.0-1"
+  - kind: "remove"
+    package: "requests 2.7.0-1"
+  - kind: "install"
+    package: "browsey 1.1.0-1"
+
+pretty_transaction:
+  - kind: "remove"
     package: "requests 2.7.0-1"
   - kind: "update"
     from: "browsey 1.2.0-1"

@@ -1,5 +1,5 @@
 import os.path
-from unittest import TestCase, expectedFailure
+from unittest import TestCase
 
 import six
 
@@ -88,11 +88,14 @@ class ScenarioTestAssistant(object):
                 self.fail(msg.format(scenario.failure))
             self.assertEqualOperations(transaction.operations,
                                        scenario.operations)
+            if (scenario.pretty_operations or
+                    transaction.operations != transaction.pretty_operations):
+                self.assertEqualOperations(transaction.pretty_operations,
+                                           scenario.pretty_operations)
 
     def assertEqualOperations(self, operations, scenario_operations):
         pairs = zip(operations, scenario_operations)
         delta = _pretty_delta(_pkg_delta(operations, scenario_operations))
-        import pprint; pprint.pprint(operations)
         for i, (left, right) in enumerate(pairs):
             left_s = "{0} {1}".format(left.package.name,
                                       left.package.version)
@@ -140,7 +143,8 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
         self._check_solution("update_single.yaml")
 
     def test_no_prefer_installed(self):
-        self._check_solution("no_prefer_installed.yaml", prefer_installed=False)
+        self._check_solution("no_prefer_installed.yaml",
+                             prefer_installed=False)
 
     def test_update_all(self):
         self._check_solution("update_all.yaml")

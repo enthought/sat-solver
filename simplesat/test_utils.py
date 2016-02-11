@@ -4,7 +4,6 @@ import os
 import six
 import yaml
 
-from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, Requirement
@@ -141,11 +140,25 @@ class Scenario(object):
 
         decisions = data.get("decisions", {})
 
+        operations = cls._operations_from_transaction_list(
+            data.get("transaction", []))
+
+        pretty_operations = cls._operations_from_transaction_list(
+            data.get("pretty_transaction", []))
+
+        failure = data.get('failure')
+
+        return cls(packages, [remote_repository(data, packages)],
+                   installed_repository(data, packages), request,
+                   decisions, operations, pretty_operations, failure)
+
+    @staticmethod
+    def _operations_from_transaction_list(transaction_ops):
         def P(p):
             return next(parse_package_list([p]))[1]
 
         operations = []
-        for operation in data.get("transaction", []):
+        for operation in transaction_ops:
             if operation["kind"] == "install":
                 operations.append(InstallOperation(P(operation["package"])))
             elif operation["kind"] == "update":
@@ -156,21 +169,18 @@ class Scenario(object):
             else:
                 msg = "invalid operation kind {!r}".format(operation["kind"])
                 raise ValueError(msg)
-
-        failure = data.get('failure')
-
-        return cls(packages, [remote_repository(data, packages)],
-                   installed_repository(data, packages), request,
-                   decisions, operations, failure)
+        return operations
 
     def __init__(self, packages, remote_repositories, installed_repository,
-                 request, decisions, operations, failure=None):
+                 request, decisions, operations, pretty_operations,
+                 failure=None):
         self.packages = packages
         self.remote_repositories = remote_repositories
         self.installed_repository = installed_repository
         self.request = request
         self.decisions = decisions
         self.operations = operations
+        self.pretty_operations = pretty_operations
         self.failure = failure
 
     @property
