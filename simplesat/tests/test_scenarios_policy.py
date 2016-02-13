@@ -98,8 +98,6 @@ class ScenarioTestAssistant(object):
             if failure.unsat:
                 reason = failure.unsat.to_string(pool=pool)
                 msg += ":\n{0}".format(reason)
-                reason = failure.unsat.to_string(pool=pool, detailed=True)
-                msg += "\n\nDetailed:\n{0}".format(reason)
             self.fail(msg)
 
         req_names = [str(r) for r in failure.unsat.requirements]

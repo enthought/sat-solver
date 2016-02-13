@@ -188,58 +188,37 @@ class UNSAT(object):
             self._flat_clause_trails[clause] = flat_trail
         return self._flat_clause_trails[clause]
 
-    def to_string(self, pool=None, detailed=False):
+    def to_string(self, pool=None):
+        # Build a description of each problem
         return '\n\n'.join(
-            self.string_from_clauses(pool=pool, detail_clauses=details)
-            for details in self._conflict_paths)
+            self.string_from_clauses(clauses, pool=pool)
+            for clauses in self._conflict_paths)
 
-    def string_from_clauses(
-            self, requirement_clauses=None, detail_clauses=None, pool=None):
-        requirement_clauses = requirement_clauses or []
-        detail_clauses = detail_clauses or []
-
+    def string_from_clauses(self, clauses, pool=None):
         details = OrderedDict()
 
-        def add(clause):
-            """
-            Add a clause or container of clauses to our explanation.
-            """
-            if not isinstance(clause, Clause):
-                # For convenience, `clause` might be a container of clauses
-                for c in clause:
-                    add(c)
-                return
+        for clause in clauses:
+            # Learned clauses have no meaningful explanation
+            # Instead, we grab the clauses from which it is derived.
+            flat_clauses = self.clause_trail(clause) or (clause,)
 
-            if clause.learned:
-                # Learned clauses have no meaningful explanation
-                # Instead, we grab the clauses from which it is derived.
-                clauses = self.clause_trail(clause)
-            else:
-                clauses = (clause,)
-
-            for clause in clauses:
+            for clause in flat_clauses:
                 if pool:
                     pretties = (pool.id_to_string(l) for l in clause.lits)
                 else:
                     pretties = clause.lits
                 key = tuple(sorted(pretties))
+
+                # Add it to our  set of clauses to include
                 details.setdefault(key, clause)
 
         reason = ["Conflicting requirements:"]
-        add(requirement_clauses)
-
-        if detail_clauses is not None:
-            add(detail_clauses)
-
         for clause in details.values():
-            is_requirement = clause in requirement_clauses
-            if pool and (detail_clauses or is_requirement):
+            if pool:
                 reason.append(clause.rule.to_string(pool, unique=True))
-            elif is_requirement:
-                reqs = ', '.join(str(r) for r in clause.rule._requirements)
-                reason.append(reqs)
-            elif detail_clauses:
+            else:
                 reason.append(str(clause.lits))
+
         return '\n'.join(reason) + '\n'
 
 
