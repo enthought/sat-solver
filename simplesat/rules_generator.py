@@ -2,7 +2,6 @@ import collections
 import enum
 
 from .constraints import Requirement
-from .constraints.package_parser import constraints_to_pretty_strings
 from .errors import NoPackageFound, SolverException
 from .request import JobType
 

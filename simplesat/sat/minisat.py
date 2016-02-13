@@ -59,6 +59,7 @@ class UNSAT(object):
             self._implicand = -learned_clause[0]
             implicand_clause = assignments[abs(self._implicand)]
             assert implicand_clause is not None
+
             implicand_req_clauses = self.clause_requirements(implicand_clause)
             learned_req_clauses = self.clause_requirements(learned_clause)
             conflicting_req_clauses = self.clause_requirements(conflict_clause)
