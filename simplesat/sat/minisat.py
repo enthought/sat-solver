@@ -93,7 +93,8 @@ class UNSAT(object):
         lit_to_clauses = dict(lit_to_clauses)
 
         def neighbors(clause):
-            return set.union(*(lit_to_clauses[abs(lit)] for lit in clause))
+            clause_sets = (lit_to_clauses[abs(lit)] for lit in clause)
+            return sorted(set.union(*clause_sets), key=lambda c: c.lits)
 
         start, ends = end_points[0], end_points[1:]
 
