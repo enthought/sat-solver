@@ -224,3 +224,6 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_downgrade_conflict(self):
         self._check_solution("pillow_pil_downgrade_conflict.yaml")
+
+    def test_epd_full_conflict(self):
+        self._check_solution("epd_full_conflict.yaml")
