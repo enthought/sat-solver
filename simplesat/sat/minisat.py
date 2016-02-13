@@ -96,6 +96,8 @@ class UNSAT(object):
             clause_sets = (lit_to_clauses[abs(lit)] for lit in clause)
             return sorted(set.union(*clause_sets), key=lambda c: c.lits)
 
+        if len(end_points) < 2:
+            return end_points
         start, ends = end_points[0], end_points[1:]
 
         # We start with a set of all the points our path *must* touch. When we
