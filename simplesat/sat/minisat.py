@@ -13,13 +13,15 @@ from .assignment_set import AssignmentSet
 from .clause import Clause
 from .policy import DefaultPolicy
 from simplesat.utils import timed_context
+from simplesat.utils.graph import breadth_first_search
+from simplesat.rules_generator import RuleType
 
 
 class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
 
-    def __init__(self, conflict, learned_clause, trails):
+    def __init__(self, conflict_clause, learned_clause, trails, assignments):
         """
         Create a new UNSAT object.
 
@@ -37,7 +39,7 @@ class UNSAT(object):
             Only learned clauses should have trails of non-zero length
         """
 
-        self._conflict = conflict
+        self._conflict = conflict_clause
         self._learned_clause = learned_clause
         self._clause_trails = trails
 
@@ -50,14 +52,55 @@ class UNSAT(object):
 
         self._find_requirement_time = None
         with timed_context("Find Requirements") as self._find_requirement_time:
-            # What conflict is implied?
+            # We look at the chain of clauses that led us to assign the
+            # original value and then the chain of clauses that led us to want
+            # to assign the opposite
             assert len(learned_clause.lits) == 1
             self._implicand = -learned_clause[0]
-            requirement_clauses = self.clause_requirements(learned_clause)
-            self._conflict_details.append(requirement_clauses)
+            implicand_clause = assignments[abs(self._implicand)]
+            assert implicand_clause is not None
+            implicand_req_clauses = self.clause_requirements(implicand_clause)
+            learned_req_clauses = self.clause_requirements(learned_clause)
+            conflicting_req_clauses = self.clause_requirements(conflict_clause)
+            self._conflict_details.append(
+                implicand_req_clauses +
+                learned_req_clauses +
+                conflicting_req_clauses)
+
+        clauses = self._conflict_details[0]
+        end_points = self._end_points(clauses, implicand=self._implicand)
+        self._conflict_path = self._conflict_path(end_points, clauses)
 
     def _key(self, clause):
         return sorted(abs(l) for l in clause.lits)
+
+    def _conflict_path(self, end_points, relevant_clauses):
+        """ Return a path from one clause to another """
+
+        lit_to_clauses = defaultdict(set)
+        for c in relevant_clauses:
+            for lit in c:
+                lit_to_clauses[abs(lit)].add(c)
+        lit_to_clauses = dict(lit_to_clauses)
+
+        def neighbors(clause):
+            return set.union(*(lit_to_clauses[abs(lit)] for lit in clause))
+
+        start, ends = end_points[0], end_points[1:]
+        left_to_visit = set(ends)
+
+        def should_terminate(clause):
+            left_to_visit.discard(clause)
+            return len(left_to_visit) == 0
+
+        return breadth_first_search(start, neighbors, should_terminate)[0]
+
+    def _end_points(self, relevant_clauses, implicand=None):
+        jobs = (RuleType.job_install, RuleType.job_remove, RuleType.job_update)
+        roots = [c for c in relevant_clauses
+                 if c.rule and c.rule._requirements
+                 if implicand in c or c.rule.reason in jobs]
+        return roots
 
     @property
     def rules(self):
@@ -65,7 +108,7 @@ class UNSAT(object):
 
     @property
     def requirements(self):
-        return [rule._requirement for rule in self.rules]
+        return [r for rule in self.rules for r in rule._requirements]
 
     def clause_requirements(self, clause, ignore=None):
         """
@@ -81,7 +124,7 @@ class UNSAT(object):
         if clause not in self._clause_requirements:
             # We haven't searched this clause before. Do so now.
             reqs = []
-            if clause.rule and clause.rule._requirement:
+            if clause.rule and clause.rule._requirements:
                 # This clause came directly from a rule that came from a
                 # user requirement.
                 reqs.append(clause)
@@ -122,13 +165,19 @@ class UNSAT(object):
         return self._flat_clause_trails[clause]
 
     def to_string(self, pool=None, detailed=False):
-        learned_clauses = self.clause_requirements(self._learned_clause)
+        return self.string_from_clauses(
+            pool=pool, detail_clauses=self._conflict_path)
+
+    def string_from_clauses(
+            self, requirement_clauses=None, detail_clauses=None, pool=None):
+        requirement_clauses = requirement_clauses or []
+        detail_clauses = detail_clauses or []
 
         details = OrderedDict()
 
         def add(clause):
             """
-            Add a clause or container of clauses to out explanation.
+            Add a clause or container of clauses to our explanation.
             """
             if not isinstance(clause, Clause):
                 # For convenience, `clause` might be a container of clauses
@@ -152,18 +201,19 @@ class UNSAT(object):
                 details.setdefault(key, clause)
 
         reason = ["Conflicting requirements:"]
-        add(learned_clauses)
+        add(requirement_clauses)
 
-        if detailed:
-            add(self._conflict_details)
+        if detail_clauses is not None:
+            add(detail_clauses)
 
         for clause in details.values():
-            is_requirement = clause in learned_clauses
-            if pool and (detailed or is_requirement):
+            is_requirement = clause in requirement_clauses
+            if pool and (detail_clauses or is_requirement):
                 reason.append(clause.rule.to_string(pool, unique=True))
             elif is_requirement:
-                reason.append(str(clause.rule._requirement))
-            elif detailed:
+                reqs = ', '.join(str(r) for r in clause.rule._requirements)
+                reason.append(reqs)
+            elif detail_clauses:
                 reason.append(str(clause.lits))
         return '\n'.join(reason) + '\n'
 
@@ -342,7 +392,8 @@ class MiniSATSolver(object):
                 if root_level == self.decision_level:
                     conflict = UNSAT(
                         conflict_clause, learned_clause,
-                        self.clause_trails)
+                        self.clause_trails,
+                        self.assigning_clause)
                     raise SatisfiabilityError(conflict)
 
                 self.cancel_until(max(bt_level, root_level))
@@ -440,7 +491,6 @@ class MiniSATSolver(object):
         p = self.trail.pop()
         v = abs(p)  # Underlying variable
         self.assignments[v] = None
-        self.assigning_clause[v] = None
         self.levels[v] = -1  # FIXME Why -1?
 
     def cancel_until(self, level):
