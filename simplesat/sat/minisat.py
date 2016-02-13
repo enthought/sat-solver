@@ -52,6 +52,7 @@ class UNSAT(object):
         # A mapping from clauses to the requirements that generated them
         self._clause_requirements = {}
         self._conflict_details = []
+        self._conflict_paths = []
 
         self._find_requirement_time = None
         with timed_context("Find Requirements") as self._find_requirement_time:
@@ -71,14 +72,15 @@ class UNSAT(object):
                 learned_req_clauses +
                 conflicting_req_clauses)
 
-        clauses = self._conflict_details[0]
-        end_points = self._end_points(clauses, implicand=self._implicand)
-        self._conflict_path = self._conflict_path(end_points, clauses)
+        for clauses in self._conflict_details:
+            end_points = self._end_points(clauses, implicand=self._implicand)
+            self._conflict_paths.append(
+                self._find_conflict_path(end_points, clauses))
 
     def _key(self, clause):
         return sorted(abs(l) for l in clause.lits)
 
-    def _conflict_path(self, end_points, relevant_clauses):
+    def _find_conflict_path(self, end_points, relevant_clauses):
         """ Return a path from one clause to another """
 
         # It's expensive to figure out which clauses are neighbors. This dict
@@ -120,11 +122,14 @@ class UNSAT(object):
 
     @property
     def rules(self):
-        return [c.rule for problem in self._conflict_details for c in problem]
+        return tuple(OrderedDict.fromkeys(
+            c.rule for path in self._conflict_paths for c in path).keys())
 
     @property
     def requirements(self):
-        return [r for rule in self.rules for r in rule._requirements]
+        # Every list of requirements ends at a job, so only take the last one
+        return tuple(OrderedDict.fromkeys(
+            rule._requirements[-1] for rule in self.rules))
 
     def clause_requirements(self, clause, ignore=None):
         """
@@ -176,13 +181,14 @@ class UNSAT(object):
                         flat_trail.extend(self.clause_trail(t_clause, ignore))
                     else:
                         flat_trail.append(t_clause)
-                        ignore.add(t_clause)
+                    ignore.add(t_clause)
             self._flat_clause_trails[clause] = flat_trail
         return self._flat_clause_trails[clause]
 
     def to_string(self, pool=None, detailed=False):
-        return self.string_from_clauses(
-            pool=pool, detail_clauses=self._conflict_path)
+        return '\n\n'.join(
+            self.string_from_clauses(pool=pool, detail_clauses=details)
+            for details in self._conflict_paths)
 
     def string_from_clauses(
             self, requirement_clauses=None, detail_clauses=None, pool=None):
