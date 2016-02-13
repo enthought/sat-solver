@@ -17,6 +17,9 @@ from simplesat.utils.graph import breadth_first_search
 from simplesat.rules_generator import RuleType
 
 
+JOBTYPES = (RuleType.job_install, RuleType.job_remove, RuleType.job_update)
+
+
 class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
@@ -78,6 +81,9 @@ class UNSAT(object):
     def _conflict_path(self, end_points, relevant_clauses):
         """ Return a path from one clause to another """
 
+        # It's expensive to figure out which clauses are neighbors. This dict
+        # maps ids to clauses containing that id. We can do this lookup for
+        # each literal in a clause to get all of its neighbors.
         lit_to_clauses = defaultdict(set)
         for c in relevant_clauses:
             for lit in c:
@@ -88,6 +94,10 @@ class UNSAT(object):
             return set.union(*(lit_to_clauses[abs(lit)] for lit in clause))
 
         start, ends = end_points[0], end_points[1:]
+
+        # We start with a set of all the points our path *must* touch. When we
+        # reach one, we remove it from the set. We're done searching when the
+        # set is empty.
         left_to_visit = set(ends)
 
         def should_terminate(clause):
@@ -97,10 +107,15 @@ class UNSAT(object):
         return breadth_first_search(start, neighbors, should_terminate)[0]
 
     def _end_points(self, relevant_clauses, implicand=None):
-        jobs = (RuleType.job_install, RuleType.job_remove, RuleType.job_update)
+        """ Return the nodes which will serve as required points in our path.
+
+        Given a bag of clauses, possibly with rules and requirements attached,
+        this pulls out the clauses whose rule came direclty from a user request
+        or whose variable contain the variable with the assignment conflict.
+        """
         roots = [c for c in relevant_clauses
                  if c.rule and c.rule._requirements
-                 if implicand in c or c.rule.reason in jobs]
+                 if implicand in c or c.rule.reason in JOBTYPES]
         return roots
 
     @property
