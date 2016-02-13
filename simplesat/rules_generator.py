@@ -177,8 +177,8 @@ class RulesGenerator(object):
             Sequence of packages that fulfill the requirement.
         reason: RuleType
             A valid PackageRule.reason value
-        reason_details: str
-            Optional details explaining that rule origin.
+        requirements: list of Requirement
+            Optional requirements explaining that rule origin.
 
         Returns
         -------
@@ -207,8 +207,8 @@ class RulesGenerator(object):
             Package causing the conflict
         reason: RuleType
             One of PackageRule.reason
-        reason_details: str
-            Optional details explaining that rule origin.
+        requirements: list of Requirement
+            Optional requirements explaining that rule origin.
 
         Returns
         -------
