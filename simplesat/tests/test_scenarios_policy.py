@@ -53,6 +53,9 @@ def _pretty_delta(pkg_delta):
 
 class ScenarioTestAssistant(object):
 
+    def setUp(self):
+        self.maxDiff = None
+
     def _check_solution(self, filename, prefer_installed=True):
         # Test that the solution described in the scenario file matches with
         # what the SAT solver computes.
