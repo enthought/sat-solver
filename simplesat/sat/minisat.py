@@ -51,12 +51,15 @@ class UNSAT(object):
 
         # A mapping from clauses to the requirements that generated them
         self._clause_requirements = {}
+
+        # The a list of lists representing "problems". These are the clauses
+        # that we'll use to construct our paths, one per problem.
         self._conflict_details = []
         self._conflict_paths = []
 
         self._find_requirement_time = None
         with timed_context("Find Requirements") as self._find_requirement_time:
-            # We look at the chain of clauses that led us to assign the
+            # Here we look at the chain of clauses that led us to assign the
             # original value and then the chain of clauses that led us to want
             # to assign the opposite
             assert len(learned_clause.lits) == 1
@@ -64,25 +67,29 @@ class UNSAT(object):
             implicand_clause = assignments[abs(self._implicand)]
             assert implicand_clause is not None
 
+            # The clauses that led us to our first assignment
             implicand_req_clauses = self.clause_requirements(implicand_clause)
+            # The clauses we used to learn that the first assignment is invalid
             learned_req_clauses = self.clause_requirements(learned_clause)
+            # The clause we were on when we discovered the problem.
             conflicting_req_clauses = self.clause_requirements(conflict_clause)
             self._conflict_details.append(
                 implicand_req_clauses +
                 learned_req_clauses +
                 conflicting_req_clauses)
 
+        # Figure out the path for each of our problems
         for clauses in self._conflict_details:
             end_points = self._end_points(clauses, implicand=self._implicand)
-            self._conflict_paths.append(
-                self._find_conflict_path(end_points, clauses))
+            path = self._find_conflict_path(end_points, clauses)
+            self._conflict_paths.append(path)
 
     def _key(self, clause):
         return sorted(abs(l) for l in clause.lits)
 
     def _find_conflict_path(self, end_points, relevant_clauses):
-        """ Return a path from one clause to another """
-
+        """ Return a path between a set of clauses, given a pool of candidates.
+        """
         # It's expensive to figure out which clauses are neighbors. This dict
         # maps ids to clauses containing that id. We can do this lookup for
         # each literal in a clause to get all of its neighbors.
@@ -114,9 +121,10 @@ class UNSAT(object):
     def _end_points(self, relevant_clauses, implicand=None):
         """ Return the nodes which will serve as required points in our path.
 
-        Given a bag of clauses, possibly with rules and requirements attached,
-        this pulls out the clauses whose rule came direclty from a user request
-        or whose variable contain the variable with the assignment conflict.
+        Given a bag of clauses, each possibly with rules and requirements
+        attached, this pulls out the clauses whose rule came direclty from a
+        user request or whose variable contain the variable with the assignment
+        conflict.
         """
         roots = [c for c in relevant_clauses
                  if c.rule and c.rule._requirements
