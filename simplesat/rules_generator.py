@@ -284,9 +284,11 @@ class RulesGenerator(object):
                 if requirements is not None
                 else None)
 
-            assert len(dependency_candidates) > 0, \
-                ("No candidates found for requirement {0!r}, needed for "
-                 "dependency {1!r}".format(pkg_requirement.name, package))
+            if not dependency_candidates:
+                msg = ("No candidates found for requirement {0!r}, needed for "
+                       "dependency {1!r}")
+                raise NoPackageFound(
+                    msg.format(pkg_requirement.name, package))
 
             rule = self._create_dependency_rule(
                 package, dependency_candidates, RuleType.package_requires,
@@ -327,9 +329,10 @@ class RulesGenerator(object):
                 else None)
             conflict_providers = self._pool.what_provides(pkg_requirement)
 
-            assert len(conflict_providers) > 0, \
-                ("No candidates found for requirement {0!r}, needed for "
-                 "conflict {1!r}".format(pkg_requirement.name, package))
+            if not conflict_providers:
+                msg = ("No candidates found for requirement {0!r}, needed for "
+                       "conflict {1!r}")
+                raise NoPackageFound(msg.format(pkg_requirement.name, package))
 
             # XXX: Only build up a stack of requirements when it's related to a
             # job requirement, then we can put them together to get the "why"

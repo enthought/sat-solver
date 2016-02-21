@@ -3,6 +3,8 @@
 import io
 import unittest
 
+from simplesat.errors import NoPackageFound
+
 from ..pool import Pool
 from ..rules_generator import RuleType, RulesGenerator
 from ..test_utils import Scenario
@@ -98,3 +100,53 @@ class TestRulesGenerator(unittest.TestCase):
         # Then
         self.assertEqual(conflict.reason, RuleType.package_conflicts)
         self.assertEqual(conflict.literals, r_literals)
+
+    def test_missing_dependencies_package(self):
+        # Given
+        yaml = u"""
+            packages:
+              - atom 1.0.0-1; depends (quark > 1.0); conflicts (gdata ^= 1.0.0)
+              - gdata 1.0.0-1; conflicts (atom >= 1.0.1)
+
+            request:
+              - operation: "install"
+                requirement: "atom"
+        """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+
+        # When
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_map = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+
+        # Then
+        with self.assertRaises(NoPackageFound):
+            list(rules_generator.iter_rules())
+
+    def test_missing_conflicts_package(self):
+        # Given
+        yaml = u"""
+            packages:
+              - quark 1.0.0-1
+              - atom 1.0.0-1; depends (quark > 1.0); conflicts (gdata ^= 1.0.0)
+
+            request:
+              - operation: "install"
+                requirement: "atom"
+        """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+
+        # When
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_map = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+
+        # Then
+        with self.assertRaises(NoPackageFound):
+            list(rules_generator.iter_rules())
