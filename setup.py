@@ -7,6 +7,7 @@ PACKAGES = [
     "simplesat.constraints.tests",
     "simplesat.examples",
     "simplesat.sat",
+    "simplesat.sat.policy",
     "simplesat.sat.tests",
     "simplesat.tests",
     "simplesat.test_data",
