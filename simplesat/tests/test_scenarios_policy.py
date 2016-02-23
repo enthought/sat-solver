@@ -148,6 +148,9 @@ class TestNoInstallSet(ScenarioTestAssistant, TestCase):
         with self.assertRaises(NoPackageFound):
             self._check_solution("no_candidate.yaml")
 
+    def test_three_way_conflict(self):
+        self._check_solution("three_way_conflict.yaml")
+
 
 class TestInstallSet(ScenarioTestAssistant, TestCase):
 
