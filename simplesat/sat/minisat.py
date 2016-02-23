@@ -140,7 +140,7 @@ class UNSAT(object):
     def requirements(self):
         # Every list of requirements ends at a job, so only take the last one
         return tuple(OrderedDict.fromkeys(
-            rule._requirements[-1] for rule in self.rules))
+            rule._requirements[0] for rule in self.rules))
 
     def clause_requirements(self, clause, ignore=None):
         """

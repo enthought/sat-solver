@@ -106,7 +106,7 @@ class ScenarioTestAssistant(object):
 
         message = failure.unsat.to_string(pool=pool)
         r_message = scenario.failure['raw']
-        self.assertEqual(message, r_message)
+        self.assertMultiLineEqual(message, r_message)
 
     def assertEqualOperations(self, operations, scenario_operations):
         pairs = zip(operations, scenario_operations)

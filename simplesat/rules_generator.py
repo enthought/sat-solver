@@ -63,8 +63,8 @@ class PackageRule(object):
     def __init__(self, literals, reason, requirements=None):
         self.literals = tuple(sorted(literals))
         self._reason = RuleType(reason)
-        assert isinstance(requirements, (list, type(None)))
-        self._requirements = requirements or []
+        assert isinstance(requirements, (tuple, type(None)))
+        self._requirements = requirements or ()
 
     @property
     def is_assertion(self):
@@ -176,8 +176,8 @@ class RulesGenerator(object):
             Sequence of packages that fulfill the requirement.
         reason: RuleType
             A valid PackageRule.reason value
-        requirements: list of Requirement
-            Optional requirements explaining that rule origin.
+        requirements: tuple of Requirement
+            Optional requirements explaining the rule's origin.
 
         Returns
         -------
@@ -206,8 +206,8 @@ class RulesGenerator(object):
             Package causing the conflict
         reason: RuleType
             One of PackageRule.reason
-        requirements: list of Requirement
-            Optional requirements explaining that rule origin.
+        requirements: tuple of Requirement
+            Optional requirements explaining the rule's origin.
 
         Returns
         -------
@@ -230,6 +230,8 @@ class RulesGenerator(object):
             List of packages to choose from
         reason: RuleType
             One of PackageRule.reason
+        requirements: tuple of Requirement
+            Optional requirements explaining the rule's origin.
 
         Returns
         -------
@@ -248,10 +250,14 @@ class RulesGenerator(object):
         ----------
         package: PackageInfo
             The package with a requirement
+        reason: RuleType
+            One of PackageRule.reason
+        requirements: tuple of Requirement
+            Optional requirements explaining the rule's origin.
 
         Returns
         -------
-        rule: PackageRule or None
+        rule: PackageRule
         """
         return PackageRule((-self._pool.package_id(package),), reason,
                            requirements=requirements)
@@ -279,8 +285,11 @@ class RulesGenerator(object):
         for constraints in package.install_requires:
             pkg_requirement = Requirement.from_constraints(constraints)
             dependency_candidates = self._pool.what_provides(pkg_requirement)
+
+            # We add our new requirement to the stack of requirements we've
+            # gathered so far for these rules.
             combined_requirements = (
-                [pkg_requirement] + requirements
+                requirements + (pkg_requirement,)
                 if requirements is not None
                 else None)
 
@@ -307,7 +316,7 @@ class RulesGenerator(object):
         pkg_requirement = Requirement._from_string(package.name)
         obsolete_providers = self._pool.what_provides(pkg_requirement)
         combined_requirements = (
-            [pkg_requirement] + requirements
+            requirements + (pkg_requirement,)
             if requirements is not None
             else None)
         for provider in obsolete_providers:
@@ -324,7 +333,7 @@ class RulesGenerator(object):
         for constraints in package.conflicts:
             pkg_requirement = Requirement.from_constraints(constraints)
             combined_requirements = (
-                [pkg_requirement] + requirements
+                requirements + (pkg_requirement,)
                 if requirements is not None
                 else None)
             conflict_providers = self._pool.what_provides(pkg_requirement)
@@ -363,17 +372,18 @@ class RulesGenerator(object):
             for package in packages:
                 if package not in self.installed_map:
                     self._add_package_rules(
-                        package, requirements=[job.requirement])
+                        package, requirements=(job.requirement,))
 
             rule = self._create_install_one_of_rule(
-                packages, RuleType.job_install, requirements=[job.requirement])
+                packages, RuleType.job_install,
+                requirements=(job.requirement,))
             self._add_rule(rule, "job")
 
     def _add_remove_job_rules(self, job):
         packages = self._pool.what_provides(job.requirement)
         for package in packages:
             rule = self._create_remove_rule(
-                package, RuleType.job_remove, requirements=[job.requirement])
+                package, RuleType.job_remove, requirements=(job.requirement,))
             self._add_rule(rule, "job")
 
     def _add_update_job_rules(self, job):
@@ -391,11 +401,11 @@ class RulesGenerator(object):
             installed = self._pool.package_id(package) in self.installed_map
             return (package.version, installed)
         package = max(packages, key=key)
-        self._add_package_rules(package, requirements=[job.requirement])
+        self._add_package_rules(package, requirements=(job.requirement,))
         rule = PackageRule(
             (self._pool.package_id(package),),
             RuleType.job_update,
-            requirements=[job.requirement],
+            requirements=(job.requirement,),
         )
         self._add_rule(rule, "job")
 
