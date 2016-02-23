@@ -59,9 +59,9 @@ class UNSAT(object):
 
         self._find_requirement_time = None
         with timed_context("Find Requirements") as self._find_requirement_time:
-            # Here we look at the chain of clauses that led us to assign the
+            # We'll look at the chain of clauses that led us to assign the
             # original value and then the chain of clauses that led us to want
-            # to assign the opposite
+            # to assign the opposite value
             assert len(learned_clause.lits) == 1
             self._implicand = -learned_clause[0]
             implicand_clause = assignments[abs(self._implicand)]
@@ -71,14 +71,16 @@ class UNSAT(object):
             implicand_req_clauses = self.clause_requirements(implicand_clause)
             # The clauses we used to learn that the first assignment is invalid
             learned_req_clauses = self.clause_requirements(learned_clause)
-            # The clause we were on when we discovered the problem.
+            # The clause we were on when we discovered the conflict.
             conflicting_req_clauses = self.clause_requirements(conflict_clause)
             self._conflict_details.append(
                 implicand_req_clauses +
                 learned_req_clauses +
                 conflicting_req_clauses)
 
-        # Figure out the path for each of our problems
+        # Figure out the path for each of the conflicts we've found
+        # This path is a minimal series of related clauses that describe the
+        # conflict.
         for clauses in self._conflict_details:
             end_points = self._end_points(clauses, implicand=self._implicand)
             path = self._find_conflict_path(end_points, clauses)
@@ -100,9 +102,13 @@ class UNSAT(object):
         lit_to_clauses = dict(lit_to_clauses)
 
         def neighbors(clause):
+            """ Return the set of clauses which have at least one variable in
+            common with this one. """
             clause_sets = (lit_to_clauses[abs(lit)] for lit in clause)
             return sorted(set.union(*clause_sets), key=lambda c: c.lits)
 
+        # If there aren't two end points then none of this makes any sense.
+        # Just return what we have.
         if len(end_points) < 2:
             return end_points
         start, ends = end_points[0], end_points[1:]
@@ -113,8 +119,14 @@ class UNSAT(object):
         left_to_visit = set(ends)
 
         def should_terminate(clause):
+            """ Return True if it has been called with each end point at least
+            once, otherwise return False.
+
+            This is used to terminate the graph search after all of the
+            relevant clauses have been connected.
+            """
             left_to_visit.discard(clause)
-            return len(left_to_visit) == 0
+            return not left_to_visit
 
         return breadth_first_search(start, neighbors, should_terminate)[0]
 
@@ -122,7 +134,7 @@ class UNSAT(object):
         """ Return the nodes which will serve as required points in our path.
 
         Given a bag of clauses, each possibly with rules and requirements
-        attached, this pulls out the clauses whose rule came direclty from a
+        attached, this pulls out the clauses whose rule came directly from a
         user request or whose variable contain the variable with the assignment
         conflict.
         """
@@ -178,7 +190,7 @@ class UNSAT(object):
         A learned clause has a "trail" of clauses which led to the learned
         clause being created. Clauses in this trail might also be learned
         clauses. This method recursively builds up all of non-learned clauses
-        found by expanding these trails.
+        found by expanding and concatenating these trails.
         """
         ignore = ignore or set()
         if clause in ignore:
@@ -197,7 +209,7 @@ class UNSAT(object):
         return self._flat_clause_trails[clause]
 
     def to_string(self, pool=None):
-        # Build a description of each problem
+        # Build a string description of each conflict we've found
         return '\n\n'.join(
             self.string_from_clauses(clauses, pool=pool)
             for clauses in self._conflict_paths)
@@ -206,7 +218,7 @@ class UNSAT(object):
         details = OrderedDict()
 
         for clause in clauses:
-            # Learned clauses have no meaningful explanation
+            # Learned clauses have no meaningful explanation and thus, no Rule.
             # Instead, we grab the clauses from which it is derived.
             flat_clauses = self.clause_trail(clause) or (clause,)
 
