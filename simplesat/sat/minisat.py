@@ -145,8 +145,8 @@ class UNSAT(object):
 
     @property
     def rules(self):
-        return tuple(OrderedDict.fromkeys(
-            c.rule for path in self._conflict_paths for c in path).keys())
+        flat = (c.rule for path in self._conflict_paths for c in path)
+        return tuple(OrderedDict.fromkeys(flat).keys())
 
     @property
     def requirements(self):
