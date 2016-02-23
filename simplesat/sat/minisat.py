@@ -87,7 +87,7 @@ class UNSAT(object):
             self._conflict_paths.append(path)
 
     def _key(self, clause):
-        return sorted(abs(l) for l in clause.lits)
+        return tuple(sorted(l for l in clause.lits))
 
     def _find_conflict_path(self, end_points, relevant_clauses):
         """ Return a path between a set of clauses, given a pool of candidates.
@@ -223,14 +223,8 @@ class UNSAT(object):
             flat_clauses = self.clause_trail(clause) or (clause,)
 
             for clause in flat_clauses:
-                if pool:
-                    pretties = (pool.id_to_string(l) for l in clause.lits)
-                else:
-                    pretties = clause.lits
-                key = tuple(sorted(pretties))
-
-                # Add it to our  set of clauses to include
-                details.setdefault(key, clause)
+                # Add it to our set of clauses to include
+                details.setdefault(self._key(clause), clause)
 
         reason = ["Conflicting requirements:"]
         for clause in details.values():
