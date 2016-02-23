@@ -2020,12 +2020,12 @@ request:
 
 
 failure:
-  requirements: ['EPD', 'numpy > 1.8.0-0']
+  requirements: ['numpy > 1.8.0-0', 'EPD']
   raw: |
       Conflicting requirements:
-      Requirements: 'EPD' <- 'numpy == 1.6.0-5'
-          EPD-7.1-1 requires (+numpy-1.6.0-5)
-      Requirements: 'EPD' <- 'numpy'
-          Can only install one of: (+numpy-1.8.1-1 | +numpy-1.6.0-5)
       Requirements: 'numpy > 1.8.0-0'
           Install command rule (+numpy-1.8.0-1 | +numpy-1.8.0-2 | +numpy-1.8.0-3 | +numpy-1.8.1-1)
+      Requirements: 'EPD' <- 'numpy'
+          Can only install one of: (+numpy-1.8.1-1 | +numpy-1.6.0-5)
+      Requirements: 'EPD' <- 'numpy == 1.6.0-5'
+          EPD-7.1-1 requires (+numpy-1.6.0-5)
