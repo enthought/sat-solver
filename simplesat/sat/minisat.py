@@ -150,7 +150,7 @@ class UNSAT(object):
 
     @property
     def requirements(self):
-        # Every list of requirements ends at a job, so only take the last one
+        # Every list of requirements start at a job, so only take the first one
         return tuple(OrderedDict.fromkeys(
             rule._requirements[0] for rule in self.rules))
 
