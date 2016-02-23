@@ -5,6 +5,7 @@ A SAT solver which follows the Minisat approach.
 from __future__ import absolute_import
 
 from collections import defaultdict, deque, OrderedDict
+import itertools
 
 from six.moves import range
 
@@ -101,7 +102,7 @@ class UNSAT(object):
                 lit_to_clauses[abs(lit)].add(c)
         lit_to_clauses = dict(lit_to_clauses)
 
-        def neighbors(clause):
+        def get_neighbors(clause):
             """ Return the set of clauses which have at least one variable in
             common with this one. """
             clause_sets = (lit_to_clauses[abs(lit)] for lit in clause)
@@ -111,24 +112,19 @@ class UNSAT(object):
         # Just return what we have.
         if len(end_points) < 2:
             return end_points
-        start, ends = end_points[0], end_points[1:]
 
-        # We start with a set of all the points our path *must* touch. When we
-        # reach one, we remove it from the set. We're done searching when the
-        # set is empty.
-        left_to_visit = set(ends)
+        start = None
+        ends = set()
+        for point in end_points:
+            if start is None and point.rule.reason in JOBTYPES:
+                start = point
+            else:
+                ends.add(point)
 
-        def should_terminate(clause):
-            """ Return True if it has been called with each end point at least
-            once, otherwise return False.
-
-            This is used to terminate the graph search after all of the
-            relevant clauses have been connected.
-            """
-            left_to_visit.discard(clause)
-            return not left_to_visit
-
-        return breadth_first_search(start, neighbors, should_terminate)[0]
+        path = tuple(itertools.chain.from_iterable(
+            breadth_first_search(start, get_neighbors, ends)
+        ))
+        return path
 
     def _end_points(self, relevant_clauses, implicand=None):
         """ Return the nodes which will serve as required points in our path.
