@@ -134,9 +134,13 @@ class UNSAT(object):
         user request or whose variable contain the variable with the assignment
         conflict.
         """
-        roots = [c for c in relevant_clauses
-                 if c.rule and c.rule._requirements
-                 if implicand in c or c.rule.reason in JOBTYPES]
+
+        flat_clauses = set(
+            c for c in relevant_clauses
+            if c.rule and c.rule._requirements
+            if implicand in c or c.rule.reason in JOBTYPES
+        )
+        roots = tuple(sorted(flat_clauses, key=lambda c: c.lits))
         return roots
 
     @property
