@@ -123,7 +123,7 @@ def connected_nodes(node, neighbor_func, visited=None):
 
 
 def backtrack(end, start, visited):
-    """ Return a list of nodes from `start` to `end` by recursively looking up
+    """ Return a tuple of nodes from `start` to `end` by recursively looking up
     the current node in `visited`. `visited` is a dictionary of one-way edges
     between nodes.
     """
@@ -132,7 +132,7 @@ def backtrack(end, start, visited):
     while node != start:
         node = visited[node]
         path.append(node)
-    return list(reversed(path))
+    return tuple(reversed(path))
 
 
 def breadth_first_search(start, neighbor_func, targets,
