@@ -80,7 +80,7 @@ class ScenarioTestAssistant(object):
         try:
             transaction = solver.solve(request)
         except SatisfiabilityError as failure:
-            self.assertEqualFailure(pool, failure, scenario)
+            self.assertFailureEqual(pool, failure, scenario)
         else:
             if scenario.failed:
                 msg = "Solver unexpectedly succeeded, but {0}."
@@ -92,7 +92,7 @@ class ScenarioTestAssistant(object):
                 self.assertEqualOperations(transaction.pretty_operations,
                                            scenario.pretty_operations)
 
-    def assertEqualFailure(self, pool, failure, scenario):
+    def assertFailureEqual(self, pool, failure, scenario):
         if not scenario.failed:
             msg = "Solver unexpectedly failed"
             if failure.unsat:
@@ -100,13 +100,13 @@ class ScenarioTestAssistant(object):
                 msg += ":\n{0}".format(reason)
             self.fail(msg)
 
-        req_names = [str(r) for r in failure.unsat.requirements]
-        r_names = scenario.failure['requirements']
-        self.assertEqual(req_names, r_names)
+        result = [str(r) for r in failure.unsat.requirements]
+        expected = scenario.failure['requirements']
+        self.assertEqual(expected, result)
 
-        message = failure.unsat.to_string(pool=pool)
-        r_message = scenario.failure['raw']
-        self.assertMultiLineEqual(message, r_message)
+        result = failure.unsat.to_string(pool=pool)
+        expected = scenario.failure['raw']
+        self.assertMultiLineEqual(expected, result)
 
     def assertEqualOperations(self, operations, scenario_operations):
         pairs = zip(operations, scenario_operations)
