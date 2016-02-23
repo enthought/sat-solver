@@ -53,6 +53,9 @@ def _pretty_delta(pkg_delta):
 
 class ScenarioTestAssistant(object):
 
+    def setUp(self):
+        self.maxDiff = None
+
     def _check_solution(self, filename, prefer_installed=True):
         # Test that the solution described in the scenario file matches with
         # what the SAT solver computes.
@@ -95,8 +98,6 @@ class ScenarioTestAssistant(object):
             if failure.unsat:
                 reason = failure.unsat.to_string(pool=pool)
                 msg += ":\n{0}".format(reason)
-                reason = failure.unsat.to_string(pool=pool, detailed=True)
-                msg += "\n\nDetailed:\n{0}".format(reason)
             self.fail(msg)
 
         req_names = [str(r) for r in failure.unsat.requirements]
@@ -224,3 +225,6 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_downgrade_conflict(self):
         self._check_solution("pillow_pil_downgrade_conflict.yaml")
+
+    def test_epd_full_conflict(self):
+        self._check_solution("epd_full_conflict.yaml")

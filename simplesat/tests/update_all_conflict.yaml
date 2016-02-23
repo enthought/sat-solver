@@ -22,10 +22,14 @@ installed:
   - pandas 0.12.5-3
 
 failure:
-  requirements: ['pandas', 'numpy']
+  requirements: ['numpy', 'pandas']
   raw: |
     Conflicting requirements:
-    Requirement: 'pandas'
-        Update to latest command rule (+pandas-0.18.0-1)
-    Requirement: 'numpy'
+    Requirements: 'numpy'
         Update to latest command rule (+numpy-1.9.2-2)
+    Requirements: 'numpy' <- 'numpy'
+        Can only install one of: (+numpy-1.9.2-2 | +numpy-1.9.2-1)
+    Requirements: 'numpy == 1.9.2-1' <- 'pandas'
+        pandas-0.18.0-1 requires (+numpy-1.9.2-1)
+    Requirements: 'pandas'
+        Update to latest command rule (+pandas-0.18.0-1)
