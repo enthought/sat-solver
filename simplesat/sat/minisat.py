@@ -140,7 +140,7 @@ class UNSAT(object):
             if c.rule and c.rule._requirements
             if implicand in c or c.rule.reason in JOBTYPES
         )
-        roots = tuple(sorted(flat_clauses, key=lambda c: c.lits))
+        roots = tuple(sorted(flat_clauses, key=self._key))
         return roots
 
     @property
