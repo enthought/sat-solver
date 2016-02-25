@@ -33,7 +33,8 @@ class TestRulesGenerator(unittest.TestCase):
         pool = Pool(repos)
         installed_map = {
             pool.package_id(p): p for p in scenario.installed_repository}
-        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rules_generator = RulesGenerator(
+            pool, scenario.request, installed_map=installed_map)
         rules = list(rules_generator.iter_rules())
 
         # Then
@@ -79,7 +80,8 @@ class TestRulesGenerator(unittest.TestCase):
         pool = Pool(repos)
         installed_map = {
             pool.package_id(p): p for p in scenario.installed_repository}
-        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rules_generator = RulesGenerator(
+            pool, scenario.request, installed_map=installed_map)
         rules = list(rules_generator.iter_rules())
 
         # Then
@@ -120,7 +122,8 @@ class TestRulesGenerator(unittest.TestCase):
         pool = Pool(repos)
         installed_map = {
             pool.package_id(p): p for p in scenario.installed_repository}
-        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rules_generator = RulesGenerator(
+            pool, scenario.request, installed_map=installed_map)
 
         # Then
         with self.assertRaises(NoPackageFound):
@@ -145,7 +148,8 @@ class TestRulesGenerator(unittest.TestCase):
         pool = Pool(repos)
         installed_map = {
             pool.package_id(p): p for p in scenario.installed_repository}
-        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rules_generator = RulesGenerator(
+            pool, scenario.request, installed_map=installed_map)
 
         # Then
         with self.assertRaises(NoPackageFound):
