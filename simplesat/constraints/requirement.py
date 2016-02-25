@@ -158,7 +158,7 @@ class Requirement(object):
             return self.name + " " + ", ".join(parts)
 
     def __repr__(self):
-        return "Requirement('" + str(self) + "')"
+        return "{}('{}')".format(self.__class__.__name__, self)
 
     @property
     def has_any_version_constraint(self):
