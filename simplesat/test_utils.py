@@ -116,6 +116,10 @@ class Scenario(object):
 
         request = Request()
 
+        for kind, values in data.get("adhoc", {}).items():
+            for value in values:
+                getattr(request, kind)(value)
+
         update_all = False
 
         for s_request in scenario_requests:
