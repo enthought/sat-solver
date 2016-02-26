@@ -4,6 +4,9 @@ import io
 import unittest
 
 from simplesat.errors import NoPackageFound
+from simplesat.constraints.requirement_transformation import (
+    TransformedRequirement
+)
 
 from ..pool import Pool
 from ..rules_generator import RuleType, RulesGenerator
@@ -150,3 +153,53 @@ class TestRulesGenerator(unittest.TestCase):
         # Then
         with self.assertRaises(NoPackageFound):
             list(rules_generator.iter_rules())
+
+    def test_allow_newer_transformation(self):
+        # Given
+        yaml = u"""
+            packages:
+              - atom 1.0.1-1; depends (quark > 1.0, quark < 2.0)
+              - quark 1.1.0-1
+              - quark 2.1.0-1
+
+            request:
+              - operation: "install"
+                requirement: "atom"
+        """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_map = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+
+        # When
+        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rule = next(rule for rule in rules_generator.iter_rules()
+                    if rule.reason == RuleType.package_requires)
+
+        # Then
+        expected = (-1, 2)
+        result = rule.literals
+        self.assertEqual(expected, result)
+
+        # When
+        original_rule = rule
+        scenario.request.allow_newer('quark')
+        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rule = next(rule for rule in rules_generator.iter_rules()
+                    if rule.reason == RuleType.package_requires)
+        requirement = next(req for req in rule._requirements
+                           if req.name == 'quark')
+
+        # Then
+        expected = (-1, 2, 3)
+        result = rule.literals
+        self.assertEqual(expected, result)
+
+        self.assertIsInstance(requirement, TransformedRequirement)
+
+        expected = requirement._original_requirement
+        result = next(req for req in original_rule._requirements
+                      if req.name == 'quark')
+        self.assertEqual(expected, result)
