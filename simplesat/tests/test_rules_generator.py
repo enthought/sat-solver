@@ -191,3 +191,33 @@ class TestRulesGenerator(unittest.TestCase):
         expected = (-1, 2, 3)
         result = rule.literals
         self.assertEqual(expected, result)
+
+    def test_adhoc_constraint(self):
+        # Given
+        yaml = u"""
+            packages:
+              - quark 1.1.0-1
+              - quark 1.2.0-1
+              - quark 2.1.0-1
+              - quark 3.1.0-1
+
+            request:
+              - operation: "constrain"
+                requirement: "quark > 2.0"
+        """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_map = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+
+        # When
+        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rules = tuple(rules_generator.iter_rules())
+
+        # Then
+        self.assertEqual(len(rules), 2)
+        for rule, expected in zip(rules, ((-1,), (-2,))):
+            result = rule.literals
+            self.assertEqual(expected, result)
