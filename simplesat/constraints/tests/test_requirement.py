@@ -333,7 +333,7 @@ class TestRequirementTransformation(unittest.TestCase):
             for before, after in pairs)
 
     def _nub(self, sequence):
-        return type(sequence)(OrderedDict.fromkeys(sequence).keys())
+        return tuple(OrderedDict.fromkeys(sequence).keys())
 
     def test_allow_newer(self):
         # Given
