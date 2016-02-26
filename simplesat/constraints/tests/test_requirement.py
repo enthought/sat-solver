@@ -58,7 +58,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
         self.assertTrue(requirement.matches(V("1.9.0-1")))
         self.assertEqual(
             requirement,
-            Requirement.from_constraints(("numpy", (("*"),)))
+            Requirement.from_constraints(("numpy", (("*",),)))
         )
 
     def test_simple(self):
@@ -94,7 +94,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
         # Given
         requirements = [
             (("numpy", ((),)), False),
-            (("numpy", (("*"),)), False),
+            (("numpy", (("*",),)), False),
             (("numpy", (("< 1.8.1",),)), True),
             (("numpy", (("== 1.8.1-1",),)), True),
             (("numpy", (("^= 1.8.1",),)), True),
@@ -137,7 +137,7 @@ class TestRequirementFromString(unittest.TestCase):
     def test_any(self):
         # Given
         requirement_string = "numpy"
-        r_requirement = Requirement.from_constraints(("numpy", (("*"),)))
+        r_requirement = Requirement.from_constraints(("numpy", (("*",),)))
         r_requirement_empty = Requirement.from_constraints(("numpy", ((),)))
 
         # When
