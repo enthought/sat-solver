@@ -140,7 +140,6 @@ class RulesGenerator(object):
         self._allow_any = request.adhoc_constraints.allow_any
         self._allow_older = request.adhoc_constraints.allow_older
         self._rules_set = collections.OrderedDict()
-        self._requirements_set = collections.OrderedDict()
         self._pool = pool
 
         self.request = request
