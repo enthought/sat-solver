@@ -228,3 +228,6 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_epd_full_conflict(self):
         self._check_solution("epd_full_conflict.yaml")
+
+    def test_adhoc_allow_newer_older_any(self):
+        self._check_solution('adhoc_allow_newer_older_any.yaml')
