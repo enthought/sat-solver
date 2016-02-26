@@ -117,7 +117,6 @@ def _connected_packages(solution, root_ids, pool):
         if name in root_names
     )
 
-    # FIXME: can use package_lit_dependency_graph() here
     def neighborfunc(pkg_id):
         """ Given a pkg id, return the pkg ids of the immediate dependencies
         that appeared in our solution. """
