@@ -136,11 +136,9 @@ class PackageRule(object):
 
 class RulesGenerator(object):
     def __init__(self, pool, request, installed_map=None):
-        self._allow_newer = request.modifiers.allow_newer
-        self._allow_any = request.modifiers.allow_any
-        self._allow_older = request.modifiers.allow_older
         self._rules_set = collections.OrderedDict()
         self._pool = pool
+        self._modifiers = request.modifiers
 
         self.request = request
         self.installed_map = installed_map or collections.OrderedDict()
@@ -278,18 +276,12 @@ class RulesGenerator(object):
         if rule is not None and rule not in self._rules_set:
             self._rules_set[rule] = None
 
-    def _transform_install_requires(self, requirement):
-        return transform_install_requires(
-            requirement,
-            allow_newer=self._allow_newer,
-            allow_any=self._allow_any,
-            allow_older=self._allow_older
-        )
-
     def _add_install_requires_rules(self, package, work_queue, requirements):
         for constraints in package.install_requires:
-            pkg_requirement = self._transform_install_requires(
-                Requirement.from_constraints(constraints))
+            pkg_requirement = transform_install_requires.from_modifiers(
+                Requirement.from_constraints(constraints),
+                self._modifiers
+            )
             dependency_candidates = self._pool.what_provides(pkg_requirement)
             combined_requirements = (
                 [pkg_requirement] + requirements
