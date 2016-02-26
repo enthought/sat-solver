@@ -18,7 +18,7 @@ class _Job(object):
 
 
 @attributes
-class AdhocConstraints(object):
+class ConstraintModifiers(object):
     allow_newer = attr(default=Factory(set))
     allow_any = attr(default=Factory(set))
     allow_older = attr(default=Factory(set))
@@ -27,7 +27,7 @@ class AdhocConstraints(object):
 class Request(object):
     def __init__(self):
         self.jobs = []
-        self.adhoc_constraints = AdhocConstraints()
+        self.modifiers = ConstraintModifiers()
 
     def install(self, requirement):
         self._add_job(requirement, JobType.install)
@@ -38,14 +38,17 @@ class Request(object):
     def update(self, requirement):
         self._add_job(requirement, JobType.update)
 
+    def constrain(self, requirement):
+        self._add_job(requirement, JobType.constrain)
+
     def allow_newer(self, package_name):
-        self.adhoc_constraints.allow_newer.add(package_name)
+        self.modifiers.allow_newer.add(package_name)
 
     def allow_any(self, package_name):
-        self.adhoc_constraints.allow_any.add(package_name)
+        self.modifiers.allow_any.add(package_name)
 
     def allow_older(self, package_name):
-        self.adhoc_constraints.allow_older.add(package_name)
+        self.modifiers.allow_older.add(package_name)
 
     def _add_job(self, requirement, job_type):
         self.jobs.append(_Job(requirement, job_type))

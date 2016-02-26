@@ -116,7 +116,7 @@ class Scenario(object):
 
         request = Request()
 
-        for kind, values in data.get("adhoc", {}).items():
+        for kind, values in data.get("modifiers", {}).items():
             for value in values:
                 getattr(request, kind)(value)
 
