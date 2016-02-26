@@ -9,6 +9,7 @@ class JobType(Enum):
     install = 1
     remove = 2
     update = 3
+    constrain = 4
 
 
 @attributes
