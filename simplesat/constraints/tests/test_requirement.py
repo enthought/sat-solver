@@ -1,4 +1,5 @@
 import unittest
+from collections import OrderedDict
 
 from okonomiyaki.versions import EnpkgVersion
 
@@ -93,6 +94,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
         # Given
         requirements = [
             (("numpy", ((),)), False),
+            (("numpy", (("*"),)), False),
             (("numpy", (("< 1.8.1",),)), True),
             (("numpy", (("== 1.8.1-1",),)), True),
             (("numpy", (("^= 1.8.1",),)), True),
@@ -304,7 +306,7 @@ class TestRequirementTransformation(unittest.TestCase):
 
         # When the constraints are all together as a single requirement
         before = ', '.join(dict(requirement_strings).keys())
-        after = ', '.join(dict(requirement_strings).values())
+        after = ', '.join(self._nub(dict(requirement_strings).values()))
         requirement_strings = ((before, after),)
 
         # Then
@@ -329,6 +331,9 @@ class TestRequirementTransformation(unittest.TestCase):
         return tuple(
             (name + ' ' + before, name + ' ' + after)
             for before, after in pairs)
+
+    def _nub(self, sequence):
+        return type(sequence)(OrderedDict.fromkeys(sequence).keys())
 
     def test_allow_newer(self):
         # Given
@@ -418,3 +423,21 @@ class TestRequirementTransformation(unittest.TestCase):
         # Then
         self.run_transformations(
             any_constraints, transform_install_requires, allow)
+
+    def test_collapse_multiple_any(self):
+        # Given
+        requirement = Requirement._from_string(
+            "MKL >= 1.2.1-2, MKL != 2.3.1-1, MKL < 1.4"
+        )
+        expected = Requirement._from_string(
+            "MKL, MKL != 2.3.1-1"
+        )
+
+        # When
+        transformed = transform_install_requires(
+            requirement, allow_any=set(["MKL"]))
+        constraints = transformed._constraints._constraints
+
+        # Then
+        self.assertEqual(2, len(constraints))
+        self.assertEqual(expected, transformed)

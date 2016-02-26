@@ -3,6 +3,8 @@
 
 from __future__ import division, print_function
 
+from collections import OrderedDict
+
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, Not, GEQ, GT, LEQ, LT,
 )
@@ -52,9 +54,9 @@ def _transform_requirement(
     name = requirement.name
     original_constraints = constraints = requirement._constraints._constraints
     transformers = (
-        (allow_older or set(), ALLOW_OLDER_MAP),
-        (allow_newer or set(), ALLOW_NEWER_MAP),
-        (allow_any or set(), ALLOW_ANY_MAP),
+        (allow_older or (), ALLOW_OLDER_MAP),
+        (allow_newer or (), ALLOW_NEWER_MAP),
+        (allow_any or (), ALLOW_ANY_MAP),
     )
 
     modified = False
@@ -64,6 +66,8 @@ def _transform_requirement(
             constraints = _transform_constraints(constraints, type_map)
 
     if modified and constraints != original_constraints:
+        # Remove duplicate constraints
+        constraints = tuple(OrderedDict.fromkeys(constraints).keys())
         return TransformedRequirement(name, constraints, requirement)
 
     return requirement
