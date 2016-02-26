@@ -9,6 +9,9 @@ import six
 import itertools
 
 from simplesat.constraints.requirement import Requirement
+from simplesat.constraints.requirement_transformation import (
+    transform_install_requires
+)
 
 
 def toposort(nodes_to_edges):
@@ -59,12 +62,23 @@ def toposort(nodes_to_edges):
         raise ValueError(msg.format(cyclic))
 
 
-def package_lit_dependency_graph(pool, package_lits, closed=True):
+def package_lit_dependency_graph(pool, package_lits,
+                                 closed=True, modifiers=None):
     """
     Return an dict of nodes to edges from package_lits to their dependencies,
     maintaining sign.
 
-    If closed is True, only include edges to packages in package_lits.
+    Parameters
+    ----------
+    pool : simplesat.pool.Pool
+        The pool of repositories to pull packages from.
+    package_lits: sequence of package id literals
+        The literals that correspond to packages of interest in the pool.
+    closed : bool
+        If True, only include edges to packages in package_lits.
+    modifiers : simplesat.request.ConstraintModifiers
+        Optional, if given, the modifiers to apply to the constraints on
+        packages coming out of the pool.
     """
 
     package_id_map = {abs(p): p for p in package_lits}
@@ -76,7 +90,11 @@ def package_lit_dependency_graph(pool, package_lits, closed=True):
 
     for package_lit, package in packages.items():
         for constraints in package.install_requires:
-            deps = pool.what_provides(R(constraints))
+            requirement = R(constraints)
+            if modifiers is not None:
+                requirement = transform_install_requires.from_modifiers(
+                    requirement, modifiers)
+            deps = pool.what_provides(requirement)
             nodes_to_edges[package_lit].update(
                 dep_lit for dep_lit in (
                     package_id_map.get(dep_id, dep_id)

@@ -52,7 +52,8 @@ class DependencySolver(object):
                 solution_ids, root_ids, self._pool
             )
 
-        return Transaction(self._pool, solution_ids, installed_map)
+        return Transaction(
+            self._pool, solution_ids, installed_map, request.modifiers)
 
     def _create_rules_and_initialize_policy(self, request):
         pool = self._pool
