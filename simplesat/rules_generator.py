@@ -136,9 +136,9 @@ class PackageRule(object):
 
 class RulesGenerator(object):
     def __init__(self, pool, request, installed_map=None):
-        self._allow_newer = request.adhoc_constraints.allow_newer
-        self._allow_any = request.adhoc_constraints.allow_any
-        self._allow_older = request.adhoc_constraints.allow_older
+        self._allow_newer = request.modifiers.allow_newer
+        self._allow_any = request.modifiers.allow_any
+        self._allow_older = request.modifiers.allow_older
         self._rules_set = collections.OrderedDict()
         self._pool = pool
 

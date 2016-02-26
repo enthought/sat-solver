@@ -12,7 +12,7 @@ packages:
 installed:
   - A 0.0.1-1
 
-adhoc:
+modifiers:
   allow_newer:
     - A
   allow_older:

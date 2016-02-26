@@ -169,13 +169,13 @@ class TestScenario(unittest.TestCase):
         jobs = scenario.request.jobs
         self.assertEqual(jobs, r_jobs)
 
-    def test_load_adhoc(self):
+    def test_load_modifiers(self):
         # Given
         yaml = six.StringIO(textwrap.dedent("""\
         packages:
             - MKL 10.3-1
 
-        adhoc:
+        modifiers:
             allow_newer: [MKL]
             allow_older:
                 - numpy
@@ -198,5 +198,5 @@ class TestScenario(unittest.TestCase):
 
         # Then
         constraints = attr.asdict(
-            scenario.request.adhoc_constraints, recurse=False)
+            scenario.request.modifiers, recurse=False)
         self.assertEqual(constraints, expected)

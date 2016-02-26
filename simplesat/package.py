@@ -107,12 +107,12 @@ class PackageMetadata(object):
         # Keep track of whether this package was derived from another one
         self.parent_package = parent_package
 
-    def clone_with_adhoc_constraints(self, adhoc_constraints):
-        if adhoc_constraints is None:
+    def clone_with_modifiers(self, modifiers):
+        if modifiers is None:
             return self
 
-        adhoc_dict = adhoc_constraints.asdict()
-        targets = adhoc_constraints.targets
+        modifier_dict = modifiers.asdict()
+        targets = modifiers.targets
         modified = False
         new_install_requires = []
         for name, disjunction in self.install_requires:
@@ -120,7 +120,7 @@ class PackageMetadata(object):
                 modified = True
                 requirement = transform_install_requires(
                     Requirement.from_constraints((name, disjunction)),
-                    **adhoc_dict)
+                    **modifier_dict)
                 new_install_requires.append(requirement.to_constraints())
             else:
                 new_install_requires.append((name, disjunction))
@@ -132,7 +132,7 @@ class PackageMetadata(object):
                 modified = True
                 requirement = transform_conflicts(
                     Requirement.from_constraints((name, disjunction)),
-                    **adhoc_dict)
+                    **modifier_dict)
                 new_conflicts.append(requirement.to_constraints())
             else:
                 new_conflicts.append((name, disjunction))
@@ -188,11 +188,10 @@ class RepositoryPackageMetadata(object):
         self._key = (package._key, repository_info)
         self._hash = hash(self._key)
 
-    def clone_with_adhoc_constraints(self, adhoc_constraints):
-        if adhoc_constraints is None:
+    def clone_with_modifiers(self, modifiers):
+        if modifiers is None:
             return self
-        new_package = self._package.clone_with_adhoc_constraints(
-            adhoc_constraints)
+        new_package = self._package.clone_with_modifiers(modifiers)
         return self if new_package is self._package else type(self)(
             new_package, self._repository_info)
 

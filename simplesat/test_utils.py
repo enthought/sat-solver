@@ -53,9 +53,10 @@ def packages_from_definition(packages_definition):
 
 
 def transform_packages_for_request(name_and_packages, request):
-    adhoc = request.adhoc_constraints
+    modifiers = request.modifiers
     for name, package in name_and_packages.items():
-        name_and_packages[name] = package.clone_with_adhoc_constraints(adhoc)
+        name_and_packages[name] = package.clone_with_modifiers(
+            modifiers)
     return name_and_packages
 
 
@@ -120,7 +121,7 @@ class Scenario(object):
 
         request = Request()
 
-        for kind, values in data.get("adhoc", {}).items():
+        for kind, values in data.get("modifiers", {}).items():
             for value in values:
                 getattr(request, kind)(value)
 

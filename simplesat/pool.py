@@ -124,11 +124,14 @@ class Pool(object):
         return tuple(self._id_to_package_.keys())
 
     def _prepare_packages(self):
-        adhoc = self._request.adhoc_constraints if self._request else None
+        modifiers = (
+            self._request.modifiers
+            if self._request
+            else None)
         all_packages = itertools.chain.from_iterable(self._repositories)
         self._reset_packages()
         for current_id, package in enumerate(all_packages, start=1):
-            package = package.clone_with_adhoc_constraints(adhoc)
+            package = package.clone_with_modifiers(modifiers)
             self._id_to_package_[current_id] = package
             self._package_to_id_[package] = current_id
             self._packages_by_name_[package.name].append(package)

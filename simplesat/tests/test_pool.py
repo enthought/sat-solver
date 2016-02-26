@@ -132,7 +132,7 @@ class TestPool(unittest.TestCase):
         repository = Repository(self.packages_from_definition(
             "numpy 1.8.1-1; depends (MKL == 10.3-1)"))
         request = Request()
-        request.adhoc_constraints.allow_newer.add('MKL')
+        request.modifiers.allow_newer.add('MKL')
 
         # When
         pool = Pool([repository], request=request)
