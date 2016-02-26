@@ -321,8 +321,8 @@ class TestRequirementTransformation(unittest.TestCase):
         for before, after in requirement_strings:
             # When
             req = R(before)
-            expected = R(after)
             result = transform(req, **kw)
+            expected = R(after)
 
             # Then
             self.assertEqual(expected, result)

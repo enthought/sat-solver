@@ -154,7 +154,7 @@ class Scenario(object):
 
         return cls(packages, [remote_repository(data, packages)],
                    installed_repository(data, packages), request,
-                   decisions, operations, pretty_operations, failure)
+                   decisions, operations, pretty_operations, failure=failure)
 
     @staticmethod
     def _operations_from_transaction_list(transaction_ops):
