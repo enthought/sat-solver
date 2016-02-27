@@ -25,7 +25,8 @@ class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
 
-    def __init__(self, conflict_clause, learned_clause, trails, assignments):
+    def __init__(self, conflict_clause, learned_clause, trails,
+                 assigning_clauses):
         """
         Create a new UNSAT object.
 
@@ -43,9 +44,10 @@ class UNSAT(object):
             Only learned clauses should have trails of non-zero length
         """
 
-        self._conflict = conflict_clause
+        self._conflict_clause = conflict_clause
         self._learned_clause = learned_clause
         self._clause_trails = trails
+        self._assigning_clauses = assigning_clauses
 
         # A flattened version of `self._clause_trails`
         self._flat_clause_trails = {}
@@ -65,11 +67,12 @@ class UNSAT(object):
             # to assign the opposite value
             assert len(learned_clause.lits) == 1
             self._implicand = -learned_clause[0]
-            implicand_clause = assignments[abs(self._implicand)]
-            assert implicand_clause is not None
+            self._implicand_clause = assigning_clauses[abs(self._implicand)]
+            assert self._implicand_clause is not None
 
             # The clauses that led us to our first assignment
-            implicand_req_clauses = self.clause_requirements(implicand_clause)
+            implicand_req_clauses = self.clause_requirements(
+                self._implicand_clause)
             # The clauses we used to learn that the first assignment is invalid
             learned_req_clauses = self.clause_requirements(learned_clause)
             # The clause we were on when we discovered the conflict.
@@ -285,7 +288,7 @@ class MiniSATSolver(object):
 
         # For each variable assignment, a reference to the clause that forced
         # this assignment.
-        self.assigning_clause = {}
+        self.assigning_clauses = {}
 
         # Whether the system is satisfiable.
         self.status = None
@@ -383,7 +386,7 @@ class MiniSATSolver(object):
             self.prop_queue.append(lit)
             self.trail.append(lit)
             self.levels[abs(lit)] = self.decision_level
-            self.assigning_clause[abs(lit)] = cause
+            self.assigning_clauses[abs(lit)] = cause
             return True
 
     def search(self):
@@ -411,7 +414,7 @@ class MiniSATSolver(object):
                     conflict = UNSAT(
                         conflict_clause, learned_clause,
                         self.clause_trails,
-                        self.assigning_clause)
+                        self.assigning_clauses)
                     raise SatisfiabilityError(conflict)
 
                 self.cancel_until(max(bt_level, root_level))
@@ -465,7 +468,7 @@ class MiniSATSolver(object):
             # Select next literal to look at.
             while True:
                 p = self.trail[-1]
-                conflict = self.assigning_clause[abs(p)]
+                conflict = self.assigning_clauses[abs(p)]
                 clause_trail.append(conflict)
                 self.undo_one()
                 if abs(p) in seen:
