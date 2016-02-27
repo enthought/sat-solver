@@ -31,7 +31,5 @@ failure:
             Can only install one of: (+MKL-10.2-1 | +MKL-10.3-1)
         Requirements: 'numpy > 1.8-0' <- 'MKL == 10.3-1'
             numpy-1.8.1-2 requires (+MKL-10.3-1)
-        Requirements: 'numpy > 1.8-0' <- 'MKL == 10.3-1'
-            numpy-1.8.1-1 requires (+MKL-10.3-1)
         Requirements: 'numpy > 1.8-0'
             Install command rule (+numpy-1.8.1-1 | +numpy-1.8.1-2)

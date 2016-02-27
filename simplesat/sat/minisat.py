@@ -77,24 +77,24 @@ class UNSAT(object):
             learned_req_clauses = self.clause_requirements(learned_clause)
             # The clause we were on when we discovered the conflict.
             conflicting_req_clauses = self.clause_requirements(conflict_clause)
-            self._conflict_details.append(
+            self._conflict_details.extend(
                 implicand_req_clauses +
                 learned_req_clauses +
                 conflicting_req_clauses)
 
-        # Figure out the path for each of the conflicts we've found
-        # This path is a minimal series of related clauses that describe the
-        # conflict.
-        for clauses in self._conflict_details:
-            end_points = self._end_points(clauses, implicand=self._implicand)
-            path = self._find_conflict_path(end_points, clauses)
-            self._conflict_paths.append(path)
+        # Figure out the paths for the conflict(s) we've found
+        # These paths are a minimal series of related clauses that describe the
+        # conflict(s).
+        clauses = self._conflict_details
+        end_points = self._end_points(clauses, implicand=self._implicand)
+        paths = self._find_conflict_paths(end_points, clauses)
+        self._conflict_paths.extend(paths)
 
     def _key(self, clause):
         return tuple(sorted(l for l in clause.lits))
 
-    def _find_conflict_path(self, end_points, relevant_clauses):
-        """ Return a path between a set of clauses, given a pool of candidates.
+    def _find_conflict_paths(self, end_points, relevant_clauses):
+        """ Return a tuple of paths between a set of clauses.
         """
         # It's expensive to figure out which clauses are neighbors. This dict
         # maps ids to clauses containing that id. We can do this lookup for
@@ -116,18 +116,39 @@ class UNSAT(object):
         if len(end_points) < 2:
             return end_points
 
-        start = None
-        ends = set()
-        for point in end_points:
-            if start is None and point.rule.reason in JOBTYPES:
-                start = point
-            else:
-                ends.add(point)
+        ends = OrderedDict.fromkeys(end_points)
+        ends = tuple(ends.keys())
 
-        path = tuple(itertools.chain.from_iterable(
-            breadth_first_search(start, get_neighbors, ends)
-        ))
-        return path
+        def jobs_in_path(path):
+            return len([clause for clause in path
+                        if clause.rule.reason in JOBTYPES])
+
+        def tails(seq):
+            for i in range(1, len(seq)):
+                yield seq[i:]
+
+        raw_paths = list(itertools.chain.from_iterable(
+            breadth_first_search(start, get_neighbors, rest)
+            for start, rest in zip(ends, tails(ends))))
+
+        # The best path is the one with the most conflicting jobs in it
+        empty = (0, ())
+        path_groups = itertools.groupby(
+            sorted(raw_paths, key=jobs_in_path, reverse=True),
+            key=jobs_in_path)
+        equal_job_paths = tuple(next(path_groups, empty)[1])
+
+        # Now start from the shortest and only include paths that include
+        # something that we haven't seen before.
+        seen_clauses = set()
+        paths = []
+        for path in sorted(equal_job_paths, key=len):
+            p = set(path)
+            if p - seen_clauses:
+                seen_clauses.update(p)
+                paths.append(path)
+
+        return tuple(paths)
 
     def _end_points(self, relevant_clauses, implicand=None):
         """ Return the nodes which will serve as required points in our path.
@@ -213,7 +234,7 @@ class UNSAT(object):
 
     def to_string(self, pool=None):
         # Build a string description of each conflict we've found
-        return '\n\n'.join(
+        return '\n'.join(
             self.string_from_clauses(clauses, pool=pool)
             for clauses in self._conflict_paths)
 
