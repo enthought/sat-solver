@@ -138,9 +138,9 @@ def backtrack(end, start, visited):
 def breadth_first_search(start, neighbor_func, targets,
                          target_func=None, visited=None):
     """
-    Return an iterable of paths from `start` to each terminal node `end` such
-    that `terminate_func(end)` is in `targets`, by following neighbors as given
-    by `neighborfunc(node)`.
+    Return an iterable of paths from `start` to each reachable terminal node
+    `end` such that `terminate_func(end)` is in `targets`, by following
+    neighbors as given by `neighborfunc(node)`.
 
     Parameters
     ----------
@@ -178,5 +178,3 @@ def breadth_first_search(start, neighbor_func, targets,
                 continue
             queue.append(neighbor)
             visited[neighbor] = node
-    else:
-        yield ()
