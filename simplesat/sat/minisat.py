@@ -127,11 +127,13 @@ class UNSAT(object):
             for i in range(1, len(seq)):
                 yield seq[i:]
 
+        # Find a shortest path between each pair of end points if there is one
         raw_paths = list(itertools.chain.from_iterable(
             breadth_first_search(start, get_neighbors, rest)
             for start, rest in zip(ends, tails(ends))))
 
-        # The best path is the one with the most conflicting jobs in it
+        # This is somewhat arbitrary, but for now we'll say that the best path
+        # is the one with the most jobs in it.
         empty = (0, ())
         path_groups = itertools.groupby(
             sorted(raw_paths, key=jobs_in_path, reverse=True),
