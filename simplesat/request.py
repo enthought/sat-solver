@@ -26,9 +26,9 @@ class ConstraintModifiers(object):
 
 
 class Request(object):
-    def __init__(self):
+    def __init__(self, modifiers=None):
         self.jobs = []
-        self.modifiers = ConstraintModifiers()
+        self.modifiers = modifiers or ConstraintModifiers()
 
     def install(self, requirement):
         self._add_job(requirement, JobType.install)
