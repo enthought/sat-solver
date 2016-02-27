@@ -86,15 +86,19 @@ class UNSAT(object):
         # These paths are a minimal series of related clauses that describe the
         # conflict(s).
         clauses = self._conflict_details
-        end_points = self._end_points(clauses, implicand=self._implicand)
-        paths = self._find_conflict_paths(end_points, clauses)
+        end_clauses = self._end_clauses(clauses, implicand=self._implicand)
+        paths = self._find_conflict_paths(end_clauses, clauses)
         self._conflict_paths.extend(paths)
 
     def _key(self, clause):
         return tuple(sorted(l for l in clause.lits))
 
-    def _find_conflict_paths(self, end_points, relevant_clauses):
-        """ Return a tuple of paths between a set of clauses.
+    def _find_conflict_paths(self, end_clauses, relevant_clauses):
+        """ Return a tuple of paths representing conflicts between a set of
+        clauses.
+
+            See https://github.com/enthought/sat-solver/wiki/Unsatisfiability-Error-Messages
+            for discussion about how best to implement this.
         """
         # It's expensive to figure out which clauses are neighbors. This dict
         # maps ids to clauses containing that id. We can do this lookup for
@@ -113,10 +117,10 @@ class UNSAT(object):
 
         # If there aren't two end points then none of this makes any sense.
         # Just return what we have.
-        if len(end_points) < 2:
-            return end_points
+        if len(end_clauses) < 2:
+            return end_clauses
 
-        ends = OrderedDict.fromkeys(end_points)
+        ends = OrderedDict.fromkeys(end_clauses)
         ends = tuple(ends.keys())
 
         def jobs_in_path(path):
@@ -152,7 +156,7 @@ class UNSAT(object):
 
         return tuple(paths)
 
-    def _end_points(self, relevant_clauses, implicand=None):
+    def _end_clauses(self, relevant_clauses, implicand=None):
         """ Return the nodes which will serve as required points in our path.
 
         Given a bag of clauses, each possibly with rules and requirements
