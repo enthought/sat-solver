@@ -85,7 +85,8 @@ class DependencySolver(object):
         for package in installed_repository:
             installed_map[pool.package_id(package)] = package
 
-        rules_generator = RulesGenerator(pool, request, installed_map)
+        rules_generator = RulesGenerator(
+            pool, request, installed_map=installed_map)
 
         return all_requirement_ids, list(rules_generator.iter_rules())
 
