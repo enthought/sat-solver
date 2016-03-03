@@ -193,9 +193,8 @@ class _RawRequirementParser(object):
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
                 name = distribution.value
-                return (
-                    name, (_operator_factory(operator, version, version_factory),)
-                )
+                op = _operator_factory(operator, version, version_factory)
+                return name, (op,)
             elif len(requirement_block) == 2:
                 distribution, operator = requirement_block
                 name = distribution.value
