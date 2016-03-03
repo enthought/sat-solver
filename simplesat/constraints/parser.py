@@ -10,16 +10,20 @@ from simplesat.constraints.kinds import (
 from simplesat.errors import SolverException
 
 
-_VERSION_R = "[^=><!,\s;^][^,\s;]+"
-_EQUAL_R = "=="
-_GEQ_R = ">="
+# NOTE: re.Scanner seems to ignore (?i), so we have to write case-insensitivity
+# into the regex manually. We must also permit a leading underscore because of
+# names like `_distribute_remove`
+_DISTRIBUTION_R = r"([a-zA-Z0-9_][a-zA-Z0-9._]*[a-zA-Z0-9]|[a-zA-Z0-9])"
+_VERSION_R = r"(\d\w*(?:\.\w+)*(?:-\w+)?)"
+_EQUAL_R = r"=="
+_GEQ_R = r">="
 _GT_R = r">"
 _LEQ_R = r"<="
 _LT_R = r"<"
 _NOT_R = r"!="
 _ENPKG_UPSTREAM_MATCH_R = r"\^="
 _ANY_R = r"\*"
-_WS_R = " +"
+_WS_R = r" +"
 
 _CONSTRAINTS_SCANNER = re.Scanner([
     (_VERSION_R, lambda scanner, token: VersionToken(token)),
@@ -35,11 +39,9 @@ _CONSTRAINTS_SCANNER = re.Scanner([
     (_WS_R, lambda scanner, token: None),
 ])
 
-_DISTRIBUTION_R = "[a-zA-Z_][^\s,-]*"
-
 _REQUIREMENTS_SCANNER = re.Scanner([
-    (_DISTRIBUTION_R, lambda scanner, token: DistributionNameToken(token)),
     (_VERSION_R, lambda scanner, token: VersionToken(token)),
+    (_DISTRIBUTION_R, lambda scanner, token: DistributionNameToken(token)),
     (_EQUAL_R, lambda scanner, token: EqualToken(token)),
     (_GEQ_R, lambda scanner, token: GEQToken(token)),
     (_GT_R, lambda scanner, token: GTToken(token)),
