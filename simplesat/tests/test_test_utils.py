@@ -2,9 +2,8 @@ import os.path
 import sys
 import textwrap
 
+import attr
 import six
-
-from okonomiyaki.platforms import PythonImplementation
 
 from ..constraints import Requirement
 from ..package import RepositoryInfo, RepositoryPackageMetadata
@@ -169,3 +168,35 @@ class TestScenario(unittest.TestCase):
         # Then
         jobs = scenario.request.jobs
         self.assertEqual(jobs, r_jobs)
+
+    def test_load_modifiers(self):
+        # Given
+        yaml = six.StringIO(textwrap.dedent("""\
+        packages:
+            - MKL 10.3-1
+
+        modifiers:
+            allow_newer: [MKL]
+            allow_older:
+                - numpy
+            allow_any:
+                - pyzmq
+                - pandas
+
+        request:
+            - operation: install
+              requirement: numpy
+        """))
+        expected = {
+            'allow_newer': set(['MKL']),
+            'allow_older': set(['numpy']),
+            'allow_any': set(['pyzmq', 'pandas']),
+        }
+
+        # When
+        scenario = Scenario.from_yaml(yaml)
+
+        # Then
+        constraints = attr.asdict(
+            scenario.request.modifiers, recurse=False)
+        self.assertEqual(constraints, expected)

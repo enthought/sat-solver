@@ -28,7 +28,8 @@ class RemoveOperation(Operation):
 
 class Transaction(object):
 
-    def __init__(self, pool, decisions, installed_map):
+    def __init__(self, pool, decisions, installed_map, modifiers):
+        self.modifiers = modifiers
         self.operations = self._safe_operations(
             pool, decisions, installed_map)
         self.pretty_operations = self._as_pretty_operations(
@@ -97,7 +98,8 @@ class Transaction(object):
         return UpdateOperation(first.package, second.package)
 
     def _safe_operations(self, pool, decisions, installed_map):
-        graph = package_lit_dependency_graph(pool, decisions, closed=True)
+        graph = package_lit_dependency_graph(
+            pool, decisions, closed=True, modifiers=self.modifiers)
         removals = []
         installs = []
         operations = []

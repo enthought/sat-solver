@@ -58,7 +58,7 @@ class TestTransaction(unittest.TestCase):
                     for i in to_install]
         removals = [RemoveOperation(self.pool._id_to_package[i])
                     for i in to_remove]
-        transaction = Transaction(self.pool, decisions, installed)
+        transaction = Transaction(self.pool, decisions, installed, None)
         result = transaction.operations
         expected = removals + installs
 
@@ -83,7 +83,7 @@ class TestTransaction(unittest.TestCase):
                    for old, new in to_update]
         removals = [RemoveOperation(self.pool._id_to_package[i])
                     for i in to_remove]
-        transaction = Transaction(self.pool, decisions, installed)
+        transaction = Transaction(self.pool, decisions, installed, None)
         result = transaction.pretty_operations
         expected = removals + updates + installs
 

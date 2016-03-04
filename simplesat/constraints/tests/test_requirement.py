@@ -1,4 +1,5 @@
 import unittest
+from collections import OrderedDict
 
 from okonomiyaki.versions import EnpkgVersion
 
@@ -8,7 +9,11 @@ from simplesat.errors import (
 
 from ..kinds import Equal
 from ..multi import MultiConstraints
+from ..parser import _RawConstraintsParser
 from ..requirement import Requirement, parse_package_full_name
+from ..requirement_transformation import (
+    ALLOW_ANY_MAP, transform_install_requires, _transform_constraints
+)
 
 
 V = EnpkgVersion.from_string
@@ -53,7 +58,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
         self.assertTrue(requirement.matches(V("1.9.0-1")))
         self.assertEqual(
             requirement,
-            Requirement.from_constraints(("numpy", (("*"),)))
+            Requirement.from_constraints(("numpy", (("*",),)))
         )
 
     def test_simple(self):
@@ -89,6 +94,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
         # Given
         requirements = [
             (("numpy", ((),)), False),
+            (("numpy", (("*",),)), False),
             (("numpy", (("< 1.8.1",),)), True),
             (("numpy", (("== 1.8.1-1",),)), True),
             (("numpy", (("^= 1.8.1",),)), True),
@@ -131,7 +137,7 @@ class TestRequirementFromString(unittest.TestCase):
     def test_any(self):
         # Given
         requirement_string = "numpy"
-        r_requirement = Requirement.from_constraints(("numpy", (("*"),)))
+        r_requirement = Requirement.from_constraints(("numpy", (("*",),)))
         r_requirement_empty = Requirement.from_constraints(("numpy", ((),)))
 
         # When
@@ -265,3 +271,173 @@ class TestRequirement(unittest.TestCase):
 
         # Then
         self.assertMultiLineEqual(repr(requirement), r_repr)
+
+
+class TestRequirementTransformation(unittest.TestCase):
+
+    name = "MKL"
+    not_name = "shapely"
+    never_name = "basemap"
+
+    def run_transformations(self, constraints, transform, allow):
+
+        self.assertSingleMulti(
+            constraints, self.name, transform_install_requires, allow)
+
+        # When
+        noop_constraints = tuple(
+            (before, before)
+            for before, _ in constraints
+        )
+
+        # Then
+        self.assertSingleMulti(
+            noop_constraints, self.not_name, transform, allow)
+
+    def assertSingleMulti(self, constraints, name, transform, allow):
+        # When single-constraint per requirement
+        requirement_strings = self._add_name(name, constraints)
+
+        # Then
+        self.assertTransformations(
+            requirement_strings,
+            transform,
+            **allow)
+
+        # When the constraints are all together as a single requirement
+        before = ', '.join(dict(requirement_strings).keys())
+        after = ', '.join(self._nub(dict(requirement_strings).values()))
+        requirement_strings = ((before, after),)
+
+        # Then
+        self.assertTransformations(
+            requirement_strings,
+            transform,
+            **allow)
+
+    def assertTransformations(self, requirement_strings, transform, **kw):
+        # Given
+        R = Requirement._from_string
+        for before, after in requirement_strings:
+            # When
+            req = R(before)
+            result = transform(req, **kw)
+            expected = R(after)
+
+            # Then
+            self.assertEqual(expected, result)
+
+    def _add_name(self, name, pairs):
+        return tuple(
+            (name + ' ' + before, name + ' ' + after)
+            for before, after in pairs)
+
+    def _nub(self, sequence):
+        return tuple(OrderedDict.fromkeys(sequence).keys())
+
+    def test_allow_newer(self):
+        # Given
+        constraints = (
+            ("*", "*"),
+            ("> 1.1.1-1", "> 1.1.1-1"),
+            (">= 1.1.1-1", ">= 1.1.1-1"),
+            ("< 1.1.1-1", "*"),
+            ("<= 1.1.1-1", "*"),
+            ("^= 1.1.1", ">= 1.1.1"),
+            ("== 1.1.1-1", ">= 1.1.1-1"),
+            ("!= 1.1.1-1", "!= 1.1.1-1"),
+        )
+
+        # When
+        allow = {'allow_newer': set([self.name])}
+
+        # Then
+        self.run_transformations(
+            constraints, transform_install_requires, allow)
+
+    def test_allow_older(self):
+        # Given
+        constraints = (
+            ("*", "*"),
+            ("> 1.1.1-1", "*"),
+            (">= 1.1.1-1", "*"),
+            ("< 1.1.1-1", "< 1.1.1-1"),
+            ("<= 1.1.1-1", "<= 1.1.1-1"),
+            ("^= 1.1.1", "<= 1.1.1"),
+            ("== 1.1.1-1", "<= 1.1.1-1"),
+            ("!= 1.1.1-1", "!= 1.1.1-1"),
+        )
+
+        # When
+        allow = {'allow_older': set([self.name]),
+                 'allow_newer': set([self.never_name])}
+
+        # Then
+        self.run_transformations(
+            constraints, transform_install_requires, allow)
+
+    def test_allow_any(self):
+        # Given
+        constraints = (
+            ("*", "*"),
+            ("> 1.1.1-1", "*"),
+            (">= 1.1.1-1", "*"),
+            ("< 1.1.1-1", "*"),
+            ("<= 1.1.1-1", "*"),
+            ("^= 1.1.1", "*"),
+            ("== 1.1.1-1", "*"),
+            ("!= 1.1.1-1", "!= 1.1.1-1"),
+        )
+
+        # When
+        allow = {'allow_any': set([self.name]),
+                 'allow_older': set([self.never_name])}
+
+        # Then
+        self.run_transformations(
+            constraints, transform_install_requires, allow)
+
+    def test_newer_older_is_any(self):
+        # Given
+        constraints = (
+            "*",
+            "> 1.1.1-1",
+            ">= 1.1.1-1",
+            "< 1.1.1-1",
+            "<= 1.1.1-1",
+            "^= 1.1.1",
+            "== 1.1.1-1",
+            "!= 1.1.1-1",
+        )
+        constraint_objs = _RawConstraintsParser().parse(
+            ', '.join(constraints), EnpkgVersion.from_string)
+        any_constraints = zip(
+            constraints,
+            map(str, _transform_constraints(constraint_objs, ALLOW_ANY_MAP))
+        )
+
+        # When
+        allow = {'allow_older': set([self.name]),
+                 'allow_newer': set([self.name])}
+
+        # Then
+        self.run_transformations(
+            any_constraints, transform_install_requires, allow)
+
+    def test_collapse_multiple_any(self):
+        # Given
+        requirement = Requirement._from_string(
+            "MKL >= 1.2.1-2, MKL != 2.3.1-1, MKL < 1.4"
+        )
+        expected = Requirement._from_string(
+            "MKL, MKL != 2.3.1-1"
+        )
+
+        # When
+        transformed = transform_install_requires(
+            requirement, allow_any=set(["MKL"]))
+        constraints = transformed._constraints._constraints
+
+        # Then
+        self.assertEqual(2, len(constraints))
+        self.assertEqual(expected, transformed)

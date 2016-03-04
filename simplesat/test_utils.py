@@ -117,6 +117,10 @@ class Scenario(object):
 
         request = Request()
 
+        for kind, values in data.get("modifiers", {}).items():
+            for value in values:
+                getattr(request, kind)(value)
+
         update_all = False
 
         for s_request in scenario_requests:
@@ -151,7 +155,7 @@ class Scenario(object):
 
         return cls(packages, [remote_repository(data, packages)],
                    installed_repository(data, packages), request,
-                   decisions, operations, pretty_operations, failure)
+                   decisions, operations, pretty_operations, failure=failure)
 
     @staticmethod
     def _operations_from_transaction_list(transaction_ops):

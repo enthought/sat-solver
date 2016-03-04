@@ -137,8 +137,8 @@ class Requirement(object):
         return self._constraints.matches(version_candidate)
 
     def __eq__(self, other):
-        return (self.name == other.name
-                and self._constraints == other._constraints)
+        return (self.name == other.name and
+                self._constraints == other._constraints)
 
     def __ne__(self, other):
         return not (self == other)
@@ -158,7 +158,7 @@ class Requirement(object):
             return self.name + " " + ", ".join(parts)
 
     def __repr__(self):
-        return "Requirement('" + str(self) + "')"
+        return "{}('{}')".format(self.__class__.__name__, self)
 
     @property
     def has_any_version_constraint(self):
