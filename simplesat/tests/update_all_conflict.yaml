@@ -29,7 +29,7 @@ failure:
         Update to latest command rule (+numpy-1.9.2-2)
     Requirements: 'numpy' <- 'numpy'
         Can only install one of: (+numpy-1.9.2-2 | +numpy-1.9.2-1)
-    Requirements: 'numpy == 1.9.2-1' <- 'pandas'
+    Requirements: 'pandas' <- 'numpy == 1.9.2-1'
         pandas-0.18.0-1 requires (+numpy-1.9.2-1)
     Requirements: 'pandas'
         Update to latest command rule (+pandas-0.18.0-1)
