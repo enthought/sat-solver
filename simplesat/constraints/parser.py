@@ -10,9 +10,11 @@ from simplesat.constraints.kinds import (
 from simplesat.errors import SolverException
 
 
-# NOTE: re.Scanner seems to ignore (?i), so we have to write case-insensitivity
-# into the regex manually. We must also permit a leading underscore because of
-# names like `_distribute_remove`
+# NOTE: The _DISTRIBUTION_R regex is based on PEP508. Additionally, we remove
+# the '-' because it breaks too many other things to do otherwise. We must also
+# permit a leading underscore because of names like `_distribute_remove`
+# re.Scanner seems to ignore (?i), so we have to write case-insensitivity into
+# the regex manually.
 _DISTRIBUTION_R = r"([a-zA-Z0-9_][a-zA-Z0-9._]*[a-zA-Z0-9]|[a-zA-Z0-9])"
 _VERSION_R = r"(\d\w*(?:\.\w+)*(?:-\w+)?)"
 _EQUAL_R = r"=="
