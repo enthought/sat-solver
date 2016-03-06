@@ -9,17 +9,16 @@ from simplesat.errors import (
 
 from ..kinds import Equal
 from ..multi import MultiConstraints
-from ..parser import _RawConstraintsParser
 from ..requirement import Requirement, parse_package_full_name
-from ..requirement_transformation import (
-    ALLOW_ANY_MAP, transform_install_requires, _transform_constraints
-)
+from ..requirement_transformation import transform_install_requires
 
 
+R = Requirement._from_string
 V = EnpkgVersion.from_string
 
 
 class TestRequirementFromConstraint(unittest.TestCase):
+
     def test_comparison(self):
         # Given
         constraints0 = ("numpy", ((">= 1.8.1-3", "< 1.9.0"),))
@@ -275,154 +274,63 @@ class TestRequirement(unittest.TestCase):
 
 class TestRequirementTransformation(unittest.TestCase):
 
-    name = "MKL"
-    not_name = "shapely"
-    never_name = "basemap"
+    CONSTRAINTS = (
+        # Greater than
+        "> 1.1.1-1", ">= 1.1.1-1",
+        # Less than
+        "< 1.1.1-1", "<= 1.1.1-1",
+        # Equality
+        "^= 1.1.1", "== 1.1.1-1", "!= 1.1.1-1", "*")
 
-    def run_transformations(self, constraints, transform, allow):
+    TARGETS = {
+        'allow_newer': (
+            # Greater than
+            "> 1.1.1-1", ">= 1.1.1-1",
+            # Less than
+            "*", "*",
+            # Equality
+            ">= 1.1.1", ">= 1.1.1-1", "!= 1.1.1-1", "*"),
+        'allow_older': (
+            # Greater than
+            "*", "*",
+            # Less than
+            "< 1.1.1-1", "<= 1.1.1-1",
+            # Equality
+            "<= 1.1.1", "<= 1.1.1-1", "!= 1.1.1-1", "*"),
+        'allow_any': ("*", "*", "*", "*", "*", "*", "!= 1.1.1-1", "*"),
+    }
 
-        self.assertSingleMulti(
-            constraints, self.name, transform_install_requires, allow)
+    def test_transform_single(self):
+        for mode in ('allow_newer', 'allow_older', 'allow_any'):
+            allow = self._make_allow_dict()
+            allow[mode] = ('A',)
+            for before_c, after_c in zip(self.CONSTRAINTS, self.TARGETS[mode]):
+                before = 'A ' + before_c
+                after = 'A ' + after_c
+                self.assertTransformation(before, after, allow)
 
-        # When
-        noop_constraints = tuple(
-            (before, before)
-            for before, _ in constraints
-        )
-
-        # Then
-        self.assertSingleMulti(
-            noop_constraints, self.not_name, transform, allow)
-
-    def assertSingleMulti(self, constraints, name, transform, allow):
-        # When single-constraint per requirement
-        requirement_strings = self._add_name(name, constraints)
-
-        # Then
-        self.assertTransformations(
-            requirement_strings,
-            transform,
-            **allow)
-
+    def test_transform_multi(self):
         # When the constraints are all together as a single requirement
-        before = ', '.join(dict(requirement_strings).keys())
-        after = ', '.join(self._nub(dict(requirement_strings).values()))
-        requirement_strings = ((before, after),)
+        requirement_strings = ('A ' + c for c in self.CONSTRAINTS)
+        before = ', '.join(requirement_strings)
 
-        # Then
-        self.assertTransformations(
-            requirement_strings,
-            transform,
-            **allow)
-
-    def assertTransformations(self, requirement_strings, transform, **kw):
-        # Given
-        R = Requirement._from_string
-        for before, after in requirement_strings:
-            # When
-            req = R(before)
-            result = transform(req, **kw)
-            expected = R(after)
-
-            # Then
-            self.assertEqual(expected, result)
-
-    def _add_name(self, name, pairs):
-        return tuple(
-            (name + ' ' + before, name + ' ' + after)
-            for before, after in pairs)
-
-    def _nub(self, sequence):
-        return tuple(OrderedDict.fromkeys(sequence).keys())
-
-    def test_allow_newer(self):
-        # Given
-        constraints = (
-            ("*", "*"),
-            ("> 1.1.1-1", "> 1.1.1-1"),
-            (">= 1.1.1-1", ">= 1.1.1-1"),
-            ("< 1.1.1-1", "*"),
-            ("<= 1.1.1-1", "*"),
-            ("^= 1.1.1", ">= 1.1.1"),
-            ("== 1.1.1-1", ">= 1.1.1-1"),
-            ("!= 1.1.1-1", "!= 1.1.1-1"),
-        )
-
-        # When
-        allow = {'allow_newer': set([self.name])}
-
-        # Then
-        self.run_transformations(
-            constraints, transform_install_requires, allow)
-
-    def test_allow_older(self):
-        # Given
-        constraints = (
-            ("*", "*"),
-            ("> 1.1.1-1", "*"),
-            (">= 1.1.1-1", "*"),
-            ("< 1.1.1-1", "< 1.1.1-1"),
-            ("<= 1.1.1-1", "<= 1.1.1-1"),
-            ("^= 1.1.1", "<= 1.1.1"),
-            ("== 1.1.1-1", "<= 1.1.1-1"),
-            ("!= 1.1.1-1", "!= 1.1.1-1"),
-        )
-
-        # When
-        allow = {'allow_older': set([self.name]),
-                 'allow_newer': set([self.never_name])}
-
-        # Then
-        self.run_transformations(
-            constraints, transform_install_requires, allow)
-
-    def test_allow_any(self):
-        # Given
-        constraints = (
-            ("*", "*"),
-            ("> 1.1.1-1", "*"),
-            (">= 1.1.1-1", "*"),
-            ("< 1.1.1-1", "*"),
-            ("<= 1.1.1-1", "*"),
-            ("^= 1.1.1", "*"),
-            ("== 1.1.1-1", "*"),
-            ("!= 1.1.1-1", "!= 1.1.1-1"),
-        )
-
-        # When
-        allow = {'allow_any': set([self.name]),
-                 'allow_older': set([self.never_name])}
-
-        # Then
-        self.run_transformations(
-            constraints, transform_install_requires, allow)
+        for mode in ('allow_newer', 'allow_older', 'allow_any'):
+            target_requirement_strings = ('A ' + c for c in self.TARGETS[mode])
+            after = ', '.join(self._stable_unique(target_requirement_strings))
+            allow = self._make_allow_dict()
+            allow[mode] = ('A',)
+            self.assertTransformation(before, after, allow)
 
     def test_newer_older_is_any(self):
-        # Given
-        constraints = (
-            "*",
-            "> 1.1.1-1",
-            ">= 1.1.1-1",
-            "< 1.1.1-1",
-            "<= 1.1.1-1",
-            "^= 1.1.1",
-            "== 1.1.1-1",
-            "!= 1.1.1-1",
-        )
-        constraint_objs = _RawConstraintsParser().parse(
-            ', '.join(constraints), EnpkgVersion.from_string)
-        any_constraints = zip(
-            constraints,
-            map(str, _transform_constraints(constraint_objs, ALLOW_ANY_MAP))
-        )
-
         # When
-        allow = {'allow_older': set([self.name]),
-                 'allow_newer': set([self.name])}
-
-        # Then
-        self.run_transformations(
-            any_constraints, transform_install_requires, allow)
+        allow = self._make_allow_dict()
+        allow['allow_newer'] = ('A',)
+        allow['allow_older'] = ('A',)
+        targets_any = self.TARGETS['allow_any']
+        for before_c, after_c in zip(self.CONSTRAINTS, targets_any):
+            before = 'A ' + before_c
+            after = 'A ' + after_c
+            self.assertTransformation(before, after, allow)
 
     def test_collapse_multiple_any(self):
         # Given
@@ -441,3 +349,25 @@ class TestRequirementTransformation(unittest.TestCase):
         # Then
         self.assertEqual(2, len(constraints))
         self.assertEqual(expected, transformed)
+
+    def _stable_unique(self, sequence):
+        return tuple(OrderedDict.fromkeys(sequence).keys())
+
+    def _make_allow_dict(self):
+        return {
+            'allow_any': ("B",),
+            'allow_older': ("B",),
+            'allow_any': ("B",),
+        }
+
+    def assertTransformation(self, before, after, allow):
+        before_r = R(before)
+        expected = R(after)
+        result = transform_install_requires(before_r, **allow)
+        msg = ("""
+            before: {}
+            expected: {}
+            result: {}
+            allow: {}
+        """).format(before_r, expected, result, allow)
+        self.assertEqual(expected, result, msg=msg)
