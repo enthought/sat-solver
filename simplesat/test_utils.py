@@ -52,6 +52,13 @@ def packages_from_definition(packages_definition):
     ]
 
 
+def transform_packages_for_request(name_and_packages, request):
+    adhoc = request.adhoc_constraints
+    for name, package in name_and_packages.items():
+        name_and_packages[name] = package.clone_with_adhoc_constraints(adhoc)
+    return name_and_packages
+
+
 def pool_and_repository_from_packages(packages):
     repository = Repository(packages_from_definition(packages))
     pool = Pool([repository])
@@ -107,9 +114,6 @@ class Scenario(object):
         else:
             data = yaml.load(file_or_filename, Loader=_UnicodeLoader)
 
-        packages = collections.OrderedDict(
-            parse_package_list(data.get("packages", []))
-        )
         scenario_requests = data.get("request", [])
 
         marked = list(data.get("marked", []))
@@ -151,6 +155,10 @@ class Scenario(object):
             data.get("pretty_transaction", []))
 
         failure = data.get('failure')
+
+        raw_packages = collections.OrderedDict(
+            parse_package_list(data.get("packages", [])))
+        packages = transform_packages_for_request(raw_packages, request)
 
         return cls(packages, [remote_repository(data, packages)],
                    installed_repository(data, packages), request,
