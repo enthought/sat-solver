@@ -86,6 +86,18 @@ class Requirement(object):
 
         return cls(name, constraints)
 
+    def to_constraints(self):
+        """ Return a constraint tuple as described by from_constraints. """
+        name = self.name
+
+        parts = []
+        for constraint in self._constraints._constraints:
+            if not isinstance(constraint, Any):
+                parts.append(str(constraint))
+            else:
+                parts.append('*')
+        return (name, (tuple(parts),))
+
     @classmethod
     def _from_string(cls, string,
                      version_factory=EnpkgVersion.from_string):
@@ -147,10 +159,13 @@ class Requirement(object):
         return hash((self.name, self._constraints))
 
     def __str__(self):
-        parts = []
-        for constraint in self._constraints._constraints:
-            if not isinstance(constraint, Any):
-                parts.append(str(constraint))
+        name, constraints = self.to_constraints()
+        parts = [
+            constraint
+            for conjunction in constraints
+            for constraint in conjunction
+            if constraint != '*'
+        ]
 
         if len(parts) == 0:
             return self.name

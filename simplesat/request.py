@@ -1,4 +1,4 @@
-from attr import attr, attributes, Factory
+from attr import attr, attributes, Factory, asdict
 from attr.validators import instance_of
 from enum import Enum
 
@@ -22,6 +22,13 @@ class AdhocConstraints(object):
     allow_newer = attr(default=Factory(set))
     allow_any = attr(default=Factory(set))
     allow_older = attr(default=Factory(set))
+
+    def asdict(self):
+        return asdict(self)
+
+    @property
+    def targets(self):
+        return set.union(self.allow_newer, self.allow_any, self.allow_older)
 
 
 class Request(object):

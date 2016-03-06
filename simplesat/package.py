@@ -3,6 +3,10 @@ import six
 import enum
 
 from okonomiyaki.versions import EnpkgVersion
+from simplesat.constraints.requirement import Requirement
+from simplesat.constraints.requirement_transformation import (
+    transform_install_requires, transform_conflicts
+)
 
 
 class ConstraintKinds(enum.Enum):
@@ -61,7 +65,8 @@ class PackageMetadata(object):
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
         return parser.parse_to_package(s)
 
-    def __init__(self, name, version, install_requires=None, conflicts=None):
+    def __init__(self, name, version, install_requires=None, conflicts=None,
+                 parent_package=None):
         """ Return a new PackageMetdata object.
 
         Parameters
@@ -85,14 +90,60 @@ class PackageMetadata(object):
                  ("nose", (("*",),)),
                  ("six", (("> 1.2", "<= 1.2.3"), (">= 1.2.5-2",)))
 
+        conflicts : tuple(tuple(str, tuple(tuple(str))))
+            A tuple of tuples mapping distribution names to disjunctions of
+            conjunctions of version constraints.
+
+            This works the same way as install_requires, but instead denotes
+            packages that must *not* be installed with this package.
         """
         self._name = name
         self._version = version
         self._install_requires = install_requires or ()
         self._conflicts = conflicts or ()
-
         self._key = (name, version, self._install_requires, self._conflicts)
         self._hash = hash(self._key)
+
+        # Keep track of whether this package was derived from another one
+        self.parent_package = parent_package
+
+    def clone_with_adhoc_constraints(self, adhoc_constraints):
+        if adhoc_constraints is None:
+            return self
+
+        adhoc_dict = adhoc_constraints.asdict()
+        targets = adhoc_constraints.targets
+        modified = False
+        new_install_requires = []
+        for name, disjunction in self.install_requires:
+            if name in targets:
+                modified = True
+                requirement = transform_install_requires(
+                    Requirement.from_constraints((name, disjunction)),
+                    **adhoc_dict)
+                new_install_requires.append(requirement.to_constraints())
+            else:
+                new_install_requires.append((name, disjunction))
+        new_install_requires = tuple(new_install_requires)
+
+        new_conflicts = []
+        for name, disjunction in self.conflicts:
+            if name in targets:
+                modified = True
+                requirement = transform_conflicts(
+                    Requirement.from_constraints((name, disjunction)),
+                    **adhoc_dict)
+                new_conflicts.append(requirement.to_constraints())
+            else:
+                new_conflicts.append((name, disjunction))
+        new_conflicts = tuple(new_conflicts)
+
+        return self if not modified else type(self)(
+            self._name, self._version,
+            install_requires=new_install_requires,
+            conflicts=new_conflicts,
+            parent_package=self
+        )
 
     @property
     def name(self):
@@ -111,7 +162,8 @@ class PackageMetadata(object):
         return self._conflicts
 
     def __repr__(self):
-        return "PackageMetadata('{0}-{1}')".format(self._name, self._version)
+        return "{0}('{1}-{2}')".format(
+            self.__class__.__name__, self._name, self._version)
 
     def __hash__(self):
         return self._hash
@@ -136,6 +188,14 @@ class RepositoryPackageMetadata(object):
         self._key = (package._key, repository_info)
         self._hash = hash(self._key)
 
+    def clone_with_adhoc_constraints(self, adhoc_constraints):
+        if adhoc_constraints is None:
+            return self
+        new_package = self._package.clone_with_adhoc_constraints(
+            adhoc_constraints)
+        return self if new_package is self._package else type(self)(
+            new_package, self._repository_info)
+
     @property
     def name(self):
         return self._package.name
@@ -151,6 +211,10 @@ class RepositoryPackageMetadata(object):
     @property
     def conflicts(self):
         return self._package.conflicts
+
+    @property
+    def parent_package(self):
+        return self._package.parent_package
 
     @property
     def repository_info(self):
