@@ -47,11 +47,9 @@ class Pool(object):
 
     def request():
         def fget(self):
-            print("Getting request")
             return self._request
 
         def fset(self, value):
-            print("Setting request")
             self._dirty = True
             self._request = value
         return locals()
