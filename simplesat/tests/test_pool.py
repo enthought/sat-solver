@@ -2,11 +2,11 @@ import unittest
 
 import six
 
-from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, Requirement
 from simplesat.repository import Repository
+from simplesat.request import Request
 
 from ..pool import Pool
 
@@ -126,3 +126,75 @@ class TestPool(unittest.TestCase):
         # Then
         self.assertEqual(pool.id_to_string(package_id), "+numpy-1.8.1-1")
         self.assertEqual(pool.id_to_string(-package_id), "-numpy-1.8.1-1")
+
+    def test_transform(self):
+        # Given
+        repository = Repository(self.packages_from_definition(
+            "numpy 1.8.1-1; depends (MKL == 10.3-1)"))
+        request = Request()
+        request.adhoc_constraints.allow_newer.add('MKL')
+
+        # When
+        pool = Pool([repository], request=request)
+        numpy_181 = pool.name_to_packages('numpy')[0]
+        result = numpy_181.install_requires
+        expected = (('MKL', ((">= 10.3-1",),)),)
+
+        # Then
+        self.assertEqual(result, expected)
+
+    def test_reset_packages(self):
+        # When
+        pool = Pool()
+        repository = Repository(self.packages_from_definition(
+            "numpy 1.8.1-1; depends (MKL == 10.3-1)"))
+
+        # Then
+        self.assertEqual((), pool.package_ids)
+
+        # When
+        pool.add_repository(repository)
+
+        # Then
+        self.assertEqual((1,), pool.package_ids)
+
+        # When
+        package = pool.id_to_package(1)
+        pool._reset_packages()
+
+        # Then
+        with self.assertRaises(KeyError):
+            pool._id_to_package_[1]
+        with self.assertRaises(KeyError):
+            pool._package_to_id_[package]
+        self.assertEqual(pool._packages_by_name_[package.name], [])
+
+    def test_recompute(self):
+        # When
+        pool = Pool()
+        self.assertEqual((), pool.package_ids)
+        repository = Repository(self.packages_from_definition(
+            "numpy 1.8.1-1; depends (MKL == 10.3-1)"))
+
+        # Then
+        pool.add_repository(repository)
+        self.assertEqual((1,), pool.package_ids)
+
+        # When
+        package = pool.id_to_package(1)
+        pool._reset_packages()
+
+        # Then
+        self.assertEqual(package, pool.id_to_package(1))
+
+        # When / Then
+        pool._reset_packages()
+        self.assertEqual(1, pool.package_id(package))
+
+        # When / Then
+        pool._reset_packages()
+        self.assertEqual(pool.id_to_string(1), "+numpy-1.8.1-1")
+
+        # When / Then
+        pool._reset_packages()
+        self.assertEqual((package,), pool.name_to_packages('numpy'))

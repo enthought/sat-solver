@@ -193,7 +193,7 @@ class Scenario(object):
 
     def print_solution(self, pool, positive_decisions):
         for package_id in sorted(positive_decisions):
-            package = pool._id_to_package[package_id]
+            package = pool.id_to_package(package_id)
             print("{}: {} {}".format(package_id, package.name,
                                      package.full_version))
 

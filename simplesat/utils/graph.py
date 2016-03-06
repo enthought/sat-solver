@@ -68,7 +68,7 @@ def package_lit_dependency_graph(pool, package_lits, closed=True):
     """
 
     package_id_map = {abs(p): p for p in package_lits}
-    packages = {package_id: pool._id_to_package[abs(package_id)]
+    packages = {package_id: pool.id_to_package(abs(package_id))
                 for package_id in package_lits}
 
     R = Requirement.from_constraints

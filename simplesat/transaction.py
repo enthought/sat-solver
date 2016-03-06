@@ -114,12 +114,12 @@ class Transaction(object):
 
         # Removals should happen top down
         for package_id in reversed(removals):
-            package = pool._id_to_package[package_id]
+            package = pool.id_to_package(package_id)
             operations.append(RemoveOperation(package))
 
         # Installations should happen bottom up
         for package_id in installs:
-            package = pool._id_to_package[package_id]
+            package = pool.id_to_package(package_id)
             operations.append(InstallOperation(package))
 
         return operations

@@ -97,7 +97,7 @@ def _connected_packages(solution, root_ids, pool):
     # ... -> pkg.install_requires -> pkg names -> ids -> _id_to_package -> ...
 
     def get_name(pkg_id):
-        return pool._id_to_package[abs(pkg_id)].name
+        return pool.id_to_package(abs(pkg_id)).name
 
     root_names = {get_name(pkg_id) for pkg_id in root_ids}
 
@@ -115,7 +115,7 @@ def _connected_packages(solution, root_ids, pool):
     def neighborfunc(pkg_id):
         """ Given a pkg id, return the pkg ids of the immediate dependencies
         that appeared in our solution. """
-        constraints = pool._id_to_package[pkg_id].install_requires
+        constraints = pool.id_to_package(pkg_id).install_requires
         neighbors = set(solution_name_to_id[name] for name, _ in constraints)
         return neighbors
 

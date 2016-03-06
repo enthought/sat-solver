@@ -54,7 +54,7 @@ class TestRulesGenerator(unittest.TestCase):
 
         # When
         pkg_id = update.literals[0]
-        package = pool._id_to_package[pkg_id]
+        package = pool.id_to_package(pkg_id)
 
         # Then
         self.assertIs(package, installed_repo_package)

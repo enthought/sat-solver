@@ -412,7 +412,7 @@ class RulesGenerator(object):
         self._add_rule(rule, "job")
 
     def _add_installed_package_rules(self, package):
-        packages_all_versions = self._pool._packages_by_name[package.name]
+        packages_all_versions = self._pool.name_to_packages(package.name)
         for other in packages_all_versions:
             self._add_package_rules(other)
 
