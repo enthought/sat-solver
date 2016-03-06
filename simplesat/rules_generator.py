@@ -1,7 +1,7 @@
 import collections
 import enum
 
-from .constraints import Requirement, transform_install_requires
+from .constraints import Requirement
 from .errors import NoPackageFound, SolverException
 from .request import JobType
 
@@ -278,18 +278,9 @@ class RulesGenerator(object):
         if rule is not None and rule not in self._rules_set:
             self._rules_set[rule] = None
 
-    def _transform_install_requires(self, requirement):
-        return transform_install_requires(
-            requirement,
-            allow_newer=self._allow_newer,
-            allow_any=self._allow_any,
-            allow_older=self._allow_older
-        )
-
     def _add_install_requires_rules(self, package, work_queue, requirements):
         for constraints in package.install_requires:
-            pkg_requirement = self._transform_install_requires(
-                Requirement.from_constraints(constraints))
+            pkg_requirement = Requirement.from_constraints(constraints)
             dependency_candidates = self._pool.what_provides(pkg_requirement)
             combined_requirements = (
                 [pkg_requirement] + requirements

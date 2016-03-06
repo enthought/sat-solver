@@ -68,7 +68,7 @@ def _transform_requirement(
     if modified and constraints != original_constraints:
         # Remove duplicate constraints
         constraints = tuple(OrderedDict.fromkeys(constraints).keys())
-        return TransformedRequirement(name, constraints, requirement)
+        return Requirement(name, constraints)
 
     return requirement
 
@@ -82,11 +82,3 @@ def _transform_constraints(constraints, type_map):
 
 transform_install_requires = _transform_requirement  # noqa
 transform_conflicts = _transform_requirement  # noqa
-
-
-class TransformedRequirement(Requirement):
-
-    def __init__(self, name, constraints, requirement):
-        self._original_requirement = requirement
-        super(TransformedRequirement, self).__init__(
-            name, constraints=constraints)
