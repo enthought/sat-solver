@@ -11,7 +11,8 @@ from simplesat.constraints.kinds import (
 from simplesat.constraints.requirement import Requirement
 
 
-def Any_(_):
+def Any_(_version):
+    # This just eats the 'version' argument
     return Any()
 
 ALLOW_NEWER_MAP = {
@@ -50,6 +51,9 @@ ALLOW_ANY_MAP = {
 
 def _transform_requirement(
         requirement, allow_newer=None, allow_any=None, allow_older=None):
+    """If any of the modifier rules apply, return a new Requirement with
+    modified constraints, otherwise return the original requirement.
+    """
 
     name = requirement.name
     original_constraints = constraints = requirement._constraints._constraints
