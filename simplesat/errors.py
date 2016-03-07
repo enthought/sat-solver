@@ -15,7 +15,8 @@ class InvalidDependencyString(InvalidConstraint):
 
 
 class NoPackageFound(SolverException):
-    pass
+    def __init__(self, message, requirement, *a, **kw):
+        super(NoPackageFound, self).__init__(message, requirement, *a, **kw)
 
 
 class SatisfiabilityError(SolverException):

@@ -299,7 +299,9 @@ class RulesGenerator(object):
                 msg = ("No candidates found for requirement {0!r}, needed for "
                        "dependency {1!r}")
                 raise NoPackageFound(
-                    msg.format(pkg_requirement.name, package))
+                    msg.format(pkg_requirement.name, package),
+                    pkg_requirement,
+                )
 
             rule = self._create_dependency_rule(
                 package, dependency_candidates, RuleType.package_requires,
@@ -345,7 +347,10 @@ class RulesGenerator(object):
             if not conflict_providers:
                 msg = ("No candidates found for requirement {0!r}, needed for "
                        "conflict {1!r}")
-                raise NoPackageFound(msg.format(pkg_requirement.name, package))
+                raise NoPackageFound(
+                    msg.format(pkg_requirement.name, package),
+                    pkg_requirement,
+                )
 
             for provider in conflict_providers:
                 rule = self._create_conflicts_rule(
