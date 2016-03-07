@@ -84,5 +84,25 @@ def _transform_constraints(constraints, type_map):
     )
 
 
-transform_install_requires = _transform_requirement  # noqa
-transform_conflicts = _transform_requirement  # noqa
+class _TransformInstallRequires(object):
+
+    @staticmethod
+    def __call__(*a, **kw):
+        return _transform_requirement(*a, **kw)
+
+    @staticmethod
+    def with_modifiers(constraints, modifiers):
+        return _transform_requirement(
+            constraints,
+            allow_newer=modifiers.allow_newer,
+            allow_older=modifiers.allow_older,
+            allow_any=modifiers.allow_any
+        )
+
+
+class _TransformConflicts(_TransformInstallRequires):
+    pass
+
+
+transform_install_requires = _TransformInstallRequires()
+transform_conflicts = _TransformConflicts()

@@ -111,16 +111,15 @@ class PackageMetadata(object):
         if modifiers is None:
             return self
 
-        modifier_dict = modifiers.asdict()
         targets = modifiers.targets
         modified = False
         new_install_requires = []
         for name, disjunction in self.install_requires:
             if name in targets:
                 modified = True
-                requirement = transform_install_requires(
+                requirement = transform_install_requires.with_modifiers(
                     Requirement.from_constraints((name, disjunction)),
-                    **modifier_dict)
+                    modifiers)
                 new_install_requires.append(requirement.to_constraints())
             else:
                 new_install_requires.append((name, disjunction))
@@ -130,9 +129,9 @@ class PackageMetadata(object):
         for name, disjunction in self.conflicts:
             if name in targets:
                 modified = True
-                requirement = transform_conflicts(
+                requirement = transform_conflicts.with_modfiers(
                     Requirement.from_constraints((name, disjunction)),
-                    **modifier_dict)
+                    modifiers)
                 new_conflicts.append(requirement.to_constraints())
             else:
                 new_conflicts.append((name, disjunction))
