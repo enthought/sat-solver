@@ -70,4 +70,8 @@ class DebuggingSolver extends Solver
 $policy = new DefaultPolicy();
 
 $solver = new DebuggingSolver($policy, $pool, $installed_repo);
-$solver->print_operations($request);
+try {
+    $solver->print_operations($request);
+} catch (Exception $e) {
+    echo 'Exception:', $e->getMessage();
+}
