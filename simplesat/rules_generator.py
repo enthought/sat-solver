@@ -315,8 +315,7 @@ class RulesGenerator(object):
                            " for dependency {1!r}")
                     raise MissingInstallRequires(
                         pkg_requirement,
-                        msg.format(pkg_requirement.name, package)
-                    )
+                        msg.format(pkg_requirement.name, package))
                 else:
                     msg = ("Ignoring package {0!s}: no candidates found"
                            " for dependency {1!r}.")
@@ -376,12 +375,19 @@ class RulesGenerator(object):
                 else None)
 
             if not conflict_providers:
-                msg = ("No candidates found for requirement {0!r}, needed for "
-                       "conflict {1!r}")
-                raise MissingConflicts(
-                    pkg_requirement,
-                    msg.format(pkg_requirement.name, package),
-                )
+                if self.strict:
+                    msg = ("No candidates found for requirement {0!r}, needed"
+                           " for conflict of {1!r}")
+                    name = pkg_requirement.name
+                    raise MissingConflicts(
+                        pkg_requirement,
+                        msg.format(name, package))
+                else:
+                    # We just ignore missing constraints. They don't break
+                    # anything.
+                    msg = ("Ignoring missing package conflicts {0!r}, needed"
+                           " for conflict of {1!r}")
+                    logger.info(msg.format(pkg_requirement.name, package))
 
             for provider in conflict_providers:
                 rule = self._create_conflicts_rule(

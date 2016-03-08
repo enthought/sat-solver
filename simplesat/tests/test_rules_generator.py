@@ -3,8 +3,6 @@
 import io
 import unittest
 
-from simplesat.errors import MissingConflicts, MissingInstallRequires
-
 from ..pool import Pool
 from ..rules_generator import RuleType, RulesGenerator
 from ..test_utils import Scenario
@@ -126,8 +124,7 @@ class TestRulesGenerator(unittest.TestCase):
             pool, scenario.request, installed_map=installed_map)
 
         # Then
-        with self.assertRaises(MissingInstallRequires):
-            list(rules_generator.iter_rules())
+        list(rules_generator.iter_rules())
 
     def test_missing_conflicts_package(self):
         # Given
@@ -152,5 +149,4 @@ class TestRulesGenerator(unittest.TestCase):
             pool, scenario.request, installed_map=installed_map)
 
         # Then
-        with self.assertRaises(MissingConflicts):
-            list(rules_generator.iter_rules())
+        list(rules_generator.iter_rules())
