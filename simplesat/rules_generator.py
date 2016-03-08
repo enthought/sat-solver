@@ -1,10 +1,15 @@
 import collections
 import enum
+import logging
 
 from .constraints import Requirement
-from .errors import NoPackageFound, SolverException
+from .errors import (
+    MissingConflicts, MissingInstallRequires, NoPackageFound, SolverException
+)
 from .request import JobType
 
+
+logger = logging.getLogger(__name__)
 
 INDENT = 4
 
@@ -292,6 +297,7 @@ class RulesGenerator(object):
             self._rules_set[rule] = None
 
     def _add_install_requires_rules(self, package, work_queue, requirements):
+        all_dependency_candidates = []
         for constraints in package.install_requires:
             pkg_requirement = Requirement.from_constraints(constraints)
             dependency_candidates = self._pool.what_provides(pkg_requirement)
@@ -304,20 +310,37 @@ class RulesGenerator(object):
                 else None)
 
             if not dependency_candidates:
-                msg = ("No candidates found for requirement {0!r}, needed for "
-                       "dependency {1!r}")
-                raise NoPackageFound(
-                    pkg_requirement,
-                    msg.format(pkg_requirement.name, package),
-                )
+                if self.strict:
+                    msg = ("No candidates found for requirement {0!r}, needed"
+                           " for dependency {1!r}")
+                    raise MissingInstallRequires(
+                        pkg_requirement,
+                        msg.format(pkg_requirement.name, package)
+                    )
+                else:
+                    msg = ("Ignoring package {0!s}: no candidates found"
+                           " for dependency {1!r}.")
+                    pkg_msg = ("'{0.name} {0.version}' from"
+                               " '{0.repository_info.name}'")
+                    pkg_str = pkg_msg.format(package)
+                    logger.info(msg.format(pkg_str, str(pkg_requirement)))
+                    rule = self._create_remove_rule(
+                        package, RuleType.package_broken,
+                        requirements=combined_requirements,
+                    )
+                    self._add_rule(rule, "package")
+                    return
 
             rule = self._create_dependency_rule(
                 package, dependency_candidates, RuleType.package_requires,
                 combined_requirements)
             self._add_rule(rule, "package")
-
-            for candidate in dependency_candidates:
-                work_queue.append((candidate, combined_requirements))
+            # We're "buffering" this so that we don't queue up any dependencies
+            # unless they are all successfully processed
+            all_dependency_candidates.extend(
+                (candidate, combined_requirements)
+                for candidate in dependency_candidates)
+        work_queue.extend(all_dependency_candidates)
 
     def _add_conflicts_rules(self, package, requirements):
         """
@@ -355,7 +378,7 @@ class RulesGenerator(object):
             if not conflict_providers:
                 msg = ("No candidates found for requirement {0!r}, needed for "
                        "conflict {1!r}")
-                raise NoPackageFound(
+                raise MissingConflicts(
                     pkg_requirement,
                     msg.format(pkg_requirement.name, package),
                 )
