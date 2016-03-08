@@ -142,13 +142,14 @@ class PackageRule(object):
 
 
 class RulesGenerator(object):
-    def __init__(self, pool, request, installed_map=None):
+    def __init__(self, pool, request, installed_map=None, strict=False):
         self._rules_set = collections.OrderedDict()
         self._pool = pool
 
         self.request = request
         self.installed_map = installed_map or collections.OrderedDict()
         self.added_package_ids = set()
+        self.strict = strict
 
     def iter_rules(self):
         """
