@@ -19,6 +19,7 @@ class RuleType(enum.Enum):
     package_same_name = 10
     package_implicit_obsoletes = 11
     package_installed = 12
+    package_broken = 100
 
     internal = 256
 
@@ -113,6 +114,12 @@ class PackageRule(object):
             left = pool.id_to_string(abs(left_id))[1:]
             right = pool.id_to_string(abs(right_id))
             rule_desc = "{} conflicts with {}".format(left, right)
+        elif self._reason == RuleType.package_broken:
+            package_id = self.literals[0]
+            # Trim the sign
+            package_str = pool.id_to_string(abs(package_id))
+            msg = "{} refers to missing packages and was ignored"
+            rule_desc = msg.format(package_str)
         else:
             rule_desc = s
 
