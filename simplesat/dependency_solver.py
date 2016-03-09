@@ -69,7 +69,7 @@ class DependencySolver(object):
 
             providers = tuple(pool.what_provides(requirement))
             if len(providers) == 0:
-                raise NoPackageFound(str(requirement), requirement)
+                raise NoPackageFound(requirement, str(requirement))
 
             if job.kind == JobType.update:
                 # An update request *must* install the latest package version

@@ -30,7 +30,8 @@ class Repository(object):
 
     def __len__(self):
         return sum(
-            len(packages) for packages in six.itervalues(self._name_to_packages)
+            len(packages)
+            for packages in six.itervalues(self._name_to_packages)
         )
 
     def __contains__(self, package_metadata):
@@ -89,8 +90,8 @@ class Repository(object):
                 return candidate
         package_string = '{0}-{1}'.format(name, str(version))
         raise NoPackageFound(
+            Requirement.from_package_string(package_string),
             "Package '{0}' not found".format(package_string),
-            Requirement.from_package_string(package_string)
         )
 
     def find_packages(self, name):

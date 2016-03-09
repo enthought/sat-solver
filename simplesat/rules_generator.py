@@ -47,7 +47,7 @@ class PackageRule(object):
             package_candidates = pool.what_provides(requirement)
             if len(package_candidates) == 0:
                 msg = "No candidate for package {0!r}".format(package_string)
-                raise NoPackageFound(msg)
+                raise NoPackageFound(requirement, msg)
             elif len(package_candidates) > 1:
                 msg = "> 1 candidate for package {0!r} requirement, cannot " \
                       "create rule from it" % package_string
@@ -299,8 +299,8 @@ class RulesGenerator(object):
                 msg = ("No candidates found for requirement {0!r}, needed for "
                        "dependency {1!r}")
                 raise NoPackageFound(
-                    msg.format(pkg_requirement.name, package),
                     pkg_requirement,
+                    msg.format(pkg_requirement.name, package),
                 )
 
             rule = self._create_dependency_rule(
@@ -348,8 +348,8 @@ class RulesGenerator(object):
                 msg = ("No candidates found for requirement {0!r}, needed for "
                        "conflict {1!r}")
                 raise NoPackageFound(
-                    msg.format(pkg_requirement.name, package),
                     pkg_requirement,
+                    msg.format(pkg_requirement.name, package),
                 )
 
             for provider in conflict_providers:
