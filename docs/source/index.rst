@@ -17,6 +17,9 @@ Contents:
 .. toctree::
    getting_started
    architecture
+   sat_solving
+   comparing_with_composer
+   glossary
    references
    :maxdepth: 2
 

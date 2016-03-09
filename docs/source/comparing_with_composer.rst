@@ -1,5 +1,5 @@
-Comparing with php's composer
-=============================
+Comparing with PHP's Composer library
+=====================================
 
 First, clone composer's somewhere on your machine::
 
