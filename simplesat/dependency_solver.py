@@ -62,20 +62,25 @@ class DependencySolver(object):
 
         for job in request.jobs:
             assert job.kind in (
-                JobType.install, JobType.remove, JobType.update
+                JobType.install, JobType.remove, JobType.update,
+                JobType.constrain,
             ), 'Unknown job kind: {}'.format(job.kind)
 
             requirement = job.requirement
 
             providers = tuple(pool.what_provides(requirement))
-            if len(providers) == 0:
-                raise NoPackageFound(str(requirement), requirement)
 
             if job.kind == JobType.update:
+                # FIXME: Redundant? It looks like it's handled in the
+                # RulesGenerator under `_add_update_job_rules`.
                 # An update request *must* install the latest package version
                 def key(package):
                     return (package.version, package in installed_repository)
                 providers = [max(providers, key=key)]
+
+            if job.kind != JobType.constrain:
+                if len(providers) == 0:
+                    raise NoPackageFound(str(requirement), requirement)
 
             requirement_ids = [pool.package_id(p) for p in providers]
             self._policy.add_requirements(requirement_ids)

@@ -14,6 +14,7 @@ class RuleType(enum.Enum):
     job_install = 2
     job_remove = 3
     job_update = 4
+    job_constrain = 5
     package_requires = 7
     package_conflicts = 8
     package_same_name = 10
@@ -91,6 +92,8 @@ class PackageRule(object):
             rule_desc = "Update to latest command rule ({})".format(s)
         elif self._reason == RuleType.job_remove:
             rule_desc = "Remove command rule ({})".format(s)
+        elif self._reason == RuleType.job_constrain:
+            rule_desc = "Ad-hoc constraint ({})".format(s)
         elif self._reason == RuleType.package_same_name:
             parts = [pool.id_to_string(abs(literal))
                      for literal in self.literals]
@@ -399,6 +402,49 @@ class RulesGenerator(object):
         )
         self._add_rule(rule, "job")
 
+    def _add_constrain_job_rules(self, job):
+        """
+        Add ad-hoc rules that constrain the solution to satisfy the
+        requirement.
+
+        This operation differs from just adding an "install" rule in that that
+        it does *not* force installation of any packages. I.e. the solution
+        must *not* satisfy the *negation* of the requirement given.
+
+        For example the install job for "MKL > 10.0" would translate to "Must
+        install an MKL version greater than 10.0.0-0," whereas a constrain job
+        would be read as "Must not install an MKL version less than or equal to
+        10.0.0-0."
+
+        """
+        # XXX: an alternative approach might be to actually negate the
+        # constraint, but that requires more logic and seems more likely to
+        # need special rules for edge cases.
+
+        # If we supported compound constraints, this would all be much easier.
+
+        R = Requirement._from_string
+        name_package_ids = set(
+            self._pool.package_id(p)
+            for p in self._pool.what_provides(R(job.requirement.name))
+        )
+        matched_package_ids = set(
+            self._pool.package_id(p)
+            for p in self._pool.what_provides(job.requirement)
+        )
+        package_ids = name_package_ids.difference(matched_package_ids)
+
+        if len(package_ids) == 0:
+            return
+
+        for package_id in sorted(package_ids):
+            rule = PackageRule(
+                (-package_id,),
+                RuleType.job_constrain,
+                requirements=[job.requirement],
+            )
+            self._add_rule(rule, "job")
+
     def _add_installed_package_rules(self, package):
         packages_all_versions = self._pool.name_to_packages(package.name)
         for other in packages_all_versions:
@@ -412,6 +458,8 @@ class RulesGenerator(object):
                 self._add_remove_job_rules(job)
             elif job.kind == JobType.update:
                 self._add_update_job_rules(job)
+            elif job.kind == JobType.constrain:
+                self._add_constrain_job_rules(job)
             else:
                 msg = "Job kind {0!r} not supported".format(job.kind)
                 raise NotImplementedError(msg)
