@@ -182,7 +182,7 @@ class TestRulesGenerator(unittest.TestCase):
 
         # When
         scenario.request.allow_newer('quark')
-        pool.request = scenario.request
+        pool.modifiers = scenario.request.modifiers
         rules_generator = RulesGenerator(pool, scenario.request, installed_map)
         rule = next(rule for rule in rules_generator.iter_rules()
                     if rule.reason == RuleType.package_requires)

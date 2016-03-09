@@ -23,37 +23,36 @@ class Pool(object):
     given requirement.
     """
 
-    def __init__(self, repositories=None, request=None):
+    def __init__(self, repositories=None, modifiers=None):
         self._repositories = []
-
-        # When true, we must transform the packages we have according to the
-        # request before we can use them
-        self._request = None
-        self.request = request
-
+        self._modifiers = None
+        self.modifiers = modifiers
         self._reset_packages()
 
         for repository in repositories or []:
             self.add_repository(repository)
 
     def _reset_packages(self):
-        # FIXME: temporarily changing these names to catch places that were
-        # using the private API
+        # When true, we must transform the packages we have according to the
+        # modifiers before we can use them
         self._dirty = True
+        self._original_packages = []
+        # FIXME Mar-9-2016: temporarily changing these names to catch places
+        # that were using the private API. If it has been awhile and you feel
+        # like everything is ok, you can remove these trailing underscores.
         self._package_to_id_ = {}
         self._id_to_package_ = {}
-        self._original_packages = []
         self._packages_by_name_ = DefaultOrderedDict(list)
 
-    def request():
+    def modifiers():
         def fget(self):
-            return self._request
+            return self._modifiers
 
         def fset(self, value):
             self._dirty = True
-            self._request = value
+            self._modifiers = value
         return locals()
-    request = property(**request())
+    modifiers = property(**modifiers())
 
     def add_repository(self, repository):
         """ Add the repository to this pool.
@@ -63,8 +62,8 @@ class Pool(object):
         repository : Repository
             The repository to add
         """
-        self._repositories.append(repository)
         self._dirty = True
+        self._repositories.append(repository)
         self._original_packages.extend(repository)
 
     @no_dirty
@@ -124,10 +123,7 @@ class Pool(object):
         return tuple(self._id_to_package_.keys())
 
     def _prepare_packages(self):
-        modifiers = (
-            self._request.modifiers
-            if self._request
-            else None)
+        modifiers = self._modifiers
         all_packages = itertools.chain.from_iterable(self._repositories)
         self._reset_packages()
         for current_id, package in enumerate(all_packages, start=1):

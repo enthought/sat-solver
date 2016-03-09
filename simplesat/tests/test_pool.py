@@ -135,7 +135,7 @@ class TestPool(unittest.TestCase):
         request.modifiers.allow_newer.add('MKL')
 
         # When
-        pool = Pool([repository], request=request)
+        pool = Pool([repository], modifiers=request.modifiers)
         numpy_181 = pool.name_to_packages('numpy')[0]
         result = numpy_181.install_requires
         expected = (('MKL', ((">= 10.3-1",),)),)

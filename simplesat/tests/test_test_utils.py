@@ -197,6 +197,5 @@ class TestScenario(unittest.TestCase):
         scenario = Scenario.from_yaml(yaml)
 
         # Then
-        constraints = attr.asdict(
-            scenario.request.modifiers, recurse=False)
+        constraints = attr.asdict(scenario.request.modifiers, recurse=False)
         self.assertEqual(constraints, expected)
