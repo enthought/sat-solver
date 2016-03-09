@@ -22,9 +22,9 @@ First, some definitions:
       make an assumption.
 
   Package
-      In object hierarchy, a "package" refers to a PackageMetadata instance.
-      This describes a package, its dependencies "``install_requires``" and the
-      packages with which it conflicts.
+      In object hierarchy, a "package" refers to a ``PackageMetadata``
+      instance. This describes a package, its dependencies
+      "``install_requires``" and the packages with which it conflicts.
 
       Colloquially, this refers to any kind of software distribution we might
       be trying to manage.
@@ -109,10 +109,10 @@ and can be created from them like so::
     repo = Repository(iter_of_packages)
     repo.add_package(additional_package)
 
-The ``Repository`` class is rather simple and does not support any kind of
-complicated querying. When it is time to identify packages according to
-constraints such as ``"numpy >= 1.7.2"``, we must create a ``Pool``. A ``Pool``
-can contain many such ``Repository`` and expose an API for querying.
+The ``Repository`` class does not support any kind of complicated querying.
+When it is time to identify packages according to constraints such as ``"numpy
+>= 1.7.2"``, we must create a ``Pool``. A ``Pool`` contains many such
+``Repository`` and exposes an API for querying.
 
 .. graphviz::
 
@@ -133,9 +133,39 @@ The ``Pool`` is used like so::
     pool = Pool([repository])
     package_metadata_instances = pool.what_provides(requirement)
 
-
 Requests
 --------
+
+The purpose of this library is to produce a valid of packages that satisfy
+some particular set of constraints. This is expressed as a ``Transaction`` that
+is to be applied to the "installed" repository. The ``Request`` object is our
+vehicle for communicating this constraints to the solver.
+
+
+At its core, a ``Request`` is a collection of actions such as "install" and
+``Requirement``\s such as ``numpy >= 1.8.1``, which together form ``Job``
+rules. The ``Request`` can have any number of such jobs, all of which must be
+satisfiable simultaneously. If conflicting ``Job`` rules are given, then the
+solver will fail with an ``UnsatisifiabilityError``.
+
+.. graphviz::
+
+    digraph simplesat {
+        Request -> Job;
+        Job [shape=tripleoctagon];
+    }
+
+Additionally, one may attach ``ConstraintModifiers`` to the ``Request`` which
+are used to modify the constraints of packages during the search for a
+solution.
+
+.. graphviz::
+
+    digraph simplesat {
+        Request -> Job;
+        Request -> ConstraintModifiers;
+        Job [shape=tripleoctagon];
+    }
 
 .. graphviz::
 
