@@ -124,8 +124,12 @@ def package_to_pretty_string(package):
 
 
 def _parse_preamble(preamble):
-    parts = preamble.strip().split()
-    if not len(parts) == 2:
-        raise ValueError("Invalid preamble: {0!r}".format(preamble))
-    else:
-        return parts[0], parts[1]
+    msg = "Invalid preamble: {0!r}".format(preamble)
+    match = re.match(_DISTRIBUTION_RS + _WS_RS + _VERSION_RS, preamble)
+    if not match:
+        raise ValueError(msg)
+    if match.span()[-1] != len(preamble):
+        msg = msg + ", {!r}".format(match)
+        raise ValueError(msg)
+    groups = match.groupdict()
+    return groups['distribution'], groups['version']
