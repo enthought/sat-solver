@@ -144,7 +144,7 @@ def _tokenize(scanner, requirement_string):
         for part in requirement_string.split(","):
             scanned, remaining = scanner.scan(part.strip())
             if len(remaining) > 0:
-                msg = "Invalid requirement string: {0!r}"
+                msg = "{0!r}"
                 for tok in scanned:
                     if isinstance(tok, DistributionNameToken):
                         msg += "(distribution name: {0!r})".format(tok.value)
@@ -177,8 +177,7 @@ class _RawConstraintsParser(object):
                 assert isinstance(requirement_block[0], AnyToken)
                 return Any()
             else:
-                msg = ("Invalid requirement string: {0!r}".
-                       format(requirement_string))
+                msg = "{0!r}".format(requirement_string)
                 raise InvalidConstraint(msg)
 
         constraints = []
@@ -197,7 +196,7 @@ class _RawRequirementParser(object):
 
     def parse(self, requirement_string, version_factory):
         def compute_constraint(requirement_block):
-            msg = "Invalid requirement {0!r}".format(requirement_string)
+            msg = "{0!r}".format(requirement_string)
 
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
