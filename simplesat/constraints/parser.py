@@ -12,11 +12,12 @@ from simplesat.errors import SolverException
 
 # NOTE: The _DISTRIBUTION_R regex is based on PEP508. Additionally, we remove
 # the '-' because it breaks too many other things to do otherwise. We must also
-# permit a leading underscore because of names like `_distribute_remove`
-# re.Scanner seems to ignore (?i), so we have to write case-insensitivity into
-# the regex manually.
-_DISTRIBUTION_R = r"([a-zA-Z0-9_][a-zA-Z0-9._]*[a-zA-Z0-9]|[a-zA-Z0-9])"
-_VERSION_R = r"(\d\w*(?:\.\w+)*(?:-\w+)?)"
+# permit a leading or trailling underscore because of names like
+# `_distribute_remove` re.Scanner seems to ignore (?i), so we have to write
+# case-insensitivity into the regex manually.
+_DISTRIBUTION_NAME_R = r"(?!\.)(?:\.?\w+)+(?<!\.)"
+_DISTRIBUTION_R = "({})".format(_DISTRIBUTION_NAME_R)
+_VERSION_R = r"((?=\d){}(?:-\w+)?)".format(_DISTRIBUTION_NAME_R)
 _EQUAL_R = r"=="
 _GEQ_R = r">="
 _GT_R = r">"
