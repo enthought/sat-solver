@@ -9,6 +9,7 @@ from simplesat.constraints.package_parser import (
 )
 from simplesat.constraints.requirement import Requirement
 from simplesat.package import PackageMetadata
+from simplesat.errors import InvalidConstraint
 
 
 RUNNING_PYTHON = PythonImplementation(
@@ -470,6 +471,19 @@ class TestParseScaryPackages(unittest.TestCase):
         data_analysis_common_reader_writers_addon 0.3.0.dev0-20151217
         """.strip().splitlines()
 
+    UNACCEPTABLE_PACKAGE_STRINGS = """
+        foo a909
+        barbar-242 1.2.3
+        baz!bizz 0.2.5-dev1
+        twobars 1.3-4-6
+        .startswithadot 1.2-3
+        endwithadot. 2.3-4
+        .startendwithdot. 4.5.6-7
+        versionstartswithoutnum .2.4.5-4
+        versioneendswithadot 2.3.-2
+        buildhasadot 2.3.4-2.3
+        """.strip().splitlines()
+
     def test_pretty_package_parse(self):
         # Given
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
@@ -477,13 +491,21 @@ class TestParseScaryPackages(unittest.TestCase):
 
         # When
         for package_string in package_strings:
-            # When
             package = parser.parse_to_package(package_string)
             expected = tuple(package_string.split())
             result = (package.name, str(package.version))
 
             # Then
             self.assertEqual(expected, result)
+
+        # Given
+        package_strings = self.UNACCEPTABLE_PACKAGE_STRINGS
+
+        # When
+        for package_string in package_strings:
+            # Then
+            with self.assertRaises(ValueError):
+                parser.parse_to_package(package_string)
 
     def test_requirement_parsing(self):
         # Given
@@ -497,3 +519,14 @@ class TestParseScaryPackages(unittest.TestCase):
 
             # Then
             self.assertEqual(expected, result)
+
+        # Given
+        package_strings = self.UNACCEPTABLE_PACKAGE_STRINGS
+
+        # When
+        for package_string in package_strings:
+            name, version = package_string.split()
+            requirement_string = name + ' == ' + version
+            # Then
+            with self.assertRaises(InvalidConstraint):
+                Requirement._from_string(requirement_string)
