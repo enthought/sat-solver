@@ -145,6 +145,12 @@ def _tokenize(scanner, requirement_string):
             scanned, remaining = scanner.scan(part.strip())
             if len(remaining) > 0:
                 msg = "Invalid requirement string: {0!r}"
+                for tok in scanned:
+                    if isinstance(tok, DistributionNameToken):
+                        msg += "(distribution name: {0!r})".format(tok.value)
+                    if isinstance(tok, VersionToken):
+                        msg += "(version: {0!r})".format(tok.value)
+                msg += "(unparsed {0!r})".format(remaining)
                 raise InvalidConstraint(msg.format(requirement_string))
             elif len(scanned) > 0:
                 tokens.append(scanned)
