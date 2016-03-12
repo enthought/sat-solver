@@ -1,8 +1,8 @@
-from attr import attr, attributes, Factory, asdict
+from attr import attr, attributes
 from attr.validators import instance_of
 from enum import Enum
 
-from .constraints import Requirement
+from .constraints import Requirement, ConstraintModifiers
 
 
 class JobType(Enum):
@@ -15,20 +15,6 @@ class JobType(Enum):
 class _Job(object):
     requirement = attr(validator=instance_of(Requirement))
     kind = attr(validator=instance_of(JobType))
-
-
-@attributes
-class ConstraintModifiers(object):
-    allow_newer = attr(default=Factory(set))
-    allow_any = attr(default=Factory(set))
-    allow_older = attr(default=Factory(set))
-
-    def asdict(self):
-        return asdict(self)
-
-    @property
-    def targets(self):
-        return set.union(self.allow_newer, self.allow_any, self.allow_older)
 
 
 class Request(object):

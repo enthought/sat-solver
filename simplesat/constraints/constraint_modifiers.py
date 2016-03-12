@@ -5,6 +5,8 @@ from __future__ import division, print_function
 
 from collections import OrderedDict
 
+from attr import attr, attributes, Factory, asdict
+
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, Not, GEQ, GT, LEQ, LT,
 )
@@ -47,6 +49,20 @@ ALLOW_ANY_MAP = {
     LT: Any_,
     EnpkgUpstreamMatch: Any_,
 }
+
+
+@attributes
+class ConstraintModifiers(object):
+    allow_newer = attr(default=Factory(set))
+    allow_any = attr(default=Factory(set))
+    allow_older = attr(default=Factory(set))
+
+    def asdict(self):
+        return asdict(self)
+
+    @property
+    def targets(self):
+        return set.union(self.allow_newer, self.allow_any, self.allow_older)
 
 
 def _transform_requirement(
