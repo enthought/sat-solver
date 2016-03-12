@@ -44,15 +44,14 @@ class Pool(object):
         self._id_to_package_ = {}
         self._packages_by_name_ = DefaultOrderedDict(list)
 
-    def modifiers():
-        def fget(self):
-            return self._modifiers
+    @property
+    def modifiers(self):
+        return self._modifiers
 
-        def fset(self, value):
-            self._dirty = True
-            self._modifiers = value
-        return locals()
-    modifiers = property(**modifiers())
+    @modifiers.setter
+    def modifiers(self, value):
+        self._dirty = True
+        self._modifiers = value
 
     def add_repository(self, repository):
         """ Add the repository to this pool.
