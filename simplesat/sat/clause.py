@@ -92,3 +92,6 @@ class Clause(Constraint):
 
     def __repr__(self):
         return "Clause({}, learned={})".format(self.lits, self.learned)
+
+    def __lt__(self, other):
+        raise TypeError("no ordering relation is defined for clauses")

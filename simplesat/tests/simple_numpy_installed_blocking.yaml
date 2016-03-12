@@ -20,16 +20,16 @@ installed:
     - numpy 1.7.1-1
 
 failure:
-    requirements: ['numpy > 1.8-0', 'EPD_free']
+    requirements: ['EPD_free', 'numpy > 1.8-0']
     raw: |
         Conflicting requirements:
-        Requirements: 'numpy > 1.8-0'
-            Install command rule (+numpy-1.8.1-1 | +numpy-1.8.1-2)
-        Requirements: 'MKL == 10.3-1' <- 'numpy > 1.8-0'
-            numpy-1.8.1-2 requires (+MKL-10.3-1)
-        Requirements: 'MKL' <- 'numpy > 1.8-0'
-            Can only install one of: (+MKL-10.2-1 | +MKL-10.3-1)
-        Requirements: 'MKL == 10.2-1' <- 'EPD_free'
-            EPD_free-7.3-1 requires (+MKL-10.2-1)
         Requirements: 'EPD_free'
             Install command rule (+EPD_free-7.3-1)
+        Requirements: 'EPD_free' <- 'MKL == 10.2-1'
+            EPD_free-7.3-1 requires (+MKL-10.2-1)
+        Requirements: 'numpy > 1.8-0' <- 'MKL'
+            Can only install one of: (+MKL-10.2-1 | +MKL-10.3-1)
+        Requirements: 'numpy > 1.8-0' <- 'MKL == 10.3-1'
+            numpy-1.8.1-2 requires (+MKL-10.3-1)
+        Requirements: 'numpy > 1.8-0'
+            Install command rule (+numpy-1.8.1-1 | +numpy-1.8.1-2)

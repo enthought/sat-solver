@@ -71,7 +71,7 @@ class DependencySolver(object):
 
             providers = tuple(pool.what_provides(requirement))
             if len(providers) == 0:
-                raise NoPackageFound(str(requirement), requirement)
+                raise NoPackageFound(requirement, str(requirement))
 
             if job.kind == JobType.update:
                 # An update request *must* install the latest package version
@@ -87,7 +87,8 @@ class DependencySolver(object):
         for package in installed_repository:
             installed_map[pool.package_id(package)] = package
 
-        rules_generator = RulesGenerator(pool, request, installed_map)
+        rules_generator = RulesGenerator(
+            pool, request, installed_map=installed_map)
 
         return all_requirement_ids, list(rules_generator.iter_rules())
 

@@ -123,7 +123,7 @@ def connected_nodes(node, neighbor_func, visited=None):
 
 
 def backtrack(end, start, visited):
-    """ Return a list of nodes from `start` to `end` by recursively looking up
+    """ Return a tuple of nodes from `start` to `end` by recursively looking up
     the current node in `visited`. `visited` is a dictionary of one-way edges
     between nodes.
     """
@@ -132,27 +132,49 @@ def backtrack(end, start, visited):
     while node != start:
         node = visited[node]
         path.append(node)
-    return list(reversed(path))
+    return tuple(reversed(path))
 
 
-def breadth_first_search(start, neighbor_func, terminate_func, visited=None):
+def breadth_first_search(start, neighbor_func, targets,
+                         target_func=None, visited=None):
     """
-    Return a path from `start` to `end` such that `terminate_func(end)` is
-    True by following neighbors as given by `neighborfunc(node)`.
+    Return an iterable of paths from `start` to each reachable terminal node
+    `end` such that `terminate_func(end)` is in `targets`, by following
+    neighbors as given by `neighborfunc(node)`.
 
-    `visited` is used both to track the current path and to avoid recomputing
-    sections of the graph that have been visited before.
+    Parameters
+    ----------
+    start : node
+        The starting point of the search
+    neighbor_func : callable
+        neighbor_func(start) returns an iterable of nodes to visit
+    targets : set
+        The nodes we're searching for. The search terminates when each member
+        of `targets` has been encountered at least once, but only path is
+        returned per target.
+    target_func : callable (optional)
+        If given, then `target_func` is applied to node and the result
+        is used to determine if `node` is a target.
+    visited : dict (optional)
+        If given, it will be used to track the current path. You can use it to
+        directly inspect the search path after calling breadth_first_search().
     """
     queue = deque([start])
     visited = {} if visited is None else visited
     visited[start] = None
+    targets = set(targets)
     while queue:
         node = queue.popleft()
-        if terminate_func(node):
-            return backtrack(node, start, visited), visited
+        found = target_func(node) if target_func else node
+        if found in targets:
+            # We found an important node. Yield the path to this node.
+            targets.remove(found)
+            yield backtrack(node, start, visited)
+        if not targets:
+            # There are no more important nodes, we're done.
+            break
         for neighbor in neighbor_func(node):
             if neighbor in visited:
                 continue
             queue.append(neighbor)
             visited[neighbor] = node
-    return [], visited
