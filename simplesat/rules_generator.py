@@ -1,5 +1,5 @@
-import collections
 import enum
+from collections import OrderedDict, deque
 
 from .constraints import Requirement
 from .errors import NoPackageFound, SolverException
@@ -79,7 +79,7 @@ class PackageRule(object):
         if not sign:
             parts = (p[1:] for p in parts)
         if unique:
-            parts = collections.OrderedDict.fromkeys(parts).keys()
+            parts = OrderedDict.fromkeys(parts).keys()
         return " | ".join(parts)
 
     def to_string(self, pool, unique=False):
@@ -135,12 +135,12 @@ class PackageRule(object):
 
 
 class RulesGenerator(object):
-    def __init__(self, pool, request, installed_map=None):
-        self._rules_set = collections.OrderedDict()
+    def __init__(self, pool, request, installed_package_ids=None):
+        self._rules_set = OrderedDict()
         self._pool = pool
 
         self.request = request
-        self.installed_map = installed_map or collections.OrderedDict()
+        self.installed_package_ids = installed_package_ids or OrderedDict()
         self.added_package_ids = set()
 
     def iter_rules(self):
@@ -153,7 +153,7 @@ class RulesGenerator(object):
         # we'll end up keeping the rule instance that doesn't know it should be
         # associated with a job.
         self._add_job_rules()
-        for package in self.installed_map.values():
+        for package in self.installed_package_ids.values():
             self._add_installed_package_rules(package)
             self._add_package_rules(package)
         return self._rules_set
@@ -362,7 +362,7 @@ class RulesGenerator(object):
         """
         Create all the rules required to satisfy installing the given package.
         """
-        work_queue = collections.deque()
+        work_queue = deque()
         work_queue.append(package)
 
         while len(work_queue) > 0:
@@ -381,7 +381,8 @@ class RulesGenerator(object):
             for package in packages:
                 # This is an optimization to avoid iterating over the installed
                 # packages again.
-                if package not in self.installed_map:
+                package_id = self._pool.package_id(package)
+                if package_id not in self.installed_package_ids:
                     # Rules created directly from a job requirement have no
                     # other requirements in their history-stack
                     self._add_package_rules(
@@ -411,7 +412,8 @@ class RulesGenerator(object):
 
         # An update request *must* install the latest package version
         def key(package):
-            installed = self._pool.package_id(package) in self.installed_map
+            package_id = self._pool.package_id(package)
+            installed = package_id in self.installed_package_ids
             return (package.version, installed)
         package = max(packages, key=key)
         self._add_package_rules(package, requirements=(job.requirement,))

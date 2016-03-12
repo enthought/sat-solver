@@ -28,9 +28,9 @@ class RemoveOperation(Operation):
 
 class Transaction(object):
 
-    def __init__(self, pool, decisions, installed_map):
+    def __init__(self, pool, decisions, installed_package_ids):
         self.operations = self._safe_operations(
-            pool, decisions, installed_map)
+            pool, decisions, installed_package_ids)
         self.pretty_operations = self._as_pretty_operations(
             pool, self.operations)
 
@@ -96,7 +96,7 @@ class Transaction(object):
         first, second = sorted(ops, key=lambda o: rank.index(o.__class__))
         return UpdateOperation(first.package, second.package)
 
-    def _safe_operations(self, pool, decisions, installed_map):
+    def _safe_operations(self, pool, decisions, installed_package_ids):
         graph = package_lit_dependency_graph(pool, decisions, closed=True)
         removals = []
         installs = []
@@ -107,9 +107,10 @@ class Transaction(object):
             # Sort the set of independent packages for determinism
             for package_id in sorted(group, key=abs):
                 assert package_id in decisions
-                if package_id < 0 and -package_id in installed_map:
+                if package_id < 0 and -package_id in installed_package_ids:
                     removals.append(-package_id)
-                elif package_id > 0 and package_id not in installed_map:
+                elif (package_id > 0 and
+                      package_id not in installed_package_ids):
                     installs.append(package_id)
 
         # Removals should happen top down

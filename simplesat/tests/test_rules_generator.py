@@ -31,10 +31,11 @@ class TestRulesGenerator(unittest.TestCase):
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(
-            pool, scenario.request, installed_map=installed_map)
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
         rules = list(rules_generator.iter_rules())
 
         # Then
@@ -78,10 +79,11 @@ class TestRulesGenerator(unittest.TestCase):
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(
-            pool, scenario.request, installed_map=installed_map)
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
         rules = list(rules_generator.iter_rules())
 
         # Then
@@ -120,10 +122,11 @@ class TestRulesGenerator(unittest.TestCase):
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(
-            pool, scenario.request, installed_map=installed_map)
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
 
         # Then
         with self.assertRaises(NoPackageFound):
@@ -146,10 +149,11 @@ class TestRulesGenerator(unittest.TestCase):
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(
-            pool, scenario.request, installed_map=installed_map)
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
 
         # Then
         with self.assertRaises(NoPackageFound):
@@ -171,11 +175,13 @@ class TestRulesGenerator(unittest.TestCase):
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
 
         # When
-        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
         rule = next(rule for rule in rules_generator.iter_rules()
                     if rule.reason == RuleType.package_requires)
 
@@ -187,7 +193,9 @@ class TestRulesGenerator(unittest.TestCase):
         # When
         scenario.request.allow_newer('quark')
         pool.modifiers = scenario.request.modifiers
-        rules_generator = RulesGenerator(pool, scenario.request, installed_map)
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
         rule = next(rule for rule in rules_generator.iter_rules()
                     if rule.reason == RuleType.package_requires)
 

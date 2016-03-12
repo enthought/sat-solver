@@ -43,18 +43,18 @@ class DependencySolver(object):
             solution = sat_solver.search()
         solution_ids = _solution_to_ids(solution)
 
-        installed_map = set(
+        installed_package_ids = set(
             self._pool.package_id(p)
             for p in self._installed_repository
         )
 
         if self.use_pruning:
-            root_ids = installed_map.union(requirement_ids)
+            root_ids = installed_package_ids.union(requirement_ids)
             solution_ids = _connected_packages(
                 solution_ids, root_ids, self._pool
             )
 
-        return Transaction(self._pool, solution_ids, installed_map)
+        return Transaction(self._pool, solution_ids, installed_package_ids)
 
     def _create_rules_and_initialize_policy(self, request):
         pool = self._pool
@@ -83,12 +83,13 @@ class DependencySolver(object):
             self._policy.add_requirements(requirement_ids)
             all_requirement_ids.extend(requirement_ids)
 
-        installed_map = collections.OrderedDict()
+        installed_package_ids = collections.OrderedDict()
         for package in installed_repository:
-            installed_map[pool.package_id(package)] = package
+            package_id = pool.package_id(package)
+            installed_package_ids[package_id] = package
 
         rules_generator = RulesGenerator(
-            pool, request, installed_map=installed_map)
+            pool, request, installed_package_ids=installed_package_ids)
 
         return all_requirement_ids, list(rules_generator.iter_rules())
 
