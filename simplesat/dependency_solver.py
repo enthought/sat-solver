@@ -31,6 +31,8 @@ class DependencySolver(object):
         operations to apply to resolve it, or raise SatisfiabilityError
         if no resolution could be found.
         """
+        modifiers = request.modifiers
+        self._pool.modifiers = modifiers if modifiers.targets else None
         with timed_context("Generate Rules") as self._last_rules_time:
             requirement_ids, rules = self._create_rules_and_initialize_policy(
                 request

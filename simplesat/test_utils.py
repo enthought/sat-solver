@@ -150,8 +150,7 @@ class Scenario(object):
         failure = data.get('failure')
 
         packages = collections.OrderedDict(
-            (name, package.clone_with_modifiers(request.modifiers))
-            for name, package in parse_package_list(data.get("packages", [])))
+            parse_package_list(data.get("packages", [])))
 
         return cls(packages, [remote_repository(data, packages)],
                    installed_repository(data, packages), request,
