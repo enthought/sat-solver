@@ -1,5 +1,7 @@
 from .package_parser import PrettyPackageStringParser
-from .requirement import Requirement
+from .requirement import (
+    BaseRequirement, ConflictRequirement, InstallRequirement
+)
 from .constraint_modifiers import (
-    ConstraintModifiers, transform_install_requires
+    ConstraintModifiers, transform_requirement,
 )

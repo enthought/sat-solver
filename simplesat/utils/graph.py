@@ -8,7 +8,7 @@ from collections import defaultdict, deque
 import six
 import itertools
 
-from simplesat.constraints.requirement import Requirement
+from simplesat.constraints.requirement import InstallRequirement
 
 
 def toposort(nodes_to_edges):
@@ -71,7 +71,7 @@ def package_lit_dependency_graph(pool, package_lits, closed=True):
     packages = {package_id: pool.id_to_package(abs(package_id))
                 for package_id in package_lits}
 
-    R = Requirement.from_constraints
+    R = InstallRequirement.from_constraints
     nodes_to_edges = {package_id: set() for package_id in package_lits}
 
     for package_lit, package in packages.items():

@@ -9,11 +9,11 @@ from simplesat.errors import (
 
 from ..kinds import Equal
 from ..multi import MultiConstraints
-from ..requirement import Requirement, parse_package_full_name
-from ..constraint_modifiers import transform_install_requires
+from ..requirement import InstallRequirement, parse_package_full_name
+from ..constraint_modifiers import transform_requirement
 
 
-R = Requirement._from_string
+R = InstallRequirement._from_string
 V = EnpkgVersion.from_string
 
 
@@ -25,8 +25,8 @@ class TestRequirementFromConstraint(unittest.TestCase):
         constraints1 = ("numpy", ((">= 1.8.1-3", "< 1.9.1"),))
 
         # When
-        requirement0 = Requirement.from_constraints(constraints0)
-        requirement1 = Requirement.from_constraints(constraints1)
+        requirement0 = InstallRequirement.from_constraints(constraints0)
+        requirement1 = InstallRequirement.from_constraints(constraints1)
 
         # Then
         self.assertTrue(requirement0 != requirement1)
@@ -36,8 +36,8 @@ class TestRequirementFromConstraint(unittest.TestCase):
         constraints0 = ("numpy", ((">= 1.8.1-3", "< 1.9.1"),))
 
         # When
-        requirement0 = Requirement.from_constraints(constraints0)
-        requirement1 = Requirement.from_constraints(constraints0)
+        requirement0 = InstallRequirement.from_constraints(constraints0)
+        requirement1 = InstallRequirement.from_constraints(constraints0)
 
         # Then
         self.assertEqual(requirement0, requirement1)
@@ -48,7 +48,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
         constraints0 = ("numpy", ((),))
 
         # When
-        requirement = Requirement.from_constraints(constraints0)
+        requirement = InstallRequirement.from_constraints(constraints0)
 
         # Then
         self.assertTrue(requirement.matches(V("1.8.1-2")))
@@ -57,7 +57,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
         self.assertTrue(requirement.matches(V("1.9.0-1")))
         self.assertEqual(
             requirement,
-            Requirement.from_constraints(("numpy", (("*",),)))
+            InstallRequirement.from_constraints(("numpy", (("*",),)))
         )
 
     def test_simple(self):
@@ -65,7 +65,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
         constraints0 = ("numpy", ((">= 1.8.1-3", "< 1.9.0"),))
 
         # When
-        requirement = Requirement.from_constraints(constraints0)
+        requirement = InstallRequirement.from_constraints(constraints0)
 
         # Then
         self.assertFalse(requirement.matches(V("1.8.1-2")))
@@ -80,14 +80,14 @@ class TestRequirementFromConstraint(unittest.TestCase):
 
         # Then
         with self.assertRaises(InvalidConstraint):
-            Requirement.from_constraints(constraints0)
+            InstallRequirement.from_constraints(constraints0)
 
     def test_disjunction_fails(self):
         constraints0 = ("numpy", (("< 1.8.0",), (">= 1.8.1-3",)))
 
         # Then
         with self.assertRaises(InvalidConstraint):
-            Requirement.from_constraints(constraints0)
+            InstallRequirement.from_constraints(constraints0)
 
     def test_has_any_version_constraint(self):
         # Given
@@ -101,7 +101,7 @@ class TestRequirementFromConstraint(unittest.TestCase):
 
         # When/Then
         for pretty_string, has_any_version_constraint in requirements:
-            requirement = Requirement.from_constraints(pretty_string)
+            requirement = InstallRequirement.from_constraints(pretty_string)
             self.assertEqual(
                 requirement.has_any_version_constraint,
                 has_any_version_constraint
@@ -115,8 +115,8 @@ class TestRequirementFromString(unittest.TestCase):
         requirement_string2 = "numpy >= 1.8.1-3, numpy < 1.9.1"
 
         # When
-        requirement1 = Requirement._from_string(requirement_string1)
-        requirement2 = Requirement._from_string(requirement_string2)
+        requirement1 = InstallRequirement._from_string(requirement_string1)
+        requirement2 = InstallRequirement._from_string(requirement_string2)
 
         # Then
         self.assertTrue(requirement1 != requirement2)
@@ -126,8 +126,8 @@ class TestRequirementFromString(unittest.TestCase):
         requirement_string = "numpy >= 1.8.1-3, numpy < 1.9.0"
 
         # When
-        requirement1 = Requirement._from_string(requirement_string)
-        requirement2 = Requirement._from_string(requirement_string)
+        requirement1 = InstallRequirement._from_string(requirement_string)
+        requirement2 = InstallRequirement._from_string(requirement_string)
 
         # Then
         self.assertEqual(requirement1, requirement2)
@@ -136,11 +136,13 @@ class TestRequirementFromString(unittest.TestCase):
     def test_any(self):
         # Given
         requirement_string = "numpy"
-        r_requirement = Requirement.from_constraints(("numpy", (("*",),)))
-        r_requirement_empty = Requirement.from_constraints(("numpy", ((),)))
+        r_requirement = InstallRequirement.from_constraints(
+            ("numpy", (("*",),)))
+        r_requirement_empty = InstallRequirement.from_constraints(
+            ("numpy", ((),)))
 
         # When
-        requirement = Requirement._from_string(requirement_string)
+        requirement = InstallRequirement._from_string(requirement_string)
 
         # Then
         self.assertTrue(requirement.matches(V("1.8.1-2")))
@@ -155,7 +157,7 @@ class TestRequirementFromString(unittest.TestCase):
         requirement_string = "numpy *"
 
         # When
-        requirement = Requirement._from_string(requirement_string)
+        requirement = InstallRequirement._from_string(requirement_string)
 
         # Then
         self.assertEqual(requirement, r_requirement)
@@ -167,7 +169,7 @@ class TestRequirementFromString(unittest.TestCase):
         requirement_string = "numpy >= 1.8.1-3, numpy < 1.9.0"
 
         # When
-        requirement = Requirement._from_string(requirement_string)
+        requirement = InstallRequirement._from_string(requirement_string)
 
         # Then
         self.assertFalse(requirement.matches(V("1.8.1-2")))
@@ -181,14 +183,14 @@ class TestRequirementFromString(unittest.TestCase):
 
         # When
         with self.assertRaises(InvalidDependencyString):
-            Requirement._from_string(requirement_string)
+            InstallRequirement._from_string(requirement_string)
 
     def test_from_package_string(self):
         # Given
         package_s = "numpy-1.8.1-1"
 
         # When
-        requirement = Requirement.from_package_string(package_s)
+        requirement = InstallRequirement.from_package_string(package_s)
 
         # Then
         self.assertEqual(requirement.name, "numpy")
@@ -206,7 +208,7 @@ class TestRequirementFromString(unittest.TestCase):
 
         # When/Then
         for pretty_string, has_any_version_constraint in requirements:
-            requirement = Requirement._from_string(pretty_string)
+            requirement = InstallRequirement._from_string(pretty_string)
             self.assertEqual(
                 requirement.has_any_version_constraint,
                 has_any_version_constraint
@@ -239,10 +241,10 @@ class TestRequirement(unittest.TestCase):
         constraints = (
             "numpy", (("^= 1.8.0",),)
         )
-        r_repr = "Requirement('numpy ^= 1.8.0')"
+        r_repr = "InstallRequirement('numpy ^= 1.8.0')"
 
         # When
-        requirement = Requirement.from_constraints(constraints)
+        requirement = InstallRequirement.from_constraints(constraints)
 
         # Then
         self.assertMultiLineEqual(repr(requirement), r_repr)
@@ -251,10 +253,10 @@ class TestRequirement(unittest.TestCase):
         constraints = (
             "numpy", ((">= 1.8.0", "< 1.10.0"),)
         )
-        r_repr = "Requirement('numpy >= 1.8.0-0, < 1.10.0-0')"
+        r_repr = "InstallRequirement('numpy >= 1.8.0-0, < 1.10.0-0')"
 
         # When
-        requirement = Requirement.from_constraints(constraints)
+        requirement = InstallRequirement.from_constraints(constraints)
 
         # Then
         self.assertMultiLineEqual(repr(requirement), r_repr)
@@ -263,10 +265,10 @@ class TestRequirement(unittest.TestCase):
         constraints = (
             "numpy", ((">= 1.8.0-0", "< 1.10.0-0"),)
         )
-        r_repr = "Requirement('numpy >= 1.8.0-0, < 1.10.0-0')"
+        r_repr = "InstallRequirement('numpy >= 1.8.0-0, < 1.10.0-0')"
 
         # When
-        requirement = Requirement.from_constraints(constraints)
+        requirement = InstallRequirement.from_constraints(constraints)
 
         # Then
         self.assertMultiLineEqual(repr(requirement), r_repr)
@@ -334,15 +336,15 @@ class TestRequirementTransformation(unittest.TestCase):
 
     def test_collapse_multiple_any(self):
         # Given
-        requirement = Requirement._from_string(
+        requirement = InstallRequirement._from_string(
             "MKL >= 1.2.1-2, MKL != 2.3.1-1, MKL < 1.4"
         )
-        expected = Requirement._from_string(
+        expected = InstallRequirement._from_string(
             "MKL, MKL != 2.3.1-1"
         )
 
         # When
-        transformed = transform_install_requires(
+        transformed = transform_requirement(
             requirement, allow_any=set(["MKL"]))
         constraints = transformed._constraints._constraints
 
@@ -363,7 +365,7 @@ class TestRequirementTransformation(unittest.TestCase):
     def assertTransformation(self, before, after, allow):
         before_r = R(before)
         expected = R(after)
-        result = transform_install_requires(before_r, **allow)
+        result = transform_requirement(before_r, **allow)
         msg = ("""
             before: {}
             expected: {}

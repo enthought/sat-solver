@@ -7,7 +7,7 @@ import yaml
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints import Requirement
+from simplesat.constraints import InstallRequirement
 from simplesat.constraints.package_parser import constraints_to_pretty_strings
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal
@@ -18,7 +18,7 @@ from simplesat.test_utils import repository_from_index
 # TODO Can use new enstaller pretty printer here...
 
 def dependency_to_string(dependency):
-    req = Requirement._from_string(dependency)
+    req = InstallRequirement._from_string(dependency)
     constraints = list(req._constraints._constraints)
     assert len(constraints) == 1
     assert isinstance(constraints[0],

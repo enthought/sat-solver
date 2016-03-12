@@ -6,7 +6,7 @@ import operator
 import six
 
 from .errors import NoPackageFound
-from simplesat.constraints.requirement import Requirement
+from simplesat.constraints.requirement import InstallRequirement
 
 
 class Repository(object):
@@ -90,7 +90,7 @@ class Repository(object):
                 return candidate
         package_string = '{0}-{1}'.format(name, str(version))
         raise NoPackageFound(
-            Requirement.from_package_string(package_string),
+            InstallRequirement.from_package_string(package_string),
             "Package '{0}' not found".format(package_string),
         )
 

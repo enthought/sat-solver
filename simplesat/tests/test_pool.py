@@ -4,7 +4,7 @@ import six
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints import PrettyPackageStringParser, Requirement
+from simplesat.constraints import PrettyPackageStringParser, InstallRequirement
 from simplesat.repository import Repository
 from simplesat.request import Request
 
@@ -60,7 +60,7 @@ class TestPool(unittest.TestCase):
     def test_what_provides_caret(self):
         # Given
         repository = Repository(self.packages_from_definition(NUMPY_PACKAGES))
-        requirement = Requirement._from_string("numpy ^= 1.8.1")
+        requirement = InstallRequirement._from_string("numpy ^= 1.8.1")
 
         # When
         pool = Pool([repository])
@@ -73,7 +73,7 @@ class TestPool(unittest.TestCase):
     def test_what_provides_casing(self):
         # Given
         repository = Repository(self.packages_from_definition(NUMPY_PACKAGES))
-        requirement = Requirement._from_string("mkl ^= 10.2")
+        requirement = InstallRequirement._from_string("mkl ^= 10.2")
 
         # When
         pool = Pool([repository])
@@ -86,7 +86,7 @@ class TestPool(unittest.TestCase):
     def test_what_provides_simple(self):
         # Given
         repository = Repository(self.packages_from_definition(NUMPY_PACKAGES))
-        requirement = Requirement._from_string("numpy >= 1.8.0")
+        requirement = InstallRequirement._from_string("numpy >= 1.8.0")
 
         # When
         pool = Pool([repository])
@@ -101,7 +101,8 @@ class TestPool(unittest.TestCase):
     def test_what_provides_multiple(self):
         # Given
         repository = Repository(self.packages_from_definition(NUMPY_PACKAGES))
-        requirement = Requirement._from_string("numpy >= 1.8.0, numpy < 1.8.1")
+        requirement = InstallRequirement._from_string(
+            "numpy >= 1.8.0, numpy < 1.8.1")
 
         # When
         pool = Pool([repository])
@@ -116,7 +117,7 @@ class TestPool(unittest.TestCase):
     def test_id_to_string(self):
         # Given
         repository = Repository(self.packages_from_definition(NUMPY_PACKAGES))
-        requirement = Requirement._from_string("numpy >= 1.8.1")
+        requirement = InstallRequirement._from_string("numpy >= 1.8.1")
 
         # When
         pool = Pool([repository])
@@ -127,18 +128,19 @@ class TestPool(unittest.TestCase):
         self.assertEqual(pool.id_to_string(package_id), "+numpy-1.8.1-1")
         self.assertEqual(pool.id_to_string(-package_id), "-numpy-1.8.1-1")
 
-    def test_transform(self):
+    def test_transformaion_what_provides(self):
         # Given
         repository = Repository(self.packages_from_definition(
             "numpy 1.8.1-1; depends (MKL == 10.3-1)"))
         request = Request()
-        request.modifiers.allow_newer.add('MKL')
+        request.modifiers.allow_newer.add('numpy')
 
         # When
         pool = Pool([repository], modifiers=request.modifiers)
-        numpy_181 = pool.name_to_packages('numpy')[0]
-        result = numpy_181.install_requires
-        expected = (('MKL', ((">= 10.3-1",),)),)
+        requirement = InstallRequirement._from_string('numpy ^= 1.7')
+        numpy_181 = list(repository)[0]
+        result = pool.what_provides(requirement)
+        expected = [numpy_181]
 
         # Then
         self.assertEqual(result, expected)

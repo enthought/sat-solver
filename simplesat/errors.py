@@ -17,9 +17,9 @@ class InvalidDependencyString(InvalidConstraint):
 class NoPackageFound(SolverException):
     def __init__(self, requirement, *a, **kw):
         # NOTE: Working around a circular import
-        from simplesat.constraints.requirement import Requirement
+        from simplesat.constraints.requirement import BaseRequirement
 
-        if not isinstance(requirement, Requirement):
+        if not isinstance(requirement, BaseRequirement):
             msg = "NoPackageFound expects a Requirement as first arg. Got {!r}"
             raise TypeError(msg.format(requirement))
         super(NoPackageFound, self).__init__(*a, **kw)

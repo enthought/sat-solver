@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from attr import attr, attributes
 
-from .constraints import Requirement
+from .constraints import InstallRequirement
 from simplesat.utils.graph import toposort, package_lit_dependency_graph
 
 
@@ -129,7 +129,7 @@ class Transaction(object):
         # NOTE: this assumes that the name of the package is also the name of
         # the thing that is being provided. This is not always true. Consider
         # that apache2 and nginx can both provide "webserver", etc.
-        requirement = Requirement._from_string(package.name)
+        requirement = InstallRequirement._from_string(package.name)
         return [
             p for p in pool.what_provides(requirement) if p != package
         ]

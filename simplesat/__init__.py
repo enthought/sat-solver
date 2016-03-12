@@ -1,4 +1,4 @@
-from .constraints import Requirement
+from .constraints import InstallRequirement
 from .package import PackageMetadata, RepositoryPackageMetadata, RepositoryInfo
 from .pool import Pool
 from .repository import Repository

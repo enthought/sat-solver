@@ -2,7 +2,7 @@ from attr import attr, attributes
 from attr.validators import instance_of
 from enum import Enum
 
-from .constraints import Requirement, ConstraintModifiers
+from .constraints import BaseRequirement, ConstraintModifiers
 
 
 class JobType(Enum):
@@ -13,7 +13,7 @@ class JobType(Enum):
 
 @attributes
 class _Job(object):
-    requirement = attr(validator=instance_of(Requirement))
+    requirement = attr(validator=instance_of(BaseRequirement))
     kind = attr(validator=instance_of(JobType))
 
 
@@ -30,9 +30,6 @@ class Request(object):
 
     def update(self, requirement):
         self._add_job(requirement, JobType.update)
-
-    def constrain(self, requirement):
-        self._add_job(requirement, JobType.constrain)
 
     def allow_newer(self, package_name):
         self.modifiers.allow_newer.add(package_name)

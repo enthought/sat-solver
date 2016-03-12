@@ -1,7 +1,7 @@
 import enum
 from collections import OrderedDict, deque
 
-from .constraints import Requirement
+from .constraints import ConflictRequirement, InstallRequirement
 from .errors import NoPackageFound, SolverException
 from .request import JobType
 
@@ -43,7 +43,8 @@ class PackageRule(object):
             else:
                 positive = True
 
-            requirement = Requirement.from_package_string(package_string)
+            requirement = InstallRequirement.from_package_string(
+                package_string)
             package_candidates = pool.what_provides(requirement)
             if len(package_candidates) == 0:
                 msg = "No candidate for package {0!r}".format(package_string)
@@ -285,7 +286,7 @@ class RulesGenerator(object):
 
     def _add_install_requires_rules(self, package, work_queue, requirements):
         for constraints in package.install_requires:
-            pkg_requirement = Requirement.from_constraints(constraints)
+            pkg_requirement = InstallRequirement.from_constraints(constraints)
             dependency_candidates = self._pool.what_provides(pkg_requirement)
 
             # We add our new requirement to the stack of requirements we've
@@ -317,7 +318,7 @@ class RulesGenerator(object):
         """
 
         # Conflicts due to implicit obsoletion or same-name
-        pkg_requirement = Requirement._from_string(package.name)
+        pkg_requirement = ConflictRequirement._from_string(package.name)
         obsolete_providers = self._pool.what_provides(pkg_requirement)
         # We add our new requirement to the stack of requirements we've
         # gathered so far for these rules.
@@ -337,7 +338,7 @@ class RulesGenerator(object):
 
         # Explicit conflicts in package metadata
         for constraints in package.conflicts:
-            pkg_requirement = Requirement.from_constraints(constraints)
+            pkg_requirement = ConflictRequirement.from_constraints(constraints)
             conflict_providers = self._pool.what_provides(pkg_requirement)
             combined_requirements = (
                 requirements + (pkg_requirement,)
@@ -392,6 +393,13 @@ class RulesGenerator(object):
                 packages, RuleType.job_install,
                 requirements=(job.requirement,))
             self._add_rule(rule, "job")
+        else:
+            requirement = self._pool.transform_requirement(job.requirement)
+            msg = str(requirement)
+            if requirement is not job.requirement:
+                msg += " (derived from {} by {})".format(
+                    job.requirement, self._pool.modifiers.asdict())
+            raise NoPackageFound(requirement, msg)
 
     def _add_remove_job_rules(self, job):
         packages = self._pool.what_provides(job.requirement)

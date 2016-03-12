@@ -13,7 +13,7 @@ from okonomiyaki.versions import EnpkgVersion
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, Not, GEQ, GT, LEQ, LT,
 )
-from simplesat.constraints.requirement import Requirement
+from simplesat.constraints.requirement import InstallRequirement
 
 
 MAX_BUILD = 999999999  # Nine nines... I guess
@@ -95,7 +95,7 @@ class ConstraintModifiers(object):
         return set.union(self.allow_newer, self.allow_any, self.allow_older)
 
 
-def _transform_requirement(
+def _transform_install_requirement(
         requirement, allow_newer=None, allow_any=None, allow_older=None):
     """If any of the modifier rules apply, return a new Requirement with
     modified constraints, otherwise return the original requirement.
@@ -118,7 +118,7 @@ def _transform_requirement(
     if modified and constraints != original_constraints:
         # Remove duplicate constraints
         constraints = tuple(OrderedDict.fromkeys(constraints).keys())
-        return Requirement(name, constraints)
+        return InstallRequirement(name, constraints)
 
     return requirement
 
@@ -130,25 +130,22 @@ def _transform_constraints(constraints, type_map):
     )
 
 
-class _TransformInstallRequires(object):
+class _TransformRequirement(object):
 
     @staticmethod
-    def __call__(*a, **kw):
-        return _transform_requirement(*a, **kw)
+    def __call__(requirement, **kw):
+        if isinstance(requirement, InstallRequirement):
+            return _transform_install_requirement(requirement, **kw)
+        elif requirement.has_any_version_constraint:
+            new_r = _transform_install_requirement(requirement, **kw)
+            msg = "Only identity transformations are defined for {}"
+            class_name = requirement.__class__.__name__
+            if new_r is not requirement:
+                raise NotImplementedError(msg.format(class_name))
+        return requirement
 
-    @staticmethod
-    def with_modifiers(constraints, modifiers):
-        return _transform_requirement(
-            constraints,
-            allow_newer=modifiers.allow_newer,
-            allow_older=modifiers.allow_older,
-            allow_any=modifiers.allow_any
-        )
-
-
-class _TransformConflicts(_TransformInstallRequires):
-    pass
+    def with_modifiers(self, requirement, modifiers):
+        return self(requirement, **modifiers.asdict())
 
 
-transform_install_requires = _TransformInstallRequires()
-transform_conflicts = _TransformConflicts()
+transform_requirement = _TransformRequirement()
