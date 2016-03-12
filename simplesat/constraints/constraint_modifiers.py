@@ -5,7 +5,9 @@ from __future__ import division, print_function
 
 from collections import OrderedDict
 
-from attr import attr, attributes, Factory, asdict
+from attr import attr, attributes, asdict
+from attr.validators import instance_of
+import six
 
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, Not, GEQ, GT, LEQ, LT,
@@ -51,11 +53,28 @@ ALLOW_ANY_MAP = {
 }
 
 
+def iterable_to_set(container):
+    """ Return a set from an iterable, being careful not to disassemble
+    strings.
+        >>> iterable_to_set(['foo'])
+        set(['foo'])
+        >>> iterable_to_set('foo')
+        set(['foo'])
+    """
+    if isinstance(container, six.string_types):
+        container = (container,)
+    return set(container)
+
+
+_defaults = dict(default=(), convert=iterable_to_set,
+                 validator=instance_of(set))
+
+
 @attributes
 class ConstraintModifiers(object):
-    allow_newer = attr(default=Factory(set))
-    allow_any = attr(default=Factory(set))
-    allow_older = attr(default=Factory(set))
+    allow_newer = attr(**_defaults)
+    allow_any = attr(**_defaults)
+    allow_older = attr(**_defaults)
 
     def asdict(self):
         return asdict(self)
