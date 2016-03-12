@@ -9,15 +9,26 @@ from attr import attr, attributes, asdict
 from attr.validators import instance_of
 import six
 
+from okonomiyaki.versions import EnpkgVersion
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, Not, GEQ, GT, LEQ, LT,
 )
 from simplesat.constraints.requirement import Requirement
 
 
+MAX_BUILD = 999999999  # Nine nines... I guess
+
+
 def Any_(_version):
     # This just eats the 'version' argument
     return Any()
+
+
+def LEQ_LEAST_UPPER_BOUND(version):
+    new_version = EnpkgVersion.from_upstream_and_build(
+        str(version.upstream), MAX_BUILD)
+    return LEQ(new_version)
+
 
 ALLOW_NEWER_MAP = {
     Any: Any_,
@@ -38,7 +49,7 @@ ALLOW_OLDER_MAP = {
     GT: Any_,
     LEQ: LEQ,
     LT: LT,
-    EnpkgUpstreamMatch: LEQ,
+    EnpkgUpstreamMatch: LEQ_LEAST_UPPER_BOUND,
 }
 
 ALLOW_ANY_MAP = {
