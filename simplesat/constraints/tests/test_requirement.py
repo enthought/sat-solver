@@ -10,7 +10,7 @@ from simplesat.errors import (
 from ..kinds import Equal
 from ..multi import MultiConstraints
 from ..requirement import Requirement, parse_package_full_name
-from ..requirement_transformation import transform_install_requires
+from ..constraint_modifiers import transform_install_requires
 
 
 R = Requirement._from_string

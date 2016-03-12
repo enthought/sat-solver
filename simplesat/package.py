@@ -4,7 +4,7 @@ import enum
 
 from okonomiyaki.versions import EnpkgVersion
 from simplesat.constraints.requirement import Requirement
-from simplesat.constraints.requirement_transformation import (
+from simplesat.constraints.constraint_modifiers import (
     transform_install_requires, transform_conflicts
 )
 
