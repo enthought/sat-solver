@@ -115,8 +115,8 @@ class TestRequirementFromString(unittest.TestCase):
         requirement_string2 = "numpy >= 1.8.1-3, numpy < 1.9.1"
 
         # When
-        requirement1 = InstallRequirement._from_string(requirement_string1)
-        requirement2 = InstallRequirement._from_string(requirement_string2)
+        requirement1 = R(requirement_string1)
+        requirement2 = R(requirement_string2)
 
         # Then
         self.assertTrue(requirement1 != requirement2)
@@ -126,8 +126,8 @@ class TestRequirementFromString(unittest.TestCase):
         requirement_string = "numpy >= 1.8.1-3, numpy < 1.9.0"
 
         # When
-        requirement1 = InstallRequirement._from_string(requirement_string)
-        requirement2 = InstallRequirement._from_string(requirement_string)
+        requirement1 = R(requirement_string)
+        requirement2 = R(requirement_string)
 
         # Then
         self.assertEqual(requirement1, requirement2)
@@ -142,7 +142,7 @@ class TestRequirementFromString(unittest.TestCase):
             ("numpy", ((),)))
 
         # When
-        requirement = InstallRequirement._from_string(requirement_string)
+        requirement = R(requirement_string)
 
         # Then
         self.assertTrue(requirement.matches(V("1.8.1-2")))
@@ -157,7 +157,7 @@ class TestRequirementFromString(unittest.TestCase):
         requirement_string = "numpy *"
 
         # When
-        requirement = InstallRequirement._from_string(requirement_string)
+        requirement = R(requirement_string)
 
         # Then
         self.assertEqual(requirement, r_requirement)
@@ -169,7 +169,7 @@ class TestRequirementFromString(unittest.TestCase):
         requirement_string = "numpy >= 1.8.1-3, numpy < 1.9.0"
 
         # When
-        requirement = InstallRequirement._from_string(requirement_string)
+        requirement = R(requirement_string)
 
         # Then
         self.assertFalse(requirement.matches(V("1.8.1-2")))
@@ -183,7 +183,7 @@ class TestRequirementFromString(unittest.TestCase):
 
         # When
         with self.assertRaises(InvalidDependencyString):
-            InstallRequirement._from_string(requirement_string)
+            R(requirement_string)
 
     def test_from_package_string(self):
         # Given
@@ -208,7 +208,7 @@ class TestRequirementFromString(unittest.TestCase):
 
         # When/Then
         for pretty_string, has_any_version_constraint in requirements:
-            requirement = InstallRequirement._from_string(pretty_string)
+            requirement = R(pretty_string)
             self.assertEqual(
                 requirement.has_any_version_constraint,
                 has_any_version_constraint
@@ -336,12 +336,8 @@ class TestRequirementTransformation(unittest.TestCase):
 
     def test_collapse_multiple_any(self):
         # Given
-        requirement = InstallRequirement._from_string(
-            "MKL >= 1.2.1-2, MKL != 2.3.1-1, MKL < 1.4"
-        )
-        expected = InstallRequirement._from_string(
-            "MKL, MKL != 2.3.1-1"
-        )
+        requirement = R("MKL >= 1.2.1-2, MKL != 2.3.1-1, MKL < 1.4")
+        expected = R("MKL, MKL != 2.3.1-1")
 
         # When
         transformed = transform_requirement(
