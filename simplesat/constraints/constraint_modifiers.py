@@ -64,7 +64,7 @@ ALLOW_ANY_MAP = {
 }
 
 
-def iterable_to_set(container):
+def as_set(container):
     """ Return a set from an iterable, being careful not to disassemble
     strings.
         >>> iterable_to_set(['foo'])
@@ -77,15 +77,15 @@ def iterable_to_set(container):
     return set(container)
 
 
-_defaults = dict(default=(), convert=iterable_to_set,
-                 validator=instance_of(set))
+_coerced_set = dict(default=(), convert=as_set,
+                    validator=instance_of(set))
 
 
 @attributes
 class ConstraintModifiers(object):
-    allow_newer = attr(**_defaults)
-    allow_any = attr(**_defaults)
-    allow_older = attr(**_defaults)
+    allow_newer = attr(**_coerced_set)
+    allow_any = attr(**_coerced_set)
+    allow_older = attr(**_coerced_set)
 
     def asdict(self):
         return asdict(self)
