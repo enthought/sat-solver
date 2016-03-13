@@ -2,7 +2,7 @@ from attr import attr, attributes
 from attr.validators import instance_of
 from enum import Enum
 
-from .constraints import BaseRequirement, ConstraintModifiers
+from .constraints import Requirement, ConstraintModifiers
 
 
 class JobType(Enum):
@@ -13,7 +13,7 @@ class JobType(Enum):
 
 @attributes
 class _Job(object):
-    requirement = attr(validator=instance_of(BaseRequirement))
+    requirement = attr(validator=instance_of(Requirement))
     kind = attr(validator=instance_of(JobType))
 
 

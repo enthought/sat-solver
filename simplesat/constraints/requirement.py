@@ -37,7 +37,7 @@ def _first(iterable):
     return six.next(iter(iterable))
 
 
-class BaseRequirement(object):
+class Requirement(object):
     """Requirements instances represent a 'package requirement', that is a
     package + version constraints.
 
@@ -188,9 +188,9 @@ class BaseRequirement(object):
         return True
 
 
-class InstallRequirement(BaseRequirement):
+class InstallRequirement(Requirement):
     """ A Requirement that describes packages to be installed. """
 
 
-class ConflictRequirement(BaseRequirement):
+class ConflictRequirement(Requirement):
     """ A Requirement that describes packages which must not be installed. """
