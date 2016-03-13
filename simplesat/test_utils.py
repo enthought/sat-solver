@@ -6,9 +6,7 @@ import yaml
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints import (
-    InstallRequirement, PrettyPackageStringParser, Requirement,
-)
+from simplesat.constraints import PrettyPackageStringParser, Requirement
 from simplesat.package import RepositoryInfo, RepositoryPackageMetadata
 from simplesat.pool import Pool
 from simplesat.repository import Repository
@@ -140,7 +138,7 @@ class Scenario(object):
             request_job = request.install
 
         for package_str in marked:
-            request_job(InstallRequirement._from_string(package_str))
+            request_job(Requirement._from_string(package_str))
 
         decisions = data.get("decisions", {})
 

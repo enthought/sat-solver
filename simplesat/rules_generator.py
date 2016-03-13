@@ -377,7 +377,7 @@ class RulesGenerator(object):
                 self._add_conflicts_rules(p, requirements)
 
     def _add_install_job_rules(self, job):
-        packages = self._pool.what_provides(job.requirement)
+        packages = self._pool.what_provides(job.requirement, transform=False)
         if len(packages) > 0:
             for package in packages:
                 # This is an optimization to avoid iterating over the installed
@@ -394,15 +394,10 @@ class RulesGenerator(object):
                 requirements=(job.requirement,))
             self._add_rule(rule, "job")
         else:
-            requirement = self._pool.transform_requirement(job.requirement)
-            msg = str(requirement)
-            if requirement is not job.requirement:
-                msg += " (derived from {} by {})".format(
-                    job.requirement, self._pool.modifiers.asdict())
-            raise NoPackageFound(requirement, msg)
+            raise NoPackageFound(job.requirement, str(job.requirement))
 
     def _add_remove_job_rules(self, job):
-        packages = self._pool.what_provides(job.requirement)
+        packages = self._pool.what_provides(job.requirement, transform=False)
         for package in packages:
             rule = self._create_remove_rule(
                 package, RuleType.job_remove, requirements=(job.requirement,))
@@ -414,7 +409,7 @@ class RulesGenerator(object):
         the standard rules then adding an additional rule for just the most
         recent version.
         """
-        packages = self._pool.what_provides(job.requirement)
+        packages = self._pool.what_provides(job.requirement, transform=False)
         if len(packages) == 0:
             return
 
