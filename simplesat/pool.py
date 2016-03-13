@@ -70,7 +70,7 @@ class Pool(object):
         return requirement
 
     def package_id(self, package):
-        """ Returns the 'package id' of the given transformed package."""
+        """ Returns the 'package id' of the given package."""
         try:
             return self._package_to_id_[package]
         except KeyError:
