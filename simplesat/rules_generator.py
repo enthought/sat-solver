@@ -59,7 +59,7 @@ class PackageRule(object):
                     package_literals.append(_id)
                 else:
                     package_literals.append(-_id)
-        return cls(package_literals, None, requirement)
+        return cls(package_literals, None, requirements=(requirement,))
 
     def __init__(self, literals, reason, requirements=None):
         self.literals = tuple(sorted(literals))
