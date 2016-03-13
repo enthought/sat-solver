@@ -6,7 +6,9 @@ import yaml
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints import PrettyPackageStringParser, InstallRequirement
+from simplesat.constraints import (
+    InstallRequirement, PrettyPackageStringParser, Requirement,
+)
 from simplesat.package import RepositoryInfo, RepositoryPackageMetadata
 from simplesat.pool import Pool
 from simplesat.repository import Repository
@@ -125,8 +127,7 @@ class Scenario(object):
             if kind == 'update_all':
                 update_all = True
                 continue
-            requirement = InstallRequirement._from_string(
-                s_request["requirement"])
+            requirement = Requirement._from_string(s_request["requirement"])
             try:
                 marked.remove(requirement.name)
             except ValueError:
