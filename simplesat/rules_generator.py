@@ -22,6 +22,14 @@ class RuleType(enum.Enum):
 
     internal = 256
 
+    @property
+    def is_job(self):
+        return self in (
+            RuleType.job_install,
+            RuleType.job_remove,
+            RuleType.job_update
+        )
+
 
 class PackageRule(object):
     @classmethod
