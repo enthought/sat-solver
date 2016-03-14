@@ -4,7 +4,9 @@ import unittest
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, Requirement
-from simplesat.dependency_solver import DependencySolver
+from simplesat.dependency_solver import (
+    DependencySolver, requirements_are_satisfiable
+)
 from simplesat.pool import Pool
 from simplesat.repository import Repository
 from simplesat.request import Request
@@ -164,8 +166,7 @@ class TestSolver(unittest.TestCase):
         requirements = [job.requirement for job in scenario.request.jobs]
 
         # When
-        result = DependencySolver.requirements_are_satisfiable(
-            repositories, requirements)
+        result = requirements_are_satisfiable(repositories, requirements)
 
         # Then
         self.assertTrue(result)
@@ -189,8 +190,7 @@ class TestSolver(unittest.TestCase):
         requirements = [job.requirement for job in scenario.request.jobs]
 
         # When
-        result = DependencySolver.requirements_are_satisfiable(
-            repositories, requirements)
+        result = requirements_are_satisfiable(repositories, requirements)
 
         # Then
         self.assertFalse(result)

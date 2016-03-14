@@ -12,22 +12,22 @@ from simplesat.transaction import Transaction
 from simplesat.utils import timed_context, connected_nodes
 
 
+def requirements_are_satisfiable(repositories, requirements):
+    """ Return True if the requirements can be satisfied using the packages
+    in the repositories, otherwise False. """
+    request = Request()
+    for requirement in requirements:
+        request.install(requirement)
+    pool = Pool(repositories)
+
+    try:
+        DependencySolver(pool, repositories, []).solve(request)
+        return True
+    except SatisfiabilityError:
+        return False
+
+
 class DependencySolver(object):
-
-    @classmethod
-    def requirements_are_satisfiable(cls, repositories, requirements):
-        """ Return True if the requirements can be satisfied using the packages
-        in the repositories, otherwise False. """
-        request = Request()
-        for requirement in requirements:
-            request.install(requirement)
-        pool = Pool(repositories)
-
-        try:
-            cls(pool, repositories, []).solve(request)
-            return True
-        except SatisfiabilityError:
-            return False
 
     def __init__(self, pool, remote_repositories, installed_repository,
                  policy=None, use_pruning=True):
