@@ -15,7 +15,6 @@ from .clause import Clause
 from .policy import DefaultPolicy
 from simplesat.utils import timed_context
 from simplesat.utils.graph import breadth_first_search
-from simplesat.rules_generator import RuleType
 
 
 class UNSAT(object):
@@ -122,7 +121,7 @@ class UNSAT(object):
 
         def jobs_in_path(path):
             return len([clause for clause in path
-                        if RuleType.is_job(clause.rule.reason)])
+                        if clause.rule.reason.is_job])
 
         def tails(seq):
             for i in range(1, len(seq)):
@@ -165,7 +164,7 @@ class UNSAT(object):
         flat_clauses = set(
             c for c in relevant_clauses
             if c.rule and c.rule._requirements
-            if implicand in c or RuleType.is_job(c.rule.reason)
+            if implicand in c or c.rule.reason.is_job
         )
         roots = tuple(sorted(flat_clauses, key=self._key))
         return roots
