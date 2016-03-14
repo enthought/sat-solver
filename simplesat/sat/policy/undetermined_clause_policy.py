@@ -45,10 +45,10 @@ class UndeterminedClausePolicy(IPolicy):
         changelog = assignments.consume_changelog()
         for key in six.iterkeys(changelog):
             for clause in self._id_to_clauses[key]:
-                if not any(assignments.value(l) for l in clause.lits):
-                    self._unsatisfied_clauses.add(clause)
-                else:
+                if any(assignments.value(l) for l in clause.lits):
                     self._unsatisfied_clauses.discard(clause)
+                else:
+                    self._unsatisfied_clauses.add(clause)
 
     def _build_id_to_clauses(self, clauses):
         """ Return a mapping from package ids to a list of clauses containing
