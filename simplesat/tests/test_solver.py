@@ -1,3 +1,4 @@
+import io
 import unittest
 
 from okonomiyaki.versions import EnpkgVersion
@@ -7,6 +8,7 @@ from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
 from simplesat.repository import Repository
 from simplesat.request import Request
+from simplesat.test_utils import Scenario
 from simplesat.transaction import (
     InstallOperation, RemoveOperation, UpdateOperation
 )
@@ -144,3 +146,51 @@ class TestSolver(unittest.TestCase):
         self.assertEqualOperations(transaction.operations, r_operations)
         self.assertEqualOperations(
             transaction.pretty_operations, r_pretty_operations)
+
+    def test_requirements_are_satisfiable(self):
+        # Given
+        scenario = Scenario.from_yaml(io.StringIO("""
+                packages:
+                    - MKL 10.2-1
+                    - MKL 10.3-1
+                    - numpy 1.7.1-1; depends (MKL == 10.3-1)
+                    - numpy 1.8.1-1; depends (MKL == 10.3-1)
+
+                request:
+                    - operation: "install"
+                      requirement: "numpy"
+        """))
+        repositories = scenario.remote_repositories
+        requirements = [job.requirement for job in scenario.request.jobs]
+
+        # When
+        result = DependencySolver.requirements_are_satisfiable(
+            repositories, requirements)
+
+        # Then
+        self.assertTrue(result)
+
+    def test_requirements_are_not_satisfiable(self):
+        # Given
+        scenario = Scenario.from_yaml(io.StringIO("""
+                packages:
+                    - MKL 10.2-1
+                    - MKL 10.3-1
+                    - numpy 1.7.1-1; depends (MKL == 10.3-1)
+                    - numpy 1.8.1-1; depends (MKL == 10.3-1)
+
+                request:
+                    - operation: "install"
+                      requirement: "numpy"
+                    - operation: "install"
+                      requirement: "MKL != 10.3-1"
+        """))
+        repositories = scenario.remote_repositories
+        requirements = [job.requirement for job in scenario.request.jobs]
+
+        # When
+        result = DependencySolver.requirements_are_satisfiable(
+            repositories, requirements)
+
+        # Then
+        self.assertFalse(result)
