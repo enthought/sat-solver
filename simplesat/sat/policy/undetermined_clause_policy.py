@@ -51,6 +51,9 @@ class UndeterminedClausePolicy(IPolicy):
                     self._unsatisfied_clauses.discard(clause)
 
     def _build_id_to_clauses(self, clauses):
+        """ Return a mapping from package ids to a list of clauses containing
+        that id.
+        """
         table = defaultdict(list)
         for c in clauses:
             for l in c.lits:
