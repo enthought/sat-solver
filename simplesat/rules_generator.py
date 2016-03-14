@@ -309,7 +309,7 @@ class RulesGenerator(object):
             self._add_rule(rule, "package")
 
             for candidate in dependency_candidates:
-                work_queue.append(candidate)
+                work_queue.append((candidate, combined_requirements))
 
     def _add_conflicts_rules(self, package, requirements):
         """
@@ -363,10 +363,10 @@ class RulesGenerator(object):
         Create all the rules required to satisfy installing the given package.
         """
         work_queue = collections.deque()
-        work_queue.append(package)
+        work_queue.append((package, requirements))
 
         while len(work_queue) > 0:
-            p = work_queue.popleft()
+            p, requirements = work_queue.popleft()
             p_id = self._pool.package_id(p)
             if p_id not in self.added_package_ids:
                 self.added_package_ids.add(p_id)
