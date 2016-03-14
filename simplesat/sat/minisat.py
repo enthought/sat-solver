@@ -18,9 +18,6 @@ from simplesat.utils.graph import breadth_first_search
 from simplesat.rules_generator import RuleType
 
 
-JOBTYPES = (RuleType.job_install, RuleType.job_remove, RuleType.job_update)
-
-
 class UNSAT(object):
 
     """An unsatisfiable set of boolean clauses."""
@@ -99,7 +96,7 @@ class UNSAT(object):
 
             See https://github.com/enthought/sat-solver/wiki/Unsatisfiability-Error-Messages
             for discussion about how best to implement this.
-        """
+        """  # noqa
         # It's expensive to figure out which clauses are neighbors. This dict
         # maps ids to clauses containing that id. We can do this lookup for
         # each literal in a clause to get all of its neighbors.
@@ -125,7 +122,7 @@ class UNSAT(object):
 
         def jobs_in_path(path):
             return len([clause for clause in path
-                        if clause.rule.reason in JOBTYPES])
+                        if RuleType.is_job(clause.rule.reason)])
 
         def tails(seq):
             for i in range(1, len(seq)):
@@ -168,7 +165,7 @@ class UNSAT(object):
         flat_clauses = set(
             c for c in relevant_clauses
             if c.rule and c.rule._requirements
-            if implicand in c or c.rule.reason in JOBTYPES
+            if implicand in c or RuleType.is_job(c.rule.reason)
         )
         roots = tuple(sorted(flat_clauses, key=self._key))
         return roots
