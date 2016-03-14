@@ -149,7 +149,7 @@ class TestSolver(unittest.TestCase):
 
     def test_requirements_are_satisfiable(self):
         # Given
-        scenario = Scenario.from_yaml(io.StringIO("""
+        scenario = Scenario.from_yaml(io.StringIO(u"""
                 packages:
                     - MKL 10.2-1
                     - MKL 10.3-1
@@ -172,7 +172,7 @@ class TestSolver(unittest.TestCase):
 
     def test_requirements_are_not_satisfiable(self):
         # Given
-        scenario = Scenario.from_yaml(io.StringIO("""
+        scenario = Scenario.from_yaml(io.StringIO(u"""
                 packages:
                     - MKL 10.2-1
                     - MKL 10.3-1
