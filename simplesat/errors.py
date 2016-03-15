@@ -27,6 +27,14 @@ class NoPackageFound(SolverException):
         self.args = self.args or (str(requirement),)
 
 
+class MissingInstallRequires(NoPackageFound):
+    pass
+
+
+class MissingConflicts(NoPackageFound):
+    pass
+
+
 class SatisfiabilityError(SolverException):
     def __init__(self, unsat):
         self.unsat = unsat

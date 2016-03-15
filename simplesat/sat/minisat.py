@@ -341,7 +341,13 @@ class MiniSATSolver(object):
             self.status = False
         elif len(clause) == 1:
             # Unit facts are enqueued.
-            self.enqueue(clause[0], cause=clause)
+            if not self.enqueue(clause[0], cause=clause):
+                # Bail out if we've found a conflict
+                conflict = UNSAT(
+                    clause, clause,
+                    self.clause_trails,
+                    self.assigning_clauses)
+                raise SatisfiabilityError(conflict)
         else:
             p, q = clause[:2]
             self.watches[-p].append(clause)
@@ -387,7 +393,8 @@ class MiniSATSolver(object):
                         self.enqueue(unit, clause)
 
     def enqueue(self, lit, cause=None):
-        """ Enqueue a new true literal.
+        """ Enqueue a new true literal. Return True if this assignment does not
+        conflict with a previous assignment, otherwise False.
 
         Parameters
         ----------
@@ -399,8 +406,6 @@ class MiniSATSolver(object):
         """
         status = self.assignments.value(lit)
         if status is not None:
-            # Known fact. Don't enqueue, but return whether this fact
-            # contradicts the earlier assignment.
             return status
         else:
             # New fact, store it.
