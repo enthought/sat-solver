@@ -85,12 +85,17 @@ class PackageMetadata(object):
                  ("nose", (("*",),)),
                  ("six", (("> 1.2", "<= 1.2.3"), (">= 1.2.5-2",)))
 
+        conflicts : tuple(tuple(str, tuple(tuple(str))))
+            A tuple of tuples mapping distribution names to disjunctions of
+            conjunctions of version constraints.
+
+            This works the same way as install_requires, but instead denotes
+            packages that must *not* be installed with this package.
         """
         self._name = name
         self._version = version
         self._install_requires = install_requires or ()
         self._conflicts = conflicts or ()
-
         self._key = (name, version, self._install_requires, self._conflicts)
         self._hash = hash(self._key)
 
@@ -111,7 +116,8 @@ class PackageMetadata(object):
         return self._conflicts
 
     def __repr__(self):
-        return "PackageMetadata('{0}-{1}')".format(self._name, self._version)
+        return "{0}('{1}-{2}')".format(
+            self.__class__.__name__, self._name, self._version)
 
     def __hash__(self):
         return self._hash

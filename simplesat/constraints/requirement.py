@@ -86,6 +86,18 @@ class Requirement(object):
 
         return cls(name, constraints)
 
+    def to_constraints(self):
+        """ Return a constraint tuple as described by from_constraints. """
+        name = self.name
+
+        parts = []
+        for constraint in self._constraints._constraints:
+            if not isinstance(constraint, Any):
+                parts.append(str(constraint))
+            else:
+                parts.append('*')
+        return (name, (tuple(parts),))
+
     @classmethod
     def _from_string(cls, string,
                      version_factory=EnpkgVersion.from_string):
@@ -137,8 +149,8 @@ class Requirement(object):
         return self._constraints.matches(version_candidate)
 
     def __eq__(self, other):
-        return (self.name == other.name
-                and self._constraints == other._constraints)
+        return (self.name == other.name and
+                self._constraints == other._constraints)
 
     def __ne__(self, other):
         return not (self == other)
@@ -147,10 +159,13 @@ class Requirement(object):
         return hash((self.name, self._constraints))
 
     def __str__(self):
-        parts = []
-        for constraint in self._constraints._constraints:
-            if not isinstance(constraint, Any):
-                parts.append(str(constraint))
+        name, constraints = self.to_constraints()
+        parts = [
+            constraint
+            for conjunction in constraints
+            for constraint in conjunction
+            if constraint != '*'
+        ]
 
         if len(parts) == 0:
             return self.name
@@ -158,7 +173,7 @@ class Requirement(object):
             return self.name + " " + ", ".join(parts)
 
     def __repr__(self):
-        return "Requirement('" + str(self) + "')"
+        return "{}('{}')".format(self.__class__.__name__, self)
 
     @property
     def has_any_version_constraint(self):
@@ -171,3 +186,11 @@ class Requirement(object):
             if isinstance(constraint, Any):
                 return False
         return True
+
+
+class InstallRequirement(Requirement):
+    """ A Requirement that describes packages to be installed. """
+
+
+class ConflictRequirement(Requirement):
+    """ A Requirement that describes packages which must not be installed. """
