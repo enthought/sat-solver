@@ -8,7 +8,7 @@ class timed_context(object):
 
     def __init__(self, description):
         self.description = description
-        self.elapsed = None
+        self.elapsed = float('NaN')
 
     def __enter__(self):
         self.start = default_timer()
@@ -23,6 +23,4 @@ class timed_context(object):
         return "ELAPSED : {} : {}".format(self.description, self.elapsed)
 
     def pretty(self, fmt="ELAPSED : {description} : {elapsed}"):
-        if self.elapsed is None:
-            return "Context {} has not been run".format(self.description)
         return fmt.format(description=self.description, elapsed=self.elapsed)
