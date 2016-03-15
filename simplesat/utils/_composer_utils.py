@@ -5,7 +5,7 @@ don't use this in enstaller itself.
 import collections
 import json
 
-from ..constraints import Requirement
+from ..constraints import InstallRequirement
 from ..constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT
 )
@@ -59,7 +59,7 @@ def repository_to_composer_json_dict(repository):
     """
     for package in repository:
         version_normalized = _normalize_php_version(package.version)
-        requires = [Requirement.from_constraints(p) for
+        requires = [InstallRequirement.from_constraints(p) for
                     p in package.install_requires]
         yield {
             "name": package.name,
@@ -89,7 +89,8 @@ def scenario_to_php_template_variables(scenario, remote_definition,
 
     installed_repository = scenario.installed_repository
     with open(installed_definition, "wt") as fp:
-        entries_iterator = repository_to_composer_json_dict(installed_repository)
+        entries_iterator = repository_to_composer_json_dict(
+            installed_repository)
         fp.write(json.dumps(list(entries_iterator), indent=4))
 
     return {"remote_definition": remote_definition,
@@ -181,6 +182,7 @@ def _requirements_to_php_dict(requirements):
     """
     php_dict = collections.defaultdict(list)
     for requirement in requirements:
-        php_dict[requirement.name].append(_requirement_to_php_string(requirement))
+        php_dict[requirement.name].append(
+            _requirement_to_php_string(requirement))
 
     return dict((k, ", ".join(v)) for k, v in php_dict.items())

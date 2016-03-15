@@ -35,7 +35,7 @@ class UndeterminedClausePolicy(IPolicy):
         self._all_ids = set()
 
     def _package_key(self, package_id):
-        package = self._pool._id_to_package[package_id]
+        package = self._pool.id_to_package(package_id)
         return (package.name, package.version)
 
     def add_requirements(self, package_ids):
@@ -121,7 +121,7 @@ class UndeterminedClausePolicy(IPolicy):
         installed_ids = set(self._installed_ids)
 
         for package_id in sorted(decision_set):
-            package = self._pool._id_to_package[package_id]
+            package = self._pool.id_to_package(package_id)
             if package_id in installed_ids:
                 installed_packages.append(package)
             else:

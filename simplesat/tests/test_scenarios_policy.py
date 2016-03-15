@@ -231,3 +231,6 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_epd_full_conflict(self):
         self._check_solution("epd_full_conflict.yaml")
+
+    def test_constraint_modifiers(self):
+        self._check_solution('constraint_modifiers.yaml')

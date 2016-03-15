@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from .utils import DefaultOrderedDict
+from simplesat.constraints import modify_requirement
 
 
 class Pool(object):
@@ -9,16 +10,20 @@ class Pool(object):
     The main feature of a pool is to search for every package matching a
     given requirement.
     """
-    def __init__(self, repositories=None):
-        self._package_to_id = {}
-        self._id_to_package = {}
-        self._packages_by_name = DefaultOrderedDict(list)
-        self._repositories = []
 
+    def __init__(self, repositories=None, modifiers=None):
         self._id = 1
+        self._repositories = []
+        # FIXME Mar-9-2016: temporarily changing these names to catch places
+        # that were using the private API. If it has been awhile and you feel
+        # like everything is ok, you can remove these trailing underscores.
+        self._package_to_id_ = {}
+        self._id_to_package_ = {}
+        self._packages_by_name_ = DefaultOrderedDict(list)
 
-        repositories = repositories or []
-        for repository in repositories:
+        self.modifiers = modifiers
+
+        for repository in repositories or []:
             self.add_repository(repository)
 
     def add_repository(self, repository):
@@ -29,15 +34,15 @@ class Pool(object):
         repository : Repository
             The repository to add
         """
+        self._repositories.append(repository)
         for package in repository:
             current_id = self._id
             self._id += 1
+            self._id_to_package_[current_id] = package
+            self._package_to_id_[package] = current_id
+            self._packages_by_name_[package.name].append(package)
 
-            self._id_to_package[current_id] = package
-            self._package_to_id[package] = current_id
-            self._packages_by_name[package.name].append(package)
-
-    def what_provides(self, requirement):
+    def what_provides(self, requirement, use_modifiers=True):
         """ Computes the list of packages fulfilling the given
         requirement.
 
@@ -45,29 +50,54 @@ class Pool(object):
         ----------
         requirement : Requirement
             The requirement to match candidates against.
+        use_modifiers : bool
+            If True, modify the requirement according to self.modifiers.
         """
         ret = []
-        if requirement.name in self._packages_by_name:
-            for package in self._packages_by_name[requirement.name]:
+        if requirement.name in self._packages_by_name_:
+            if use_modifiers:
+                requirement = self.modify_requirement(requirement)
+            for package in self._packages_by_name_[requirement.name]:
                 if requirement.matches(package.version):
                     ret.append(package)
         return ret
 
+    def modify_requirement(self, requirement):
+        """Return requirement modified by the pool's ConstraintModifiers."""
+        if self.modifiers:
+            requirement = modify_requirement(requirement, self.modifiers)
+        return requirement
+
     def package_id(self, package):
         """ Returns the 'package id' of the given package."""
         try:
-            return self._package_to_id[package]
+            return self._package_to_id_[package]
         except KeyError:
             msg = "Package {0!r} not found in the pool.".format(package)
+            raise ValueError(msg)
+
+    def id_to_package(self, package_id):
+        """ Returns the package of the given 'package id'."""
+        try:
+            return self._id_to_package_[package_id]
+        except KeyError:
+            msg = "Package ID {0!r} not found in the pool.".format(package_id)
             raise ValueError(msg)
 
     def id_to_string(self, package_id):
         """
         Convert a package id to a nice string representation.
         """
-        package = self._id_to_package[abs(package_id)]
+        package = self._id_to_package_[abs(package_id)]
         package_string = package.name + "-" + str(package.version)
         if package_id > 0:
             return "+" + package_string
         else:
             return "-" + package_string
+
+    def name_to_packages(self, name):
+        return tuple(self._packages_by_name_[name])
+
+    @property
+    def package_ids(self):
+        return tuple(self._id_to_package_.keys())

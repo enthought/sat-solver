@@ -156,7 +156,7 @@ class TestDependencyGraph(unittest.TestCase):
 
         # When
         pool, _ = pool_and_repository_from_packages(package_def)
-        package_lits = pool._id_to_package.keys()
+        package_lits = pool.package_ids
         result = package_lit_dependency_graph(pool, package_lits)
 
         # Then

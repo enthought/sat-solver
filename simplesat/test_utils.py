@@ -108,14 +108,15 @@ class Scenario(object):
         else:
             data = yaml.load(file_or_filename, Loader=_UnicodeLoader)
 
-        packages = collections.OrderedDict(
-            parse_package_list(data.get("packages", []))
-        )
         scenario_requests = data.get("request", [])
 
         marked = list(data.get("marked", []))
 
         request = Request()
+
+        for kind, values in data.get("modifiers", {}).items():
+            for value in values:
+                getattr(request, kind)(value)
 
         update_all = False
 
@@ -149,9 +150,12 @@ class Scenario(object):
 
         failure = data.get('failure')
 
+        packages = collections.OrderedDict(
+            parse_package_list(data.get("packages", [])))
+
         return cls(packages, [remote_repository(data, packages)],
                    installed_repository(data, packages), request,
-                   decisions, operations, pretty_operations, failure)
+                   decisions, operations, pretty_operations, failure=failure)
 
     @staticmethod
     def _operations_from_transaction_list(transaction_ops):
@@ -190,7 +194,7 @@ class Scenario(object):
 
     def print_solution(self, pool, positive_decisions):
         for package_id in sorted(positive_decisions):
-            package = pool._id_to_package[package_id]
+            package = pool.id_to_package(package_id)
             print("{}: {} {}".format(package_id, package.name,
                                      package.full_version))
 

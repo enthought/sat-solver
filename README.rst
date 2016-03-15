@@ -30,22 +30,6 @@ To print the operations::
     python scripts/solve.py simplesat/tests/simple_numpy.yaml
 
 
-Status
-======
-
-What is known to work:
-
-* runtime dependency handling from a virgin state, either using the most
-  recent requirement or an older one. See the iris.yaml for a non trivial
-  example.
-
-Known not to work:
-
-* the installed first policy implementation is really slow when many
-  packages are already installed
-* remove/upgrade: not handled yet
-* update: slow and solution often subobtimal.
-
 Comparing with php's composer
 =============================
 

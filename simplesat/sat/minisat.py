@@ -15,10 +15,6 @@ from .clause import Clause
 from .policy import DefaultPolicy
 from simplesat.utils import timed_context
 from simplesat.utils.graph import breadth_first_search
-from simplesat.rules_generator import RuleType
-
-
-JOBTYPES = (RuleType.job_install, RuleType.job_remove, RuleType.job_update)
 
 
 class UNSAT(object):
@@ -99,7 +95,7 @@ class UNSAT(object):
 
             See https://github.com/enthought/sat-solver/wiki/Unsatisfiability-Error-Messages
             for discussion about how best to implement this.
-        """
+        """  # noqa
         # It's expensive to figure out which clauses are neighbors. This dict
         # maps ids to clauses containing that id. We can do this lookup for
         # each literal in a clause to get all of its neighbors.
@@ -125,7 +121,7 @@ class UNSAT(object):
 
         def jobs_in_path(path):
             return len([clause for clause in path
-                        if clause.rule.reason in JOBTYPES])
+                        if clause.rule.reason.is_job])
 
         def tails(seq):
             for i in range(1, len(seq)):
@@ -168,7 +164,7 @@ class UNSAT(object):
         flat_clauses = set(
             c for c in relevant_clauses
             if c.rule and c.rule._requirements
-            if implicand in c or c.rule.reason in JOBTYPES
+            if implicand in c or c.rule.reason.is_job
         )
         roots = tuple(sorted(flat_clauses, key=self._key))
         return roots
@@ -345,7 +341,13 @@ class MiniSATSolver(object):
             self.status = False
         elif len(clause) == 1:
             # Unit facts are enqueued.
-            self.enqueue(clause[0], cause=clause)
+            if not self.enqueue(clause[0], cause=clause):
+                # Bail out if we've found a conflict
+                conflict = UNSAT(
+                    clause, clause,
+                    self.clause_trails,
+                    self.assigning_clauses)
+                raise SatisfiabilityError(conflict)
         else:
             p, q = clause[:2]
             self.watches[-p].append(clause)
@@ -391,7 +393,8 @@ class MiniSATSolver(object):
                         self.enqueue(unit, clause)
 
     def enqueue(self, lit, cause=None):
-        """ Enqueue a new true literal.
+        """ Enqueue a new true literal. Return True if this assignment does not
+        conflict with a previous assignment, otherwise False.
 
         Parameters
         ----------
@@ -403,8 +406,6 @@ class MiniSATSolver(object):
         """
         status = self.assignments.value(lit)
         if status is not None:
-            # Known fact. Don't enqueue, but return whether this fact
-            # contradicts the earlier assignment.
             return status
         else:
             # New fact, store it.

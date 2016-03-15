@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 import argparse
+import logging
 import sys
-
 
 from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
@@ -13,7 +13,7 @@ from simplesat.errors import SatisfiabilityError
 
 def solve_and_print(request, remote_repositories, installed_repository,
                     print_ids, prune=True, prefer_installed=True, debug=0,
-                    simple=False):
+                    simple=False, strict=False):
     pool = Pool(remote_repositories)
     pool.add_repository(installed_repository)
 
@@ -21,7 +21,7 @@ def solve_and_print(request, remote_repositories, installed_repository,
                                   prefer_installed=prefer_installed)
     solver = DependencySolver(
         pool, remote_repositories, installed_repository,
-        policy=policy, use_pruning=prune)
+        policy=policy, use_pruning=prune, strict=strict)
 
     fmt = "ELAPSED : {description:20} : {elapsed:e}"
     try:
@@ -54,17 +54,25 @@ def main(argv=None):
     p.add_argument("--no-prune", dest="prune", action="store_false")
     p.add_argument("--no-prefer-installed", dest="prefer_installed",
                    action="store_false")
-    p.add_argument("-d", "--debug", action="count")
+    p.add_argument("-d", "--debug", default=0, action="count")
     p.add_argument("--simple", action="store_true",
                    help="Show a simpler description of the transaction.")
+    p.add_argument("--strict", action="store_true",
+                   help="Use stricter error checking for package metadata.")
 
     ns = p.parse_args(argv)
+
+    logging.basicConfig(
+        format=('%(asctime)s %(levelname)-8.8s [%(name)s:%(lineno)s]'
+                ' %(message)s'),
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level=('INFO', 'WARNING', 'DEBUG')[ns.debug])
 
     scenario = Scenario.from_yaml(ns.scenario)
     solve_and_print(scenario.request, scenario.remote_repositories,
                     scenario.installed_repository, ns.print_ids,
                     prune=ns.prune, prefer_installed=ns.prefer_installed,
-                    debug=ns.debug, simple=ns.simple)
+                    debug=ns.debug, simple=ns.simple, strict=ns.strict)
 
 
 if __name__ == '__main__':

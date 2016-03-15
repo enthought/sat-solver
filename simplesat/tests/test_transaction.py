@@ -54,9 +54,9 @@ class TestTransaction(unittest.TestCase):
         to_remove = (19, 15, 13, 7, 3, 1, 10, 9, 6, 5)
 
         # When
-        installs = [InstallOperation(self.pool._id_to_package[i])
+        installs = [InstallOperation(self.pool.id_to_package(i))
                     for i in to_install]
-        removals = [RemoveOperation(self.pool._id_to_package[i])
+        removals = [RemoveOperation(self.pool.id_to_package(i))
                     for i in to_remove]
         transaction = Transaction(self.pool, decisions, installed)
         result = transaction.operations
@@ -76,12 +76,12 @@ class TestTransaction(unittest.TestCase):
         to_remove = (15, 13, 1, 10, 9, 6, 5)
 
         # When
-        installs = [InstallOperation(self.pool._id_to_package[i])
+        installs = [InstallOperation(self.pool.id_to_package(i))
                     for i in to_install]
-        updates = [UpdateOperation(self.pool._id_to_package[new],
-                                   self.pool._id_to_package[old])
+        updates = [UpdateOperation(self.pool.id_to_package(new),
+                                   self.pool.id_to_package(old))
                    for old, new in to_update]
-        removals = [RemoveOperation(self.pool._id_to_package[i])
+        removals = [RemoveOperation(self.pool.id_to_package(i))
                     for i in to_remove]
         transaction = Transaction(self.pool, decisions, installed)
         result = transaction.pretty_operations
