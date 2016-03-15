@@ -34,6 +34,7 @@ class PrettyPackageStringParser(object):
 
             numpy 1.8.1-1; install_requires (MKL == 10.3, nose ^= 1.3.4); conflicts (numeric)  # noqa
         """
+        pretty_string = pretty_string.strip()
         pkg = {}
 
         try:
@@ -124,8 +125,12 @@ def package_to_pretty_string(package):
 
 
 def _parse_preamble(preamble):
-    parts = preamble.strip().split()
-    if not len(parts) == 2:
-        raise ValueError("Invalid preamble: {0!r}".format(preamble))
-    else:
-        return parts[0], parts[1]
+    msg = "Invalid preamble: {0!r}".format(preamble)
+    match = PACKAGE_RC.match(preamble)
+    if not match:
+        raise ValueError(msg)
+    if match.span()[-1] != len(preamble):
+        msg = msg + ", {!r}".format(match.group(0))
+        raise ValueError(msg)
+    groups = match.groupdict()
+    return groups['distribution'], groups['version']

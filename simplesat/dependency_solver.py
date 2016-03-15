@@ -30,14 +30,16 @@ def requirements_are_satisfiable(repositories, requirements):
 class DependencySolver(object):
 
     def __init__(self, pool, remote_repositories, installed_repository,
-                 policy=None, use_pruning=True):
+                 policy=None, use_pruning=True, strict=False):
         self._pool = pool
         self._installed_repository = installed_repository
         self._remote_repositories = remote_repositories
+        self._last_rules_time = timed_context("Generate Rules")
+        self._last_solver_init_time = timed_context("Solver Init")
+        self._last_solve_time = timed_context("SAT Solve")
+
+        self.strict = strict
         self.use_pruning = use_pruning
-        self._last_rules_time = None
-        self._last_solver_init_time = None
-        self._last_solve_time = None
 
         self._policy = policy or InstalledFirstPolicy(
             pool, installed_repository
@@ -48,13 +50,13 @@ class DependencySolver(object):
         operations to apply to resolve it, or raise SatisfiabilityError
         if no resolution could be found.
         """
-        with timed_context("Generate Rules") as self._last_rules_time:
+        with self._last_rules_time:
             requirement_ids, rules = self._create_rules_and_initialize_policy(
                 request
             )
-        with timed_context("Solver Init") as self._last_solver_init_time:
+        with self._last_solver_init_time:
             sat_solver = MiniSATSolver.from_rules(rules, self._policy)
-        with timed_context("SAT Solve") as self._last_solve_time:
+        with self._last_solve_time:
             solution = sat_solver.search()
         solution_ids = _solution_to_ids(solution)
 
@@ -103,7 +105,7 @@ class DependencySolver(object):
             installed_map[pool.package_id(package)] = package
 
         rules_generator = RulesGenerator(
-            pool, request, installed_map=installed_map)
+            pool, request, installed_map=installed_map, strict=self.strict)
 
         return all_requirement_ids, list(rules_generator.iter_rules())
 
