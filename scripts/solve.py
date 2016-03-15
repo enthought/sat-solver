@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 import argparse
+import logging
 import sys
-
 
 from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
@@ -51,11 +51,17 @@ def main(argv=None):
     p.add_argument("--no-prune", dest="prune", action="store_false")
     p.add_argument("--no-prefer-installed", dest="prefer_installed",
                    action="store_false")
-    p.add_argument("-d", "--debug", action="count")
+    p.add_argument("-d", "--debug", default=0, action="count")
     p.add_argument("--simple", action="store_true",
                    help="Show a simpler description of the transaction.")
 
     ns = p.parse_args(argv)
+
+    logging.basicConfig(
+        format=('%(asctime)s %(levelname)-8.8s [%(name)s:%(lineno)s]'
+                ' %(message)s'),
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level=('INFO', 'WARNING', 'DEBUG')[ns.debug])
 
     scenario = Scenario.from_yaml(ns.scenario)
     solve_and_print(scenario.request, scenario.remote_repositories,
