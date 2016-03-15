@@ -2,11 +2,10 @@ import os.path
 import sys
 import textwrap
 
+import attr
 import six
 
-from okonomiyaki.platforms import PythonImplementation
-
-from ..constraints import Requirement
+from ..constraints import ConflictRequirement, InstallRequirement
 from ..package import RepositoryInfo, RepositoryPackageMetadata
 from ..request import _Job, JobType
 from ..test_utils import Scenario, parse_package_list, repository_factory
@@ -19,6 +18,8 @@ else:
 
 
 P = RepositoryPackageMetadata._from_pretty_string
+CR = ConflictRequirement._from_string
+IR = InstallRequirement._from_string
 
 
 class TestRepositoryFactory(unittest.TestCase):
@@ -68,7 +69,7 @@ class TestScenario(unittest.TestCase):
             - operation: install
               requirement: numpy
         """))
-        r_jobs = [_Job(Requirement._from_string("numpy"), JobType.install)]
+        r_jobs = [_Job(IR("numpy"), JobType.install)]
 
         # When
         scenario = Scenario.from_yaml(yaml)
@@ -99,7 +100,7 @@ class TestScenario(unittest.TestCase):
             - operation: install
               requirement: numpy
         """)
-        r_jobs = [_Job(Requirement._from_string("numpy"), JobType.install)]
+        r_jobs = [_Job(IR("numpy"), JobType.install)]
 
         # When
         with mkdtemp() as d:
@@ -133,7 +134,7 @@ class TestScenario(unittest.TestCase):
         marked:
             - MKL
         """))
-        r_jobs = [_Job(Requirement._from_string("MKL"), JobType.install)]
+        r_jobs = [_Job(IR("MKL"), JobType.install)]
 
         # When
         scenario = Scenario.from_yaml(yaml)
@@ -161,7 +162,7 @@ class TestScenario(unittest.TestCase):
             - operation: remove
               requirement: MKL
         """))
-        r_jobs = [_Job(Requirement._from_string("MKL"), JobType.remove)]
+        r_jobs = [_Job(CR("MKL"), JobType.remove)]
 
         # When
         scenario = Scenario.from_yaml(yaml)
@@ -169,3 +170,34 @@ class TestScenario(unittest.TestCase):
         # Then
         jobs = scenario.request.jobs
         self.assertEqual(jobs, r_jobs)
+
+    def test_load_modifiers(self):
+        # Given
+        yaml = six.StringIO(textwrap.dedent("""\
+        packages:
+            - MKL 10.3-1
+
+        modifiers:
+            allow_newer: [MKL]
+            allow_older:
+                - numpy
+            allow_any:
+                - pyzmq
+                - pandas
+
+        request:
+            - operation: install
+              requirement: numpy
+        """))
+        expected = {
+            'allow_newer': set(['MKL']),
+            'allow_older': set(['numpy']),
+            'allow_any': set(['pyzmq', 'pandas']),
+        }
+
+        # When
+        scenario = Scenario.from_yaml(yaml)
+
+        # Then
+        constraints = attr.asdict(scenario.request.modifiers, recurse=False)
+        self.assertEqual(constraints, expected)

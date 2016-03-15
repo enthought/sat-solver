@@ -3,7 +3,7 @@ import unittest
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints import PrettyPackageStringParser, Requirement
+from simplesat.constraints import PrettyPackageStringParser, InstallRequirement
 from simplesat.dependency_solver import (
     DependencySolver, requirements_are_satisfiable
 )
@@ -17,7 +17,7 @@ from simplesat.transaction import (
 )
 
 
-R = Requirement._from_string
+R = InstallRequirement._from_string
 
 
 class TestSolver(unittest.TestCase):

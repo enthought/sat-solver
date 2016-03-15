@@ -50,6 +50,8 @@ class DependencySolver(object):
         operations to apply to resolve it, or raise SatisfiabilityError
         if no resolution could be found.
         """
+        modifiers = request.modifiers
+        self._pool.modifiers = modifiers if modifiers.targets else None
         with self._last_rules_time:
             requirement_ids, rules = self._create_rules_and_initialize_policy(
                 request
@@ -60,18 +62,18 @@ class DependencySolver(object):
             solution = sat_solver.search()
         solution_ids = _solution_to_ids(solution)
 
-        installed_map = set(
+        installed_package_ids = set(
             self._pool.package_id(p)
             for p in self._installed_repository
         )
 
         if self.use_pruning:
-            root_ids = installed_map.union(requirement_ids)
+            root_ids = installed_package_ids.union(requirement_ids)
             solution_ids = _connected_packages(
                 solution_ids, root_ids, self._pool
             )
 
-        return Transaction(self._pool, solution_ids, installed_map)
+        return Transaction(self._pool, solution_ids, installed_package_ids)
 
     def _create_rules_and_initialize_policy(self, request):
         pool = self._pool
@@ -86,7 +88,8 @@ class DependencySolver(object):
 
             requirement = job.requirement
 
-            providers = tuple(pool.what_provides(requirement))
+            providers = tuple(pool.what_provides(
+                requirement, use_modifiers=False))
             if len(providers) == 0:
                 raise NoPackageFound(requirement, str(requirement))
 
@@ -100,12 +103,14 @@ class DependencySolver(object):
             self._policy.add_requirements(requirement_ids)
             all_requirement_ids.extend(requirement_ids)
 
-        installed_map = collections.OrderedDict()
+        installed_package_ids = collections.OrderedDict()
         for package in installed_repository:
-            installed_map[pool.package_id(package)] = package
+            package_id = pool.package_id(package)
+            installed_package_ids[package_id] = package
 
         rules_generator = RulesGenerator(
-            pool, request, installed_map=installed_map, strict=self.strict)
+            pool, request, installed_package_ids=installed_package_ids,
+            strict=self.strict)
 
         return all_requirement_ids, list(rules_generator.iter_rules())
 
@@ -117,7 +122,7 @@ def _connected_packages(solution, root_ids, pool):
     # ... -> pkg.install_requires -> pkg names -> ids -> _id_to_package -> ...
 
     def get_name(pkg_id):
-        return pool._id_to_package[abs(pkg_id)].name
+        return pool.id_to_package(abs(pkg_id)).name
 
     root_names = {get_name(pkg_id) for pkg_id in root_ids}
 
@@ -131,11 +136,10 @@ def _connected_packages(solution, root_ids, pool):
         if name in root_names
     )
 
-    # FIXME: can use package_lit_dependency_graph() here
     def neighborfunc(pkg_id):
         """ Given a pkg id, return the pkg ids of the immediate dependencies
         that appeared in our solution. """
-        constraints = pool._id_to_package[pkg_id].install_requires
+        constraints = pool.id_to_package(pkg_id).install_requires
         neighbors = set(solution_name_to_id[name] for name, _ in constraints)
         return neighbors
 

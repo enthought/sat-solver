@@ -4,7 +4,7 @@ import six
 
 
 def pkg_id_to_version(pool, package_id):
-    return pool._id_to_package[package_id].version
+    return pool.id_to_package(package_id).version
 
 
 class IPolicy(six.with_metaclass(abc.ABCMeta)):
