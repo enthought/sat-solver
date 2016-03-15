@@ -310,8 +310,9 @@ class RulesGenerator(object):
                 else None)
 
             if not dependency_candidates:
-                pkg_msg = ("'{0.name} {0.version}' from"
-                           " '{0.repository_info.name}'")
+                pkg_msg = "'{0.name} {0.version}'"
+                if hasattr(package, 'repository_info'):
+                    pkg_msg += " from '{0.repository_info.name}'"
                 pkg_str = pkg_msg.format(package)
                 req_str = str(pkg_requirement)
                 msg = ("Blocking package {0!s}: no candidates found for"
@@ -381,8 +382,9 @@ class RulesGenerator(object):
                 else None)
 
             if not conflict_providers:
-                pkg_msg = ("'{0.name} {0.version}' from"
-                           " '{0.repository_info.name}'")
+                pkg_msg = "'{0.name} {0.version}'"
+                if hasattr(package, 'repository_info'):
+                    pkg_msg += " from '{0.repository_info.name}'"
                 pkg_str = pkg_msg.format(package)
                 req_str = str(pkg_requirement)
                 msg = ("No candidates found for requirement {0!r}, needed"
