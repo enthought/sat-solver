@@ -345,7 +345,13 @@ class MiniSATSolver(object):
             self.status = False
         elif len(clause) == 1:
             # Unit facts are enqueued.
-            self.enqueue(clause[0], cause=clause)
+            if not self.enqueue(clause[0], cause=clause):
+                # Bail out if we've found a conflict
+                conflict = UNSAT(
+                    clause, clause,
+                    self.clause_trails,
+                    self.assigning_clauses)
+                raise SatisfiabilityError(conflict)
         else:
             p, q = clause[:2]
             self.watches[-p].append(clause)
