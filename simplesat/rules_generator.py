@@ -322,7 +322,8 @@ class RulesGenerator(object):
                     # job requirement. Unfortunately, we don't track that
                     # explicitly because we push all of the work through a
                     # queue. As a proxy, we can examine the associated
-                    # requirements directly.
+                    # requirements directly. Everything is rooted in a job, so
+                    # if there's only one requirement, that must be it.
                     if len(requirements) == 1:
                         raise MissingInstallRequires(pkg_requirement, msg)
                     else:
