@@ -99,7 +99,7 @@ class UNSAT(object):
 
             See https://github.com/enthought/sat-solver/wiki/Unsatisfiability-Error-Messages
             for discussion about how best to implement this.
-        """
+        """  # noqa
         # It's expensive to figure out which clauses are neighbors. This dict
         # maps ids to clauses containing that id. We can do this lookup for
         # each literal in a clause to get all of its neighbors.
