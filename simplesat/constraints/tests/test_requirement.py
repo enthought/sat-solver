@@ -10,7 +10,7 @@ from simplesat.errors import (
 from ..kinds import Equal
 from ..multi import MultiConstraints
 from ..requirement import InstallRequirement, parse_package_full_name
-from ..constraint_modifiers import transform_requirement
+from ..constraint_modifiers import modify_requirement
 
 
 R = InstallRequirement._from_string
@@ -274,7 +274,7 @@ class TestRequirement(unittest.TestCase):
         self.assertMultiLineEqual(repr(requirement), r_repr)
 
 
-class TestRequirementTransformation(unittest.TestCase):
+class TestRequirementModification(unittest.TestCase):
 
     CONSTRAINTS = (
         # Greater than
@@ -302,16 +302,16 @@ class TestRequirementTransformation(unittest.TestCase):
         'allow_any': ("*", "*", "*", "*", "*", "*", "!= 1.1.1-1", "*"),
     }
 
-    def test_transform_single(self):
+    def test_modify_single(self):
         for mode in ('allow_newer', 'allow_older', 'allow_any'):
             allow = self._make_allow_dict()
             allow[mode] = ('A',)
             for before_c, after_c in zip(self.CONSTRAINTS, self.TARGETS[mode]):
                 before = 'A ' + before_c
                 after = 'A ' + after_c
-                self.assertTransformation(before, after, allow)
+                self.assertModification(before, after, allow)
 
-    def test_transform_multi(self):
+    def test_modify_multi(self):
         # When the constraints are all together as a single requirement
         requirement_strings = ('A ' + c for c in self.CONSTRAINTS)
         before = ', '.join(requirement_strings)
@@ -321,7 +321,7 @@ class TestRequirementTransformation(unittest.TestCase):
             after = ', '.join(self._stable_unique(target_requirement_strings))
             allow = self._make_allow_dict()
             allow[mode] = ('A',)
-            self.assertTransformation(before, after, allow)
+            self.assertModification(before, after, allow)
 
     def test_newer_older_is_any(self):
         # When
@@ -332,7 +332,7 @@ class TestRequirementTransformation(unittest.TestCase):
         for before_c, after_c in zip(self.CONSTRAINTS, targets_any):
             before = 'A ' + before_c
             after = 'A ' + after_c
-            self.assertTransformation(before, after, allow)
+            self.assertModification(before, after, allow)
 
     def test_collapse_multiple_any(self):
         # Given
@@ -340,13 +340,13 @@ class TestRequirementTransformation(unittest.TestCase):
         expected = R("MKL, MKL != 2.3.1-1")
 
         # When
-        transformed = transform_requirement(
+        modified = modify_requirement(
             requirement, allow_any=set(["MKL"]))
-        constraints = transformed._constraints._constraints
+        constraints = modified._constraints._constraints
 
         # Then
         self.assertEqual(2, len(constraints))
-        self.assertEqual(expected, transformed)
+        self.assertEqual(expected, modified)
 
     def _stable_unique(self, sequence):
         return tuple(OrderedDict.fromkeys(sequence).keys())
@@ -358,10 +358,10 @@ class TestRequirementTransformation(unittest.TestCase):
             'allow_any': ("B",),
         }
 
-    def assertTransformation(self, before, after, allow):
+    def assertModification(self, before, after, allow):
         before_r = R(before)
         expected = R(after)
-        result = transform_requirement(before_r, **allow)
+        result = modify_requirement(before_r, **allow)
         msg = ("""
             before: {}
             expected: {}

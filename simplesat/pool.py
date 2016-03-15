@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from .utils import DefaultOrderedDict
-from simplesat.constraints import transform_requirement
+from simplesat.constraints import modify_requirement
 
 
 class Pool(object):
@@ -42,7 +42,7 @@ class Pool(object):
             self._package_to_id_[package] = current_id
             self._packages_by_name_[package.name].append(package)
 
-    def what_provides(self, requirement, transform=True):
+    def what_provides(self, requirement, use_modifiers=True):
         """ Computes the list of packages fulfilling the given
         requirement.
 
@@ -50,22 +50,22 @@ class Pool(object):
         ----------
         requirement : Requirement
             The requirement to match candidates against.
-        transform : bool
-            If True, transform the requirement according to self.modifiers.
+        use_modifiers : bool
+            If True, modify the requirement according to self.modifiers.
         """
         ret = []
         if requirement.name in self._packages_by_name_:
-            if transform:
-                requirement = self.transform_requirement(requirement)
+            if use_modifiers:
+                requirement = self.modify_requirement(requirement)
             for package in self._packages_by_name_[requirement.name]:
                 if requirement.matches(package.version):
                     ret.append(package)
         return ret
 
-    def transform_requirement(self, requirement):
-        """Return requirement transformed by the pool's ConstraintModifiers."""
+    def modify_requirement(self, requirement):
+        """Return requirement modified by the pool's ConstraintModifiers."""
         if self.modifiers:
-            requirement = transform_requirement.with_modifiers(
+            requirement = modify_requirement.with_modifiers(
                 requirement, self.modifiers)
         return requirement
 

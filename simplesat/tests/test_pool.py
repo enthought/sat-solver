@@ -128,7 +128,7 @@ class TestPool(unittest.TestCase):
         self.assertEqual(pool.id_to_string(package_id), "+numpy-1.8.1-1")
         self.assertEqual(pool.id_to_string(-package_id), "-numpy-1.8.1-1")
 
-    def test_transformaion_what_provides(self):
+    def test_modification_what_provides(self):
         # Given
         repository = Repository(self.packages_from_definition(
             "numpy 1.8.1-1; depends (MKL == 10.3-1)"))

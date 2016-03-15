@@ -95,7 +95,7 @@ class ConstraintModifiers(object):
         return set.union(self.allow_newer, self.allow_any, self.allow_older)
 
 
-def _transform_install_requirement(
+def _modify_install_requirement(
         requirement, allow_newer=None, allow_any=None, allow_older=None):
     """If any of the modifier rules apply, return a new Requirement with
     modified constraints, otherwise return the original requirement.
@@ -103,17 +103,17 @@ def _transform_install_requirement(
 
     name = requirement.name
     original_constraints = constraints = requirement._constraints._constraints
-    transformers = (
+    modifiers = (
         (allow_older or (), ALLOW_OLDER_MAP),
         (allow_newer or (), ALLOW_NEWER_MAP),
         (allow_any or (), ALLOW_ANY_MAP),
     )
 
     modified = False
-    for names, type_map in transformers:
+    for names, type_map in modifiers:
         if name in names:
             modified = True
-            constraints = _transform_constraints(constraints, type_map)
+            constraints = _modify_constraints(constraints, type_map)
 
     if modified and constraints != original_constraints:
         # Remove duplicate constraints
@@ -123,22 +123,22 @@ def _transform_install_requirement(
     return requirement
 
 
-def _transform_constraints(constraints, type_map):
+def _modify_constraints(constraints, type_map):
     return tuple(
         type_map[type(c)](getattr(c, 'version', None))
         for c in constraints
     )
 
 
-class _TransformRequirement(object):
+class _ModifyRequirement(object):
 
     @staticmethod
     def __call__(requirement, **kw):
         if isinstance(requirement, InstallRequirement):
-            return _transform_install_requirement(requirement, **kw)
+            return _modify_install_requirement(requirement, **kw)
         elif requirement.has_any_version_constraint:
-            new_r = _transform_install_requirement(requirement, **kw)
-            msg = "Only identity transformations are defined for {}"
+            new_r = _modify_install_requirement(requirement, **kw)
+            msg = "Only identity modifications are defined for {}"
             class_name = requirement.__class__.__name__
             if new_r is not requirement:
                 raise NotImplementedError(msg.format(class_name))
@@ -148,4 +148,4 @@ class _TransformRequirement(object):
         return self(requirement, **modifiers.asdict())
 
 
-transform_requirement = _TransformRequirement()
+modify_requirement = _ModifyRequirement()

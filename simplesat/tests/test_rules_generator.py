@@ -159,7 +159,7 @@ class TestRulesGenerator(unittest.TestCase):
         with self.assertRaises(NoPackageFound):
             list(rules_generator.iter_rules())
 
-    def test_allow_newer_transformation(self):
+    def test_allow_newer_modification(self):
         # Given
         yaml = u"""
             packages:

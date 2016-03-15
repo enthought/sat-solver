@@ -69,7 +69,8 @@ class DependencySolver(object):
 
             requirement = job.requirement
 
-            providers = tuple(pool.what_provides(requirement, transform=False))
+            providers = tuple(pool.what_provides(
+                requirement, use_modifiers=False))
             if len(providers) == 0:
                 raise NoPackageFound(requirement, str(requirement))
 
