@@ -391,7 +391,8 @@ class MiniSATSolver(object):
                         self.enqueue(unit, clause)
 
     def enqueue(self, lit, cause=None):
-        """ Enqueue a new true literal.
+        """ Enqueue a new true literal. Return True if this assignment does not
+        conflict with a previous assignment, otherwise False.
 
         Parameters
         ----------
@@ -403,8 +404,6 @@ class MiniSATSolver(object):
         """
         status = self.assignments.value(lit)
         if status is not None:
-            # Known fact. Don't enqueue, but return whether this fact
-            # contradicts the earlier assignment.
             return status
         else:
             # New fact, store it.
