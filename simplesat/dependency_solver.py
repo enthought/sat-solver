@@ -13,14 +13,16 @@ from simplesat.utils import timed_context, connected_nodes
 
 class DependencySolver(object):
     def __init__(self, pool, remote_repositories, installed_repository,
-                 policy=None, use_pruning=True):
+                 policy=None, use_pruning=True, strict=False):
         self._pool = pool
         self._installed_repository = installed_repository
         self._remote_repositories = remote_repositories
-        self.use_pruning = use_pruning
         self._last_rules_time = timed_context("Generate Rules")
         self._last_solver_init_time = timed_context("Solver Init")
         self._last_solve_time = timed_context("SAT Solve")
+
+        self.strict = strict
+        self.use_pruning = use_pruning
 
         self._policy = policy or InstalledFirstPolicy(
             pool, installed_repository
@@ -86,7 +88,7 @@ class DependencySolver(object):
             installed_map[pool.package_id(package)] = package
 
         rules_generator = RulesGenerator(
-            pool, request, installed_map=installed_map)
+            pool, request, installed_map=installed_map, strict=self.strict)
 
         return all_requirement_ids, list(rules_generator.iter_rules())
 

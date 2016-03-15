@@ -4,7 +4,7 @@ from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, Requirement
 from simplesat.dependency_solver import DependencySolver
-from simplesat.errors import SatisfiabilityError
+from simplesat.errors import MissingInstallRequires, SatisfiabilityError
 from simplesat.pool import Pool
 from simplesat.repository import Repository
 from simplesat.request import Request
@@ -28,10 +28,11 @@ class TestSolver(unittest.TestCase):
     def package_factory(self, s):
         return self._package_parser.parse_to_package(s)
 
-    def resolve(self, request):
+    def resolve(self, request, strict=False):
         pool = Pool([self.repository, self.installed_repository])
         solver = DependencySolver(
-            pool, self.repository, self.installed_repository, use_pruning=False
+            pool, self.repository, self.installed_repository,
+            use_pruning=False, strict=strict
         )
         return solver.solve(request)
 
@@ -198,3 +199,22 @@ class TestSolver(unittest.TestCase):
         # Then
         with self.assertRaises(SatisfiabilityError):
             self.resolve(request)
+
+    def test_missing_dependency_strict(self):
+        # Given
+        mkl = self.package_factory(u'MKL 10.3-1')
+        libgfortran = self.package_factory(u'libgfortran 3.0.0-2')
+        numpy192 = self.package_factory(
+            u"numpy 1.9.2-1; depends (libgfortran ^= 3.0.0, MKL == 10.3-1)")
+        numpy200 = self.package_factory(
+            u"numpy 2.0.0-1; depends (nonexistent)")
+        request = Request()
+
+        # When
+        for pkg in (mkl, libgfortran, numpy192, numpy200):
+            self.repository.add_package(pkg)
+        request.install(R("numpy == 2.0.0-1"))
+
+        # Then
+        with self.assertRaises(MissingInstallRequires):
+            self.resolve(request, strict=True)
