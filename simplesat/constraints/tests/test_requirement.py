@@ -10,7 +10,7 @@ from simplesat.errors import (
 from ..kinds import Equal
 from ..multi import MultiConstraints
 from ..requirement import InstallRequirement, parse_package_full_name
-from ..constraint_modifiers import modify_requirement
+from ..constraint_modifiers import ConstraintModifiers, modify_requirement
 
 
 R = InstallRequirement._from_string
@@ -304,12 +304,11 @@ class TestRequirementModification(unittest.TestCase):
 
     def test_modify_single(self):
         for mode in ('allow_newer', 'allow_older', 'allow_any'):
-            allow = self._make_allow_dict()
-            allow[mode] = ('A',)
+            modifiers = self._make_modifiers(**{mode: 'A'})
             for before_c, after_c in zip(self.CONSTRAINTS, self.TARGETS[mode]):
                 before = 'A ' + before_c
                 after = 'A ' + after_c
-                self.assertModification(before, after, allow)
+                self.assertModification(before, after, modifiers)
 
     def test_modify_multi(self):
         # When the constraints are all together as a single requirement
@@ -319,20 +318,17 @@ class TestRequirementModification(unittest.TestCase):
         for mode in ('allow_newer', 'allow_older', 'allow_any'):
             target_requirement_strings = ('A ' + c for c in self.TARGETS[mode])
             after = ', '.join(self._stable_unique(target_requirement_strings))
-            allow = self._make_allow_dict()
-            allow[mode] = ('A',)
-            self.assertModification(before, after, allow)
+            modifiers = self._make_modifiers(**{mode: 'A'})
+            self.assertModification(before, after, modifiers)
 
     def test_newer_older_is_any(self):
         # When
-        allow = self._make_allow_dict()
-        allow['allow_newer'] = ('A',)
-        allow['allow_older'] = ('A',)
+        modifiers = self._make_modifiers(allow_newer='A', allow_older='A')
         targets_any = self.TARGETS['allow_any']
         for before_c, after_c in zip(self.CONSTRAINTS, targets_any):
             before = 'A ' + before_c
             after = 'A ' + after_c
-            self.assertModification(before, after, allow)
+            self.assertModification(before, after, modifiers)
 
     def test_collapse_multiple_any(self):
         # Given
@@ -340,8 +336,8 @@ class TestRequirementModification(unittest.TestCase):
         expected = R("MKL, MKL != 2.3.1-1")
 
         # When
-        modified = modify_requirement(
-            requirement, allow_any=set(["MKL"]))
+        modifiers = ConstraintModifiers(allow_any='MKL')
+        modified = modify_requirement(requirement, modifiers)
         constraints = modified._constraints._constraints
 
         # Then
@@ -351,21 +347,23 @@ class TestRequirementModification(unittest.TestCase):
     def _stable_unique(self, sequence):
         return tuple(OrderedDict.fromkeys(sequence).keys())
 
-    def _make_allow_dict(self):
-        return {
+    def _make_modifiers(self, **kw):
+        default = {
             'allow_any': ("B",),
             'allow_older': ("B",),
             'allow_any': ("B",),
         }
+        default.update(**kw)
+        return ConstraintModifiers(**default)
 
-    def assertModification(self, before, after, allow):
+    def assertModification(self, before, after, modifiers):
         before_r = R(before)
         expected = R(after)
-        result = modify_requirement(before_r, **allow)
+        result = modify_requirement(before_r, modifiers)
         msg = ("""
             before: {}
             expected: {}
             result: {}
-            allow: {}
-        """).format(before_r, expected, result, allow)
+            modifiers: {}
+        """).format(before_r, expected, result, modifiers.asdict())
         self.assertEqual(expected, result, msg=msg)

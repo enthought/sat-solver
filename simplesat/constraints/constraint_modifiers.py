@@ -95,22 +95,21 @@ class ConstraintModifiers(object):
         return set.union(self.allow_newer, self.allow_any, self.allow_older)
 
 
-def _modify_install_requirement(
-        requirement, allow_newer=None, allow_any=None, allow_older=None):
+def _modify_install_requirement(requirement, modifiers):
     """If any of the modifier rules apply, return a new Requirement with
     modified constraints, otherwise return the original requirement.
     """
 
     name = requirement.name
     original_constraints = constraints = requirement._constraints._constraints
-    modifiers = (
-        (allow_older or (), ALLOW_OLDER_MAP),
-        (allow_newer or (), ALLOW_NEWER_MAP),
-        (allow_any or (), ALLOW_ANY_MAP),
+    type_maps = (
+        (modifiers.allow_older or (), ALLOW_OLDER_MAP),
+        (modifiers.allow_newer or (), ALLOW_NEWER_MAP),
+        (modifiers.allow_any or (), ALLOW_ANY_MAP),
     )
 
     modified = False
-    for names, type_map in modifiers:
+    for names, type_map in type_maps:
         if name in names:
             modified = True
             constraints = _modify_constraints(constraints, type_map)
@@ -130,22 +129,13 @@ def _modify_constraints(constraints, type_map):
     )
 
 
-class _ModifyRequirement(object):
-
-    @staticmethod
-    def __call__(requirement, **kw):
-        if isinstance(requirement, InstallRequirement):
-            return _modify_install_requirement(requirement, **kw)
-        elif requirement.has_any_version_constraint:
-            new_r = _modify_install_requirement(requirement, **kw)
-            msg = "Only identity modifications are defined for {}"
-            class_name = requirement.__class__.__name__
-            if new_r is not requirement:
-                raise NotImplementedError(msg.format(class_name))
-        return requirement
-
-    def with_modifiers(self, requirement, modifiers):
-        return self(requirement, **modifiers.asdict())
-
-
-modify_requirement = _ModifyRequirement()
+def modify_requirement(requirement, modifiers):
+    if isinstance(requirement, InstallRequirement):
+        return _modify_install_requirement(requirement, modifiers)
+    elif requirement.has_any_version_constraint:
+        new_r = _modify_install_requirement(requirement, modifiers)
+        msg = "Only identity modifications are defined for {}"
+        class_name = requirement.__class__.__name__
+        if new_r is not requirement:
+            raise NotImplementedError(msg.format(class_name))
+    return requirement

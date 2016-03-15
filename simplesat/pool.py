@@ -65,8 +65,7 @@ class Pool(object):
     def modify_requirement(self, requirement):
         """Return requirement modified by the pool's ConstraintModifiers."""
         if self.modifiers:
-            requirement = modify_requirement.with_modifiers(
-                requirement, self.modifiers)
+            requirement = modify_requirement(requirement, self.modifiers)
         return requirement
 
     def package_id(self, package):
