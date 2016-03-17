@@ -28,14 +28,14 @@ The purpose of the ``simplesat`` library as a whole is to produce a valid
 assignment of package states (installed or not) that satisfy some particular
 set of constraints. This is expressed as a ``Transaction`` that is to be
 applied to the "installed" repository. The ``Request`` object is our vehicle
-for communicating this constraints to the solver.
+for communicating these constraints to the solver.
 
 
 At its core, a ``Request`` is a collection of actions such as "install" and
-``Requirement``\s such as ``numpy >= 1.8.1``, which together form ``Job``
-rules. The ``Request`` can have any number of such jobs, all of which must be
-satisfiable simultaneously. If conflicting ``Job`` rules are given, then the
-solver will fail with an ``UnsatisifiabilityError``.
+``Requirement`` objects describing ranges, such as ``numpy >= 1.8.1``, which
+together form ``Job`` rules. The ``Request`` can have any number of such jobs,
+all of which must be satisfiable simultaneously. If conflicting jobs
+are given, then the solver will fail with a ``SatisifiabilityError``.
 
 .. graphviz::
 
@@ -48,7 +48,7 @@ solver will fail with an ``UnsatisifiabilityError``.
 ConstraintModifiers
 ~~~~~~~~~~~~~~~~~~~
 
-Additionally, one may attach ``ConstraintModifiers`` to the ``Request`` which
+Additionally, one may attach ``ConstraintModifiers`` to the ``Request``. These
 are used to modify the constraints of packages during the search for a
 solution.
 
@@ -62,9 +62,10 @@ solution.
 
 These constraints are not applied to the jobs themselves, only to their
 dependencies. For example, if one were to create an install job for ``pandas <
-0.17``, while at the same time specifying a constraint modifier to allow any
-version of pandas, the modifier should *not* be applied. We assume that any
-constraint directly associated with a ``Job`` is intentional.
+0.17``, while at the same time specifying a constraint modifier that allows
+any version of pandas to satisfy any constraint, the modifier should *not* be
+applied. We assume that any constraint directly associated with a ``Job`` is
+explicit and intentional.
 
 Note that ``Request`` objects do not carry any direct information about
 packages. They merely describes constraints that any solution of packages
@@ -79,8 +80,8 @@ strings describes the packages upon which it depends, referred to as
 ``installed_requires``, as those with which it ``conflicts``. To avoid paying
 the cost of parsing our entire universe of packages for every request, these
 attached constraints are not parsed into ``Requirement`` objects until they are
-needed. We'll show them like this from now on to make it clear that they don't
-exist until needed.
+passed to the ``Pool`` later on. We'll show them like this from now on to make
+it clear that they don't exist until needed.
 
 .. graphviz::
 
@@ -156,11 +157,12 @@ When it is time to identify packages according to constraints such as ``"numpy
         PackageMetadata [shape=tripleoctagon];
     }
 
-The ``ConstraintModifiers`` object is also attached to the ``Pool`` and used to
-transform incoming ``Requirement`` objects when they are used to query for
+The ``ConstraintModifiers`` object is also attached to the ``Pool``. It is used
+to alter incoming ``Requirement`` objects before using them to query for
 matching packages. This happens implicitly in the ``Pool.what_provides()``
-method, and can be inspected directly by calling
-``Pool.transform_requirement()``. The ``Pool`` is used like so::
+method. The result of such transformation can be inspected directly by calling
+``Pool.transform_requirement()``, which is used internally. The ``Pool`` is
+used like so::
 
     repository = Repository(packages)
     requirement = InstallRequirement._from_string("numpy ^= 1.8.1")
