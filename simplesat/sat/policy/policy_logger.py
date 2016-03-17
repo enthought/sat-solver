@@ -51,7 +51,7 @@ class PolicyLogger(IPolicy):
             repo = 'installed'
         return "{:{fill}<30} {:3} {}".format(name_ver, pkg_id, repo, fill=fill)
 
-    def _log_report(self, detailed=True, with_assignments=True):
+    def _log_report(self, with_assignments=True):
 
         def pkg_name(pkg_id):
             return pkg_key(pkg_id)[0]
