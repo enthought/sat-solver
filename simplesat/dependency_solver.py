@@ -2,8 +2,11 @@ import collections
 
 import six
 
-from simplesat.errors import NoPackageFound
-from simplesat.request import JobType
+from simplesat.constraints.requirement import InstallRequirement
+from simplesat.errors import NoPackageFound, SatisfiabilityError
+from simplesat.pool import Pool
+from simplesat.repository import Repository
+from simplesat.request import JobType, Request
 from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
@@ -11,7 +14,70 @@ from simplesat.transaction import Transaction
 from simplesat.utils import timed_context, connected_nodes
 
 
+def requirements_from_repository(repository):
+    """
+    Return a list of requirements that covers all packages in repository.
+    """
+    R = InstallRequirement.from_package_string
+    return tuple(R("{0.name}-{0.version}".format(package))
+                 for package in repository)
+
+
+def repository_from_requirements(repositories, requirements, modifiers=None):
+    """ Return a new repository that only has packages explicitly mentioned in
+    the requirements.
+
+    If `modifiers` are not None, use them when resolving requirements.
+    """
+    pool = Pool(repositories, modifiers=modifiers)
+    listed_packages = set()
+    for requirement in requirements:
+        listed_packages.update(pool.what_provides(requirement))
+    return Repository(listed_packages)
+
+
+def repository_is_consistent(repository, modifiers=None):
+    """ Return True if every package in the repository can be installed
+    simultaneously, otherwise False.
+
+    If `modifiers` are not None, use them when resolving requirements.
+    """
+    requirements = requirements_from_repository(repository)
+    return requirements_are_satisfiable(
+        [repository], requirements, modifiers=modifiers)
+
+
+def requirements_are_complete(repositories, requirements, modifiers=None):
+    """ Return True if the requirements are explicitly satisfied using packages
+    in the repositories, otherwise False.
+
+    If `modifiers` are not None, use them when resolving requirements.
+    """
+    repo = repository_from_requirements(repositories, requirements)
+    return requirements_are_satisfiable(
+        [repo], requirements, modifiers=modifiers)
+
+
+def requirements_are_satisfiable(repositories, requirements, modifiers=None):
+    """ Return True if the requirements can be satisfied using the packages
+    in the repositories, otherwise False.
+
+    If `modifiers` are not None, use them when resolving requirements.
+    """
+    request = Request()
+    for requirement in requirements:
+        request.install(requirement)
+    pool = Pool(repositories, modifiers=modifiers)
+
+    try:
+        DependencySolver(pool, repositories, []).solve(request)
+        return True
+    except SatisfiabilityError:
+        return False
+
+
 class DependencySolver(object):
+
     def __init__(self, pool, remote_repositories, installed_repository,
                  policy=None, use_pruning=True, strict=False):
         self._pool = pool
