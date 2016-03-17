@@ -9,7 +9,7 @@ based. The ``Scenario`` class shows how to build ``PackageMetadata`` instances
 from strings, use them to create a ``Repository``, ``Pool`` and ``Request`` and
 pass them to a ``DependencySolver`` for resolution.
 
-Tag said, pictures help. Let's look at how data flows through the object
+That said, pictures help. Let's look at how data flows through the object
 hierarchy. We'll use the following symbols to indicate singular objects and
 plural collections of objects.
 
