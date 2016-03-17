@@ -35,11 +35,12 @@ def solve_and_print(request, remote_repositories, installed_repository,
         print(msg.format(e.unsat.to_string(pool)))
         print(e.unsat._find_requirement_time.pretty(fmt), file=sys.stderr)
 
+    if debug:
+        report = solver._policy._log_report(detailed=(debug > 1))
+        print(report, file=sys.stderr)
     print(solver._last_rules_time.pretty(fmt), file=sys.stderr)
     print(solver._last_solver_init_time.pretty(fmt), file=sys.stderr)
     print(solver._last_solve_time.pretty(fmt), file=sys.stderr)
-    if debug:
-        print(solver._policy._log_report(), file=sys.stderr)
 
 
 def main(argv=None):
