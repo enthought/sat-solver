@@ -18,6 +18,33 @@ class _Job(object):
 
 
 class Request(object):
+    """
+    A proposed change to the state of the installed repository.
+
+    The Request is built up from :class:`Requirement` objects and
+    ad-hoc package constraint modifiers.
+
+    Parameters
+    ----------
+    modifiers : ConstraintModifiers, optional
+        The contraint modifiers are used to relax constraints when deciding
+        on which packages meet a requirement.
+
+
+    >>> from simplesat.request import Request
+    >>> from simplesat.constraints import Requirement
+    >>> request = Request()
+    >>> recent_mkl = Requirement.from_string('MKL >= 11.0')
+    >>> request.install(recent_mkl)
+    >>> request.jobs
+    [_Job(requirement=Requirement('MKL >= 11.0-0'), kind=<JobType.install: 1>)]
+    >>> request.modifiers
+    ConstraintModifiers(allow_newer=set(), allow_any=set(), allow_older=set())
+    >>> request.allow_newer('MKL')
+    >>> request.modifiers.asdict()
+    {'allow_older': [], 'allow_any': ['MKL'], 'allow_newer': []}
+    """
+
     def __init__(self, modifiers=None):
         self.jobs = []
         self.modifiers = modifiers or ConstraintModifiers()

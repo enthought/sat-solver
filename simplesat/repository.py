@@ -11,12 +11,29 @@ from simplesat.constraints.requirement import Requirement
 
 class Repository(object):
     """
-    A Repository is a set of packages, and knows about which package it
+    A Repository is a set of packages that knows about which package it
     contains.
 
     It also supports the iterator protocol. Iteration is guaranteed to be
     deterministic and independent of the order in which packages have been
     added.
+
+    Parameters
+    ----------
+    packages : list of PackageMetadata
+        The packages available in this repository.
+
+
+    >>> from simplesat.constraints.package_parser import \\
+    ...     pretty_string_to_package as P
+    >>> mkl = P('MKL 10.3-1')
+    >>> numpy1921 = P('numpy 1.9.2-1; depends (MKL)')
+    >>> numpy1922 = P('numpy 1.9.2-2; depends (MKL, libgfortran)')
+    >>> repository = Repository([mkl, numpy1922])
+    >>> repository.add_package(numpy1921)
+    >>> assert list(repository) == some_pkgs + [another_one]
+    >>> numpies = repository.find_packages['numpy']
+    >>> assert numpies == [numpy1921, numpy1922]
     """
     def __init__(self, packages=None):
         self._name_to_packages = collections.defaultdict(list)

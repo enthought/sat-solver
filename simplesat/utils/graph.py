@@ -12,11 +12,34 @@ from simplesat.constraints.requirement import InstallRequirement
 
 
 def toposort(nodes_to_edges):
-    """Dependencies are expressed as a dictionary whose keys are items and
-    whose values are a set of dependent items. Output is a list of sets in
+    """Return an iterator over topologically sorted groups of nodes.
+
+    Output is a list of sets in
     topological order. The first set consists of items with no dependences,
     each subsequent set consists of items that depend upon items in the
     preceeding sets.
+
+
+    Parameters
+    ----------
+    nodes_to_edges : dict from node to set(node)
+        A directed graph expressed as a dictionary of edges whose keys are
+        nodes and values are all of the nodes on which the key depends.
+
+        For example, if node 1 depends on 2, we have ``{1: {2}, 2: set()}``.
+
+    Yields
+    ------
+    set of nodes
+        Each yielded set contains nodes which depend only on nodes that have
+        already been yielded in a previous set. The first set contains the
+        nodes with no outgoing edges.
+
+    Raises
+    ------
+    ValueError
+        If the graph contains cyclic dependencies.
+
 
     >>> print '\\n'.join(repr(sorted(x)) for x in toposort2({
         ...     2: set([11]),
@@ -25,9 +48,9 @@ def toposort(nodes_to_edges):
         ...     11: set([7,5]),
         ...     8: set([7,3]),
         ...     }))
-    [3, 5, 7]
-    [8, 11]
-    [2, 9, 10]
+    {3, 5, 7}
+    {8, 11}
+    {2, 9, 10}
 
     """
 
@@ -61,12 +84,28 @@ def toposort(nodes_to_edges):
 
 def package_lit_dependency_graph(pool, package_lits, closed=True):
     """
-    Return an dict of nodes to edges from package_lits to their dependencies,
-    maintaining sign.
+    Return a dict of nodes to edges, suitable for use with :func:`toposort`.
 
-    If closed is True, only include edges to packages in package_lits.
+    Parameters
+    ----------
+    pool : Pool
+        The pool to use when resolving package literals to packages.
+    package_lits : iterable of int
+        The package literals to build the dependency graph for.
+        These can be positive or negative. The sign will be maintained.
+    closed : bool, optional
+        If True, only include edges to packages dependencies that are
+        themselves in `package_lits`. No package literals that are not in
+        `package_lits` will appear in the graph.
+
+    Returns
+    -------
+    nodes_to_edges : dict
+        A dict of package_literals to sets of package_literals, as described in
+        :func:`toposort`.
     """
 
+    package_lits = tuple(package_lits)
     package_id_map = {abs(p): p for p in package_lits}
     packages = {package_id: pool.id_to_package(abs(package_id))
                 for package_id in package_lits}
@@ -111,7 +150,14 @@ def _transitive(node, nodes_to_edges, trans):
 
 def connected_nodes(node, neighbor_func, visited=None):
     """ Recursively build up a set of nodes connected to `node` by following
-    neighbors as given by `neighbor_func(node)`. """
+    neighbors as given by `neighbor_func(node)`, i.e. "flood fill."
+
+
+    >>> def neighbor_func(node):
+    ...     return {-node, min(node+1, 5)}
+    >>> connected_nodes(0, neighbor_func)
+    {-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5}
+    """
     visited = set() if visited is None else visited
     queue = set([node])
     while queue:
@@ -139,25 +185,41 @@ def breadth_first_search(start, neighbor_func, targets,
                          target_func=None, visited=None):
     """
     Return an iterable of paths from `start` to each reachable terminal node
-    `end` such that `terminate_func(end)` is in `targets`, by following
-    neighbors as given by `neighborfunc(node)`.
+    `end`.
 
     Parameters
     ----------
     start : node
         The starting point of the search
     neighbor_func : callable
-        neighbor_func(start) returns an iterable of nodes to visit
+        Returns the neighbors of a node
     targets : set
         The nodes we're searching for. The search terminates when each member
         of `targets` has been encountered at least once, but only path is
         returned per target.
-    target_func : callable (optional)
+    target_func : callable, optional
         If given, then `target_func` is applied to node and the result
-        is used to determine if `node` is a target.
-    visited : dict (optional)
+        is used to determine if `node` is a target via
+        ``target_func(node) in targets``.
+    visited : dict, optional
         If given, it will be used to track the current path. You can use it to
         directly inspect the search path after calling breadth_first_search().
+
+    Yields
+    ------
+    path : tuple of nodes
+        A path from node `start` to some node `end` such that
+        `terminate_func(end)` is in `targets`, by following neighbors as given
+        by `neighborfunc(node)`::
+
+            >>> start = 0
+            >>> targets = {10, 4}
+            >>> def target_func(node):
+            ...     return node*2
+            >>> def neighbor_func(node):
+            ...     return [node + 1]
+            >>> tuple(breadth_first_search(start, neighbor_func, targets, target_func))
+            ((0, 1, 2), (0, 1, 2, 3, 4, 5))
     """
     queue = deque([start])
     visited = {} if visited is None else visited

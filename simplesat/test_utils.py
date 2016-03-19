@@ -25,15 +25,16 @@ def generate_rules_for_requirement(pool, requirement, installed_map=None):
 
     Parameters
     ----------
-    pool: Pool
-        Package constraints.
-    requirement: Requirement
-        Package to be installed.
+    pool : Pool
+        A Pool of Repositories to use when fulfilling the requirement.
+    requirement : Requirement
+        The description of the package to be installed.
 
     Returns
     -------
-    rules: list
+    rules : list
         Package rules describing the given scenario.
+
     """
     request = Request()
     request.install(requirement)
@@ -99,6 +100,34 @@ def installed_repository(yaml_data, packages):
 
 
 class Scenario(object):
+
+    """
+    A high level description of a scenario that should be solved.
+
+    The Scenario class bundles together several important related
+    pieces of data that together characterize a package management
+    scenario. This includes a
+    :class:`Request <simplesat.request.Request>`, a singular
+    :class:`Repository <simplesat.repository.Repository>` representing
+    packages that are currently installed
+    and a list of :class:`Repository <simplesat.repository.Respository>`
+    representing available packages.
+
+    The key feature is the ability to create one from a human-readable
+    yaml description::
+
+        >>> Scenario.from_yaml(io.StringIO(u'''
+        ...     packages:
+        ...         - MKL 10.2-1
+        ...         - MKL 10.3-1
+        ...         - numpy 1.7.1-1; depends (MKL == 10.3-1)
+        ...         - numpy 1.8.1-1; depends (MKL == 10.3-1)
+        ...
+        ...     request:
+        ...         - operation: "install"
+        ...           requirement: "numpy"
+        ... ''')
+    """
 
     @classmethod
     def from_yaml(cls, file_or_filename):

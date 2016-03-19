@@ -16,7 +16,17 @@ from simplesat.utils import timed_context, connected_nodes
 
 def requirements_from_repository(repository):
     """
-    Return a list of requirements that covers all packages in repository.
+    Return a list of requirements, one to match each package in `repository`.
+
+    Parameters
+    ----------
+    repository : Repository
+        The repository for which to generate requirements.
+
+    Returns
+    -------
+    list of Requirement
+        The matching requirements.
     """
     R = InstallRequirement.from_package_string
     return tuple(R("{0.name}-{0.version}".format(package))
@@ -24,10 +34,24 @@ def requirements_from_repository(repository):
 
 
 def repository_from_requirements(repositories, requirements, modifiers=None):
-    """ Return a new repository that only has packages explicitly mentioned in
-    the requirements.
+    """
+    Return a new repository that only has packages explicitly mentioned in the
+    requirements.
 
-    If `modifiers` are not None, use them when resolving requirements.
+    Parameters
+    ----------
+    repositories : list of Repository
+        The list of repositories to draw packages from.
+    requirements : list of Requirement
+        The requirements used to identify relevent packages. All packages that
+        satisfy any of the requirements will be included.
+    modifiers : ConstraintModifiers, optional
+        If not None, modify requirements before resolving packages.
+
+    Returns
+    -------
+    Repository
+        A repository containing the relevant packages.
     """
     pool = Pool(repositories, modifiers=modifiers)
     listed_packages = set()
@@ -37,10 +61,21 @@ def repository_from_requirements(repositories, requirements, modifiers=None):
 
 
 def repository_is_consistent(repository, modifiers=None):
-    """ Return True if every package in the repository can be installed
-    simultaneously, otherwise False.
+    """
+    Return True if all packages in a repository can be installed together.
 
-    If `modifiers` are not None, use them when resolving requirements.
+    Parameters
+    ----------
+    repository : Repository
+        The repository to draw packages from.
+    modifiers : ConstraintModifiers, optional
+        If not None, modify requirements before resolving packages.
+
+    Returns
+    -------
+    bool
+        True if every package in the repository can be installed
+        simultaneously, otherwise False.
     """
     requirements = requirements_from_repository(repository)
     return requirements_are_satisfiable(
@@ -48,10 +83,24 @@ def repository_is_consistent(repository, modifiers=None):
 
 
 def requirements_are_complete(repositories, requirements, modifiers=None):
-    """ Return True if the requirements are explicitly satisfied using packages
-    in the repositories, otherwise False.
+    """
+    Return True if the list of requirements includes all required transitive
+    dependencies. I.e. it will report whether all packages that are needed are
+    explicitly required.
 
-    If `modifiers` are not None, use them when resolving requirements.
+    Parameters
+    ----------
+    repositories : list of Repository
+        The list of repositories to draw packages from.
+    requirements : list of Requirement
+        The requirements used to identify relevent packages.
+    modifiers : ConstraintModifiers, optional
+        If not None, modify requirements before resolving packages.
+
+    Returns
+    -------
+    bool
+        True if the requirements specify all necessary packages.
     """
     repo = repository_from_requirements(repositories, requirements)
     return requirements_are_satisfiable(
@@ -59,10 +108,22 @@ def requirements_are_complete(repositories, requirements, modifiers=None):
 
 
 def requirements_are_satisfiable(repositories, requirements, modifiers=None):
-    """ Return True if the requirements can be satisfied using the packages
-    in the repositories, otherwise False.
+    """ Determine if the list of requirements can be satisfied together.
 
-    If `modifiers` are not None, use them when resolving requirements.
+    Parameters
+    ----------
+    repositories : list of Repository
+        The list of repositories to draw packages from.
+    requirements : list of Requirement
+        The requirements used to identify relevent packages.
+    modifiers : ConstraintModifiers, optional
+        If not None, modify requirements before resolving packages.
+
+    Returns
+    -------
+    bool
+        Return True if the `requirements` can be satisfied by the packages in
+        `repositories`.
     """
     request = Request()
     for requirement in requirements:
@@ -77,6 +138,53 @@ def requirements_are_satisfiable(repositories, requirements, modifiers=None):
 
 
 class DependencySolver(object):
+
+    """
+    Top-level class for resolving a package management scenario.
+
+    The solver is configured at construction time with packages repositories
+    and a :class:`Policy` and exposes an API for computing a
+    :class:`Transaction` that describes what to do.
+
+    Parameters
+    ----------
+    pool : Pool
+        Pool against which to resolve Requirements.
+    remote_repositories : list of Repository
+        Repositories containing package available for installation.
+    installed_repository : Repository
+        Repository containing the packages which are currently installed.
+    policy : Policy, optional
+        The policy for suggesting new packages during the search phase. If none
+        is given, then ``simplsat.policy.InstalledFirstPolicy`` is used.
+    use_pruning : bool, optional
+        When True, attempt to prune package operations that are not strictly
+        necessary for meeting the requirements. Without this, packages whose
+        assignments have changed as an artefact of the search process, but
+        which are not needed for the solution will be modified.
+
+        A typical example might be the installation of a dependency for a
+        package that was proposed but later backtracked away.
+    strict : bool, optional
+        When true, behave more harshly when dealing with broken packages. INFO
+        level log messages become WARNINGs and missing dependencies become
+        errors rather than causing the package to be ignored.
+
+
+    >>> from simplesat.constraints.package_parser import \\
+    ...     pretty_string_to_package as P
+    >>> numpy1921 = P('numpy 1.9.2-1; depends (MKL 10.2-1)')
+    >>> mkl = P('MKL 10.3-1')
+    >>> installed_repository = Repository([mkl])
+    >>> remote_repository = Repository([mkl, numpy1921])
+    >>> request = Request()
+    >>> request.install(Requirement.from_string('numpy >= 1.9'))
+    >>> request.allow_newer('MKL')
+    >>> pool = Pool([installed_repo] + remote_repos)
+    >>> pool.modifiers = request.modifiers
+    >>> solver = DependencySolver(pool, remote_repos, installed_repo)
+    >>> transaction = solver.solve(request)
+    """
 
     def __init__(self, pool, remote_repositories, installed_repository,
                  policy=None, use_pruning=True, strict=False):
@@ -95,9 +203,22 @@ class DependencySolver(object):
         )
 
     def solve(self, request):
-        """Given a request, return a Transaction contianing the set of
-        operations to apply to resolve it, or raise SatisfiabilityError
-        if no resolution could be found.
+        """Given a request return a Transaction that would satisfy it.
+
+        Parameters
+        ----------
+        request : Request
+            The request that should be satisifed.
+
+        Returns
+        -------
+        Transaction
+            The operations to apply to resolve the `request`.
+
+        Raises
+        ------
+        SatisfiabilityError
+            If no resolution is found.
         """
         modifiers = request.modifiers
         self._pool.modifiers = modifiers if modifiers.targets else None
