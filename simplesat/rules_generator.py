@@ -194,7 +194,7 @@ class RulesGenerator(object):
 
         Parameters
         ----------
-        package: PackageInfo
+        package: PackageMetadata
             The package with a requirement
         install_requires: sequence
             Sequence of packages that fulfill the requirement.
@@ -225,9 +225,9 @@ class RulesGenerator(object):
 
         Parameters
         ----------
-        issuer: PackageInfo
+        issuer: PackageMetadata
             Package declaring the conflict
-        provider: PackageInfo
+        provider: PackageMetadata
             Package causing the conflict
         reason: RuleType
             One of PackageRule.reason
@@ -273,7 +273,7 @@ class RulesGenerator(object):
 
         Parameters
         ----------
-        package: PackageInfo
+        package: PackageMetadata
             The package with a requirement
         reason: RuleType
             One of PackageRule.reason
