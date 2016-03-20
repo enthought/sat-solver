@@ -1,15 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from collections import OrderedDict
-
 import six
-
-
-class _MISSING(object):
-    def __str__(self):
-        return '<MISSING>'
-MISSING = _MISSING()
 
 
 class AssignmentSet(object):
@@ -19,59 +11,79 @@ class AssignmentSet(object):
     def __init__(self, assignments=None):
         # Changelog is a dict of id -> (original value, new value)
         # FIXME: Verify that we really need ordering here
-        self._data = OrderedDict()
+        self._data = {}
         self._orig = {}
+        self._seen = set()
         self._cached_changelog = None
-        self._assigned_literals = set()
+        self._assigned_ids = set()
+        self.new_keys = set()
         for k, v in (assignments or {}).items():
             self[k] = v
 
     def __setitem__(self, key, value):
-        assert key > 0
 
-        prev_value = self.get(key)
+        abskey = abs(key)
 
-        if prev_value is not None:
-            self._assigned_literals.difference_update((key, -key))
+        if abskey not in self._seen:
+            self.new_keys.add(abskey)
 
-        if value is not None:
-            self._assigned_literals.add(key if value else -key)
+        if value is None:
+            del self[key]
+        else:
+            self._update_diff(key, value)
+            self._data[key] = value
+            self._data[-key] = not value
+            self._assigned_ids.add(abs(key))
 
-        self._update_diff(key, value)
-        self._data[key] = value
+        self._seen.add(abskey)
 
     def __delitem__(self, key):
-        self._update_diff(key, MISSING)
-        prev = self._data.pop(key)
-        if prev is not None:
-            self._assigned_literals.difference_update((key, -key))
+        self._seen.discard(abs(key))
+        if key not in self._data:
+            return
+        self._update_diff(key, None)
+        del self._data[key]
+        del self._data[-key]
+        self._assigned_ids.discard(abs(key))
 
     def __getitem__(self, key):
-        return self._data[key]
+        val = self._data.get(key)
+        if val is None and abs(key) not in self._seen:
+            raise KeyError(key)
+        return val
 
     def get(self, key, default=None):
         return self._data.get(key, default)
 
     def __len__(self):
-        return len(self._data)
+        return len(self._seen)
+
+    def __iter__(self):
+        return iter(self.keys())
 
     def __contains__(self, key):
-        return key in self._data
+        return abs(key) in self._seen
 
     def items(self):
-        return list(self._data.items())
+        return sorted(
+            (k, self._data.get(k))
+            for k in self._seen)
 
     def iteritems(self):
-        return six.iteritems(self._data)
+        return iter(self.items())
 
     def keys(self):
-        return list(self._data.keys())
+        return [k for k, _ in self.items()]
 
     def values(self):
-        return list(self._data.values())
+        return [v for _, v in self.items()]
 
     def _update_diff(self, key, value):
-        prev = self._data.get(key, MISSING)
+        # This must be called before _data is updated
+        if key < 0 and value is not None:
+            key = -key
+            value = not value
+        prev = self._data.get(key)
         self._orig.setdefault(key, prev)
         # If a value changes, dump the cached changelog
         self._cached_changelog = None
@@ -81,7 +93,7 @@ class AssignmentSet(object):
             self._cached_changelog = {
                 key: (old, new)
                 for key, old in six.iteritems(self._orig)
-                for new in [self._data.get(key, MISSING)]
+                for new in [self._data.get(key)]
                 if new != old
             }
         return self._cached_changelog
@@ -90,24 +102,33 @@ class AssignmentSet(object):
         old = self.get_changelog()
         self._orig = {}
         self._cached_changelog = {}
+        self.new_keys.clear()
         return old
 
     def copy(self):
         new = AssignmentSet()
         new._data = self._data.copy()
         new._orig = self._orig.copy()
-        new._assigned_literals = self._assigned_literals.copy()
+        new._seen = self._seen.copy()
+        new._assigned_ids = self._assigned_ids.copy()
+        new.new_keys = self.new_keys.copy()
         return new
 
+    def to_dict(self):
+        return dict(self.items())
+
     def value(self, lit):
-        """ Return the value of literal in terms of the positive. """
-        if lit in self._assigned_literals:
-            return True
-        elif -lit in self._assigned_literals:
-            return False
-        else:
-            return None
+        """ Return the value of literal. """
+        return self._data.get(lit)
 
     @property
     def num_assigned(self):
-        return len(self._assigned_literals)
+        return len(self._assigned_ids)
+
+    @property
+    def assigned_ids(self):
+        return self._assigned_ids
+
+    @property
+    def unassigned_ids(self):
+        return self._seen.difference(self._assigned_ids)
