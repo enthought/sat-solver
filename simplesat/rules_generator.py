@@ -242,6 +242,8 @@ class RulesGenerator(object):
             return PackageRule([-self._pool.package_id(issuer),
                                 -self._pool.package_id(provider)],
                                reason, requirements=requirements)
+        else:
+            return None
 
     def _create_install_one_of_rule(self, packages, reason, requirements=None):
         """
