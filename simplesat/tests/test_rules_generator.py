@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import io
+import mock
 import unittest
 
-from simplesat.errors import NoPackageFound
+from simplesat.errors import MissingConflicts, MissingInstallRequires
 
 from ..pool import Pool
 from ..rules_generator import RuleType, RulesGenerator
@@ -31,10 +32,11 @@ class TestRulesGenerator(unittest.TestCase):
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(
-            pool, scenario.request, installed_map=installed_map)
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
         rules = list(rules_generator.iter_rules())
 
         # Then
@@ -52,7 +54,7 @@ class TestRulesGenerator(unittest.TestCase):
 
         # When
         pkg_id = update.literals[0]
-        package = pool._id_to_package[pkg_id]
+        package = pool.id_to_package(pkg_id)
 
         # Then
         self.assertIs(package, installed_repo_package)
@@ -78,10 +80,11 @@ class TestRulesGenerator(unittest.TestCase):
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(
-            pool, scenario.request, installed_map=installed_map)
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
         rules = list(rules_generator.iter_rules())
 
         # Then
@@ -103,7 +106,7 @@ class TestRulesGenerator(unittest.TestCase):
         self.assertEqual(conflict.reason, RuleType.package_conflicts)
         self.assertEqual(conflict.literals, r_literals)
 
-    def test_missing_dependencies_package(self):
+    def test_missing_direct_dependencies_package(self):
         # Given
         yaml = u"""
             packages:
@@ -115,42 +118,214 @@ class TestRulesGenerator(unittest.TestCase):
                 requirement: "atom"
         """
         scenario = Scenario.from_yaml(io.StringIO(yaml))
+        expected_log = ("Blocking package 'atom 1.0.0-1'" " from 'remote': no"
+                        " candidates found for dependency 'quark > 1.0-0'")
+        expected_rule = (-1,)
 
         # When
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(
-            pool, scenario.request, installed_map=installed_map)
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
+        with mock.patch('simplesat.rules_generator.logger') as mock_logger:
+            rules = list(rules_generator.iter_rules())
 
         # Then
-        with self.assertRaises(NoPackageFound):
+        result_log = mock_logger.info.call_args[0][0]
+        self.assertMultiLineEqual(result_log, expected_log)
+
+        result = rules[0].literals
+        self.assertEqual(expected_rule, result)
+
+        # When
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids, strict=True)
+
+        # Then
+        with self.assertRaises(MissingInstallRequires):
             list(rules_generator.iter_rules())
 
-    def test_missing_conflicts_package(self):
+    def test_missing_indirect_dependencies_package(self):
         # Given
         yaml = u"""
             packages:
-              - quark 1.0.0-1
-              - atom 1.0.0-1; depends (quark > 1.0); conflicts (gdata ^= 1.0.0)
+              - gluon 1.0.0-1; depends (quark ^= 1.0.0)
+              - atom 1.0.0-1; depends (gluon); conflicts (gdata ^= 1.0.0)
+              - gdata 1.0.0-1; conflicts (atom >= 1.0.1)
 
             request:
               - operation: "install"
                 requirement: "atom"
         """
         scenario = Scenario.from_yaml(io.StringIO(yaml))
+        expected_log = ("Blocking package 'gluon 1.0.0-1' from 'remote': no"
+                        " candidates found for dependency 'quark ^= 1.0.0'")
+        expected_rule = (-3,)
 
         # When
         repos = list(scenario.remote_repositories)
         repos.append(scenario.installed_repository)
         pool = Pool(repos)
-        installed_map = {
+        installed_package_ids = {
             pool.package_id(p): p for p in scenario.installed_repository}
         rules_generator = RulesGenerator(
-            pool, scenario.request, installed_map=installed_map)
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
+        with mock.patch('simplesat.rules_generator.logger') as mock_logger:
+            rules = list(rules_generator.iter_rules())
 
         # Then
-        with self.assertRaises(NoPackageFound):
+        result_log = mock_logger.info.call_args[0][0]
+        self.assertMultiLineEqual(result_log, expected_log)
+
+        result = [r.literals for r in rules
+                  if r.reason == RuleType.package_broken][0]
+        self.assertEqual(expected_rule, result)
+
+        # When
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids, strict=True)
+        with mock.patch('simplesat.rules_generator.logger') as mock_logger:
+            rules = list(rules_generator.iter_rules())
+
+        # Then
+        result_log = mock_logger.warning.call_args[0][0]
+        self.assertMultiLineEqual(result_log, expected_log)
+
+        result = [r.literals for r in rules
+                  if r.reason == RuleType.package_broken][0]
+        self.assertEqual(expected_rule, result)
+
+    def test_missing_direct_conflicts_package(self):
+        # Given
+        yaml = u"""
+            packages:
+              - quark 1.0.0-1
+              - atom 1.0.0-1; conflicts (gdata ^= 1.0.0)
+
+            request:
+              - operation: "install"
+                requirement: "atom"
+        """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+        expected = ("No candidates found for requirement 'gdata ^= 1.0.0',"
+                    " needed for conflict with 'atom 1.0.0-1' from 'remote'")
+
+        # When
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_package_ids = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
+        with mock.patch('simplesat.rules_generator.logger') as mock_logger:
             list(rules_generator.iter_rules())
+
+        # Then
+        result = mock_logger.info.call_args[0][0]
+        self.assertEqual(result, expected)
+
+        # When
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids, strict=True)
+
+        # Then
+        with self.assertRaises(MissingConflicts):
+            list(rules_generator.iter_rules())
+
+    def test_allow_newer_modification(self):
+        # Given
+        yaml = u"""
+            packages:
+              - atom 1.0.1-1; depends (quark > 1.0, quark < 2.0)
+              - quark 1.1.0-1
+              - quark 2.1.0-1
+
+            request:
+              - operation: "install"
+                requirement: "atom"
+        """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_package_ids = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+
+        # When
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
+        rule = next(rule for rule in rules_generator.iter_rules()
+                    if rule.reason == RuleType.package_requires)
+
+        # Then
+        expected = (-1, 2)
+        result = rule.literals
+        self.assertEqual(expected, result)
+
+        # When
+        scenario.request.allow_newer('quark')
+        pool.modifiers = scenario.request.modifiers
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
+        rule = next(rule for rule in rules_generator.iter_rules()
+                    if rule.reason == RuleType.package_requires)
+
+        # Then
+        expected = (-1, 2, 3)
+        result = rule.literals
+        self.assertEqual(expected, result)
+
+    def test_missing_indirect_conflicts_package(self):
+        # Given
+        yaml = u"""
+            packages:
+              - quark 1.0.0-1
+              - gluon 1.0.0-1; conflicts (gdata ^= 1.0.0)
+              - atom 1.0.0-1; depends (gluon);
+
+            request:
+              - operation: "install"
+                requirement: "atom"
+        """
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+        expected = ("No candidates found for requirement 'gdata ^= 1.0.0',"
+                    " needed for conflict with 'gluon 1.0.0-1' from 'remote'")
+
+        # When
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_package_ids = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
+        with mock.patch('simplesat.rules_generator.logger') as mock_logger:
+            list(rules_generator.iter_rules())
+
+        # Then
+        result = mock_logger.info.call_args[0][0]
+        self.assertEqual(result, expected)
+
+        # When
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids, strict=True)
+        with mock.patch('simplesat.rules_generator.logger') as mock_logger:
+            list(rules_generator.iter_rules())
+
+        # Then
+        result = mock_logger.warning.call_args[0][0]
+        self.assertEqual(result, expected)

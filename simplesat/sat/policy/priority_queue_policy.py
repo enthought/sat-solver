@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import six
 
-from simplesat.constraints.requirement import Requirement
+from simplesat.constraints.requirement import InstallRequirement
 from simplesat.utils import DefaultOrderedDict, toposort, transitive_neighbors
 from simplesat.priority_queue import PriorityQueue, GroupPrioritizer
 from .policy import IPolicy
@@ -32,7 +32,7 @@ class PriorityQueuePolicy(IPolicy):
         self._pool = pool
         self._installed_ids = set(map(pool.package_id, installed_repository))
 
-        package_ids = pool._id_to_package.keys()
+        package_ids = pool.package_ids
         self._package_id_to_rank = None  # set the first time we check
         self._all_ids = set(package_ids)
         self._required_ids = set()
@@ -80,7 +80,7 @@ class PriorityQueuePolicy(IPolicy):
 
     def pkg_key(self, package_id):
         """ Return the key used to compare two packages. """
-        package = self._pool._id_to_package[package_id]
+        package = self._pool.id_to_package(package_id)
         try:
             installed = package.repository_info.name == 'installed'
         except AttributeError:
@@ -97,14 +97,14 @@ class PriorityQueuePolicy(IPolicy):
         unit propagation in the solver to be preferred.
         """
         pool = self._pool
-        R = Requirement
+        R = InstallRequirement
 
         # The direct dependencies of each package
         dependencies = defaultdict(set)
         for package_id in package_ids:
             dependencies[package_id].update(
                 pool.package_id(package)
-                for cons in pool._id_to_package[package_id].install_requires
+                for cons in pool.id_to_package(package_id).install_requires
                 for package in pool.what_provides(R.from_constraints(cons))
             )
 
@@ -120,14 +120,14 @@ class PriorityQueuePolicy(IPolicy):
         # present in its own transitive dependency list
         removed_deps = []
         for package_id in package_ids:
-            package = pool._id_to_package[package_id]
+            package = pool.id_to_package(package_id)
             deps = dependencies[package_id]
             package_group = packages_by_name[package.name]
             for dep in list(deps):
                 circular = transitive[dep].intersection(package_group)
                 if circular:
-                    packages = [pool._id_to_package[p] for p in circular]
-                    depkg = pool._id_to_package[dep]
+                    packages = [pool.id_to_package(p) for p in circular]
+                    depkg = pool.id_to_package(dep)
                     pkg_strings = [
                         "{}-{}".format(pkg.name, pkg.version)
                         for pkg in packages
@@ -143,7 +143,7 @@ class PriorityQueuePolicy(IPolicy):
         # Mark packages as depending on older versions of themselves so that
         # they will come out first in the toposort
         for package_id in package_ids:
-            package = pool._id_to_package[package_id]
+            package = pool.id_to_package(package_id)
             package_group = packages_by_name[package.name]
             idx = package_group.index(package_id)
             other_older = package_group[:idx + 1]
@@ -171,7 +171,7 @@ class PriorityQueuePolicy(IPolicy):
 
         name_map = DefaultOrderedDict(list)
         for package_id in package_ids:
-            package = pool._id_to_package[package_id]
+            package = pool.id_to_package(package_id)
             name_map[package.name].append(package_id)
 
         name_to_package_ids = {}

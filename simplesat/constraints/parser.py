@@ -7,19 +7,26 @@ from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal, GEQ, GT, LEQ, LT, Not
 )
 
-from simplesat.errors import SolverException
+from simplesat.errors import InvalidConstraint
 
 
-_VERSION_R = "[^=><!,\s;^][^,\s;]+"
-_EQUAL_R = "=="
-_GEQ_R = ">="
+# NOTE: The _DISTRIBUTION_R regex is based on PEP508. Additionally, we remove
+# the '-' because it breaks too many other things to do otherwise. We must also
+# permit a leading or trailling underscore because of names like
+# `_distribute_remove` re.Scanner seems to ignore (?i), so we have to write
+# case-insensitivity into the regex manually.
+_DISTRIBUTION_NAME_R = r"(?!\.)(?:\.?\w+)+(?<!\.)"
+_DISTRIBUTION_R = "({})".format(_DISTRIBUTION_NAME_R)
+_VERSION_R = r"((?=\d){}(?:-\w+)?)".format(_DISTRIBUTION_NAME_R)
+_EQUAL_R = r"=="
+_GEQ_R = r">="
 _GT_R = r">"
 _LEQ_R = r"<="
 _LT_R = r"<"
 _NOT_R = r"!="
 _ENPKG_UPSTREAM_MATCH_R = r"\^="
 _ANY_R = r"\*"
-_WS_R = " +"
+_WS_R = r" +"
 
 _CONSTRAINTS_SCANNER = re.Scanner([
     (_VERSION_R, lambda scanner, token: VersionToken(token)),
@@ -35,11 +42,9 @@ _CONSTRAINTS_SCANNER = re.Scanner([
     (_WS_R, lambda scanner, token: None),
 ])
 
-_DISTRIBUTION_R = "[a-zA-Z_][^\s,-]*"
-
 _REQUIREMENTS_SCANNER = re.Scanner([
-    (_DISTRIBUTION_R, lambda scanner, token: DistributionNameToken(token)),
     (_VERSION_R, lambda scanner, token: VersionToken(token)),
+    (_DISTRIBUTION_R, lambda scanner, token: DistributionNameToken(token)),
     (_EQUAL_R, lambda scanner, token: EqualToken(token)),
     (_GEQ_R, lambda scanner, token: GEQToken(token)),
     (_GT_R, lambda scanner, token: GTToken(token)),
@@ -123,7 +128,7 @@ def _spec_factory(comparison_token):
     klass = _OPERATOR_TO_SPEC.get(comparison_token.__class__, None)
     if klass is None:
         msg = "Unsupported comparison token {0!r}".format(comparison_token)
-        raise SolverException(msg)
+        raise InvalidConstraint(msg)
     else:
         return klass
 
@@ -139,8 +144,14 @@ def _tokenize(scanner, requirement_string):
         for part in requirement_string.split(","):
             scanned, remaining = scanner.scan(part.strip())
             if len(remaining) > 0:
-                msg = "Invalid requirement string: {0!r}"
-                raise SolverException(msg.format(requirement_string))
+                msg = "{0!r}"
+                for tok in scanned:
+                    if isinstance(tok, DistributionNameToken):
+                        msg += "(distribution name: {0!r})".format(tok.value)
+                    if isinstance(tok, VersionToken):
+                        msg += "(version: {0!r})".format(tok.value)
+                msg += "(unparsed {0!r})".format(remaining)
+                raise InvalidConstraint(msg.format(requirement_string))
             elif len(scanned) > 0:
                 tokens.append(scanned)
         return tokens
@@ -166,9 +177,8 @@ class _RawConstraintsParser(object):
                 assert isinstance(requirement_block[0], AnyToken)
                 return Any()
             else:
-                msg = ("Invalid requirement string: {0!r}".
-                       format(requirement_string))
-                raise SolverException(msg)
+                msg = "{0!r}".format(requirement_string)
+                raise InvalidConstraint(msg)
 
         constraints = []
         tokens_blocks = _tokenize(self._scanner, requirement_string)
@@ -186,26 +196,29 @@ class _RawRequirementParser(object):
 
     def parse(self, requirement_string, version_factory):
         def compute_constraint(requirement_block):
-            msg = "Invalid requirement {0!r}".format(requirement_string)
+            msg = "{0!r}".format(requirement_string)
 
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
+                if not isinstance(distribution, DistributionNameToken):
+                    raise InvalidConstraint(msg + ' (bad distirbution name)')
+                if not isinstance(version, VersionToken):
+                    raise InvalidConstraint(msg + ' (bad version)')
                 name = distribution.value
-                return (
-                    name, (_operator_factory(operator, version, version_factory),)
-                )
+                op = _operator_factory(operator, version, version_factory)
+                return name, (op,)
             elif len(requirement_block) == 2:
                 distribution, operator = requirement_block
                 name = distribution.value
                 if isinstance(operator, AnyToken):
                     return name, (Any(),)
                 else:
-                    raise SolverException(msg)
+                    raise InvalidConstraint(msg)
             elif len(requirement_block) == 1:
                 name = requirement_block[0].value
                 return name, (Any(),)
             else:
-                raise SolverException(msg)
+                raise InvalidConstraint(msg)
 
         named_constraints = collections.defaultdict(list)
         tokens_blocks = _tokenize(self._scanner, requirement_string)

@@ -1,10 +1,15 @@
-import collections
 import enum
+from collections import OrderedDict, deque
+import logging
 
-from .constraints import Requirement
-from .errors import NoPackageFound, SolverException
+from .constraints import ConflictRequirement, InstallRequirement
+from .errors import (
+    MissingConflicts, MissingInstallRequires, NoPackageFound, SolverException
+)
 from .request import JobType
 
+
+logger = logging.getLogger(__name__)
 
 INDENT = 4
 
@@ -19,8 +24,17 @@ class RuleType(enum.Enum):
     package_same_name = 10
     package_implicit_obsoletes = 11
     package_installed = 12
+    package_broken = 100
 
     internal = 256
+
+    @property
+    def is_job(self):
+        return self in (
+            RuleType.job_install,
+            RuleType.job_remove,
+            RuleType.job_update
+        )
 
 
 class PackageRule(object):
@@ -43,11 +57,12 @@ class PackageRule(object):
             else:
                 positive = True
 
-            requirement = Requirement.from_package_string(package_string)
+            requirement = InstallRequirement.from_package_string(
+                package_string)
             package_candidates = pool.what_provides(requirement)
             if len(package_candidates) == 0:
                 msg = "No candidate for package {0!r}".format(package_string)
-                raise NoPackageFound(msg)
+                raise NoPackageFound(requirement, msg)
             elif len(package_candidates) > 1:
                 msg = "> 1 candidate for package {0!r} requirement, cannot " \
                       "create rule from it" % package_string
@@ -58,7 +73,7 @@ class PackageRule(object):
                     package_literals.append(_id)
                 else:
                     package_literals.append(-_id)
-        return cls(package_literals, None, requirement)
+        return cls(package_literals, None, requirements=(requirement,))
 
     def __init__(self, literals, reason, requirements=None):
         self.literals = tuple(sorted(literals))
@@ -79,7 +94,7 @@ class PackageRule(object):
         if not sign:
             parts = (p[1:] for p in parts)
         if unique:
-            parts = collections.OrderedDict.fromkeys(parts).keys()
+            parts = OrderedDict.fromkeys(parts).keys()
         return " | ".join(parts)
 
     def to_string(self, pool, unique=False):
@@ -113,6 +128,12 @@ class PackageRule(object):
             left = pool.id_to_string(abs(left_id))[1:]
             right = pool.id_to_string(abs(right_id))
             rule_desc = "{} conflicts with {}".format(left, right)
+        elif self._reason == RuleType.package_broken:
+            package_id = self.literals[0]
+            # Trim the sign
+            package_str = pool.id_to_string(abs(package_id))
+            msg = "{} was ignored because it depends on missing packages"
+            rule_desc = msg.format(package_str)
         else:
             rule_desc = s
 
@@ -135,13 +156,15 @@ class PackageRule(object):
 
 
 class RulesGenerator(object):
-    def __init__(self, pool, request, installed_map=None):
-        self._rules_set = collections.OrderedDict()
+    def __init__(self, pool, request,
+                 installed_package_ids=None, strict=False):
+        self._rules_set = OrderedDict()
         self._pool = pool
 
         self.request = request
-        self.installed_map = installed_map or collections.OrderedDict()
+        self.installed_package_ids = installed_package_ids or OrderedDict()
         self.added_package_ids = set()
+        self.strict = strict
 
     def iter_rules(self):
         """
@@ -153,7 +176,7 @@ class RulesGenerator(object):
         # we'll end up keeping the rule instance that doesn't know it should be
         # associated with a job.
         self._add_job_rules()
-        for package in self.installed_map.values():
+        for package in self.installed_package_ids.values():
             self._add_installed_package_rules(package)
             self._add_package_rules(package)
         return self._rules_set
@@ -284,8 +307,9 @@ class RulesGenerator(object):
             self._rules_set[rule] = None
 
     def _add_install_requires_rules(self, package, work_queue, requirements):
+        all_dependency_candidates = []
         for constraints in package.install_requires:
-            pkg_requirement = Requirement.from_constraints(constraints)
+            pkg_requirement = InstallRequirement.from_constraints(constraints)
             dependency_candidates = self._pool.what_provides(pkg_requirement)
 
             # We add our new requirement to the stack of requirements we've
@@ -296,18 +320,44 @@ class RulesGenerator(object):
                 else None)
 
             if not dependency_candidates:
-                msg = ("No candidates found for requirement {0!r}, needed for "
-                       "dependency {1!r}")
-                raise NoPackageFound(
-                    msg.format(pkg_requirement.name, package))
+                pkg_msg = "'{0.name} {0.version}'"
+                if hasattr(package, 'repository_info'):
+                    pkg_msg += " from '{0.repository_info.name}'"
+                pkg_str = pkg_msg.format(package)
+                req_str = str(pkg_requirement)
+                msg = ("Blocking package {0!s}: no candidates found for"
+                       " dependency {1!r}").format(pkg_str, req_str)
+                if self.strict:
+                    # We only raise an exception if this comes directly from a
+                    # job requirement. Unfortunately, we don't track that
+                    # explicitly because we push all of the work through a
+                    # queue. As a proxy, we can examine the associated
+                    # requirements directly. Everything is rooted in a job, so
+                    # if there's only one requirement, that must be it.
+                    if len(requirements) == 1:
+                        raise MissingInstallRequires(pkg_requirement, msg)
+                    else:
+                        logger.warning(msg)
+                else:
+                    logger.info(msg)
+
+                rule = self._create_remove_rule(
+                    package, RuleType.package_broken,
+                    requirements=combined_requirements,
+                )
+                self._add_rule(rule, "package")
+                return
 
             rule = self._create_dependency_rule(
                 package, dependency_candidates, RuleType.package_requires,
                 combined_requirements)
             self._add_rule(rule, "package")
-
-            for candidate in dependency_candidates:
-                work_queue.append(candidate)
+            # We're "buffering" this so that we don't queue up any dependencies
+            # unless they are all successfully processed
+            all_dependency_candidates.extend(
+                (candidate, combined_requirements)
+                for candidate in dependency_candidates)
+        work_queue.extend(all_dependency_candidates)
 
     def _add_conflicts_rules(self, package, requirements):
         """
@@ -315,7 +365,7 @@ class RulesGenerator(object):
         """
 
         # Conflicts due to implicit obsoletion or same-name
-        pkg_requirement = Requirement._from_string(package.name)
+        pkg_requirement = ConflictRequirement._from_string(package.name)
         obsolete_providers = self._pool.what_provides(pkg_requirement)
         # We add our new requirement to the stack of requirements we've
         # gathered so far for these rules.
@@ -335,7 +385,7 @@ class RulesGenerator(object):
 
         # Explicit conflicts in package metadata
         for constraints in package.conflicts:
-            pkg_requirement = Requirement.from_constraints(constraints)
+            pkg_requirement = ConflictRequirement.from_constraints(constraints)
             conflict_providers = self._pool.what_provides(pkg_requirement)
             combined_requirements = (
                 requirements + (pkg_requirement,)
@@ -343,9 +393,27 @@ class RulesGenerator(object):
                 else None)
 
             if not conflict_providers:
-                msg = ("No candidates found for requirement {0!r}, needed for "
-                       "conflict {1!r}")
-                raise NoPackageFound(msg.format(pkg_requirement.name, package))
+                pkg_msg = "'{0.name} {0.version}'"
+                if hasattr(package, 'repository_info'):
+                    pkg_msg += " from '{0.repository_info.name}'"
+                pkg_str = pkg_msg.format(package)
+                req_str = str(pkg_requirement)
+                msg = ("No candidates found for requirement {0!r}, needed"
+                       " for conflict with {1!s}").format(req_str, pkg_str)
+                if self.strict:
+                    # We only raise an exception if this comes directly from a
+                    # job requirement. Unfortunately, we don't track that
+                    # explicitly because we push all of the work through a
+                    # queue. As a proxy, we can examine the associated
+                    # requirements directly.
+                    if len(requirements) == 1:
+                        raise MissingConflicts(pkg_requirement, msg)
+                    else:
+                        logger.warning(msg)
+                else:
+                    # We just ignore missing constraints. They don't break
+                    # anything.
+                    logger.info(msg)
 
             for provider in conflict_providers:
                 rule = self._create_conflicts_rule(
@@ -357,11 +425,11 @@ class RulesGenerator(object):
         """
         Create all the rules required to satisfy installing the given package.
         """
-        work_queue = collections.deque()
-        work_queue.append(package)
+        work_queue = deque()
+        work_queue.append((package, requirements))
 
         while len(work_queue) > 0:
-            p = work_queue.popleft()
+            p, requirements = work_queue.popleft()
             p_id = self._pool.package_id(p)
             if p_id not in self.added_package_ids:
                 self.added_package_ids.add(p_id)
@@ -371,12 +439,14 @@ class RulesGenerator(object):
                 self._add_conflicts_rules(p, requirements)
 
     def _add_install_job_rules(self, job):
-        packages = self._pool.what_provides(job.requirement)
+        packages = self._pool.what_provides(
+            job.requirement, use_modifiers=False)
         if len(packages) > 0:
             for package in packages:
                 # This is an optimization to avoid iterating over the installed
                 # packages again.
-                if package not in self.installed_map:
+                package_id = self._pool.package_id(package)
+                if package_id not in self.installed_package_ids:
                     # Rules created directly from a job requirement have no
                     # other requirements in their history-stack
                     self._add_package_rules(
@@ -386,9 +456,12 @@ class RulesGenerator(object):
                 packages, RuleType.job_install,
                 requirements=(job.requirement,))
             self._add_rule(rule, "job")
+        else:
+            raise NoPackageFound(job.requirement, str(job.requirement))
 
     def _add_remove_job_rules(self, job):
-        packages = self._pool.what_provides(job.requirement)
+        packages = self._pool.what_provides(
+            job.requirement, use_modifiers=False)
         for package in packages:
             rule = self._create_remove_rule(
                 package, RuleType.job_remove, requirements=(job.requirement,))
@@ -400,13 +473,15 @@ class RulesGenerator(object):
         the standard rules then adding an additional rule for just the most
         recent version.
         """
-        packages = self._pool.what_provides(job.requirement)
+        packages = self._pool.what_provides(
+            job.requirement, use_modifiers=False)
         if len(packages) == 0:
             return
 
         # An update request *must* install the latest package version
         def key(package):
-            installed = self._pool.package_id(package) in self.installed_map
+            package_id = self._pool.package_id(package)
+            installed = package_id in self.installed_package_ids
             return (package.version, installed)
         package = max(packages, key=key)
         self._add_package_rules(package, requirements=(job.requirement,))
@@ -418,7 +493,7 @@ class RulesGenerator(object):
         self._add_rule(rule, "job")
 
     def _add_installed_package_rules(self, package):
-        packages_all_versions = self._pool._packages_by_name[package.name]
+        packages_all_versions = self._pool.name_to_packages(package.name)
         for other in packages_all_versions:
             self._add_package_rules(other)
 

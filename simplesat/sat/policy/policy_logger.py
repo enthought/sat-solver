@@ -42,7 +42,7 @@ class PolicyLogger(IPolicy):
         return c, pretty
 
     def _log_pretty_pkg_id(self, pkg_id):
-        package = self._log_pool._id_to_package[pkg_id]
+        package = self._log_pool.id_to_package(pkg_id)
         name_ver = '{} {}'.format(package.name, package.version)
         fill = '.' if pkg_id % 2 else ''
         try:
@@ -57,7 +57,7 @@ class PolicyLogger(IPolicy):
             return pkg_key(pkg_id)[0]
 
         def pkg_key(pkg_id):
-            pkg = self._log_pool._id_to_package[pkg_id]
+            pkg = self._log_pool.id_to_package(pkg_id)
             return pkg.name, pkg.version
 
         ids = map(abs, self._log_suggestions)

@@ -6,6 +6,7 @@ import operator
 import six
 
 from .errors import NoPackageFound
+from simplesat.constraints.requirement import Requirement
 
 
 class Repository(object):
@@ -29,7 +30,8 @@ class Repository(object):
 
     def __len__(self):
         return sum(
-            len(packages) for packages in six.itervalues(self._name_to_packages)
+            len(packages)
+            for packages in six.itervalues(self._name_to_packages)
         )
 
     def __contains__(self, package_metadata):
@@ -86,8 +88,10 @@ class Repository(object):
         for candidate in candidates:
             if candidate.version == version:
                 return candidate
+        package_string = '{0}-{1}'.format(name, str(version))
         raise NoPackageFound(
-            "Package '{0}-{1}' not found".format(name, str(version))
+            Requirement.from_package_string(package_string),
+            "Package '{0}' not found".format(package_string),
         )
 
     def find_packages(self, name):
