@@ -3,7 +3,7 @@
 Architecture
 ============
 
-Simplesat is modeled after the Composer library from PHP.
+Simplesat's API is modeled after the Composer library from PHP.
 
 For a good overview of the public API of the entire system, you should look at
 the :class:`Scenario <simplesat.test_utils.Scenario>`, upon which all of our
