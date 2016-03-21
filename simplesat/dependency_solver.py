@@ -138,7 +138,7 @@ def requirements_are_satisfiable(repositories, requirements, modifiers=None):
     try:
         DependencySolver(pool, repositories, []).solve(request)
         return True
-    except SatisfiabilityError:
+    except (SatisfiabilityError, NoPackageFound):
         return False
 
 
@@ -224,6 +224,9 @@ class DependencySolver(object):
         ------
         SatisfiabilityError
             If no resolution is found.
+
+        MissingInstallRequires
+            If no packages meet a dependency requirement.
         """
         modifiers = request.modifiers
         self._pool.modifiers = modifiers if modifiers.targets else None
