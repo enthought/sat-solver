@@ -8,6 +8,11 @@ python:
   - "3.5"
   - "pypy"
 
+addons:
+  apt:
+    packages:
+      - graphviz
+
 install:
   - pip install -U pip
   - pip install -U setuptools
