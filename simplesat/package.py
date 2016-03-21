@@ -24,6 +24,7 @@ class RepositoryInfo(IRepositoryInfo):
 
     @property
     def name(self):
+        """A name that uniquely indentifies a repository."""
         return self._name
 
     def __hash__(self):

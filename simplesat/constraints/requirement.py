@@ -57,11 +57,31 @@ class Requirement(object):
         Parameters
         ----------
         constraints : constraints tuple
-            A tuple of constraints like (
-                'nose', ( # disjunctions
-                    ('< 1.4', '>= 1.3'),  # conjunction
-                )
-            )
+            A 2-tuple of constraints where the first element is the
+            distribution name, and the second is a tuple of tuple of string,
+            representing a disjuntion of conjunctions of version ranges, e.g.
+            ``('nose', (('< 1.4', '>= 1.3'),))``.
+
+
+            >>> Requirement.from_constraints((
+            ...     'nose', ( # disjunction
+            ...         ('< 1.4', '>= 1.3'),  # conjunction
+            ...     )
+            ... ))
+            Requirement('nose < 1.4-0, >= 1.3-0')
+
+        Returns
+        -------
+        Requirement
+            A Requirement that matches the given constraints.
+
+        Raises
+        ------
+        InvalidConstraint
+            If there is more than one conjunction. In less formal terms, we do
+            not currently support the OR operator.
+        InvalidConstraint
+            If the constraint tuple has the wrong shape.
         """
         try:
             name, disjunction = constraint_tuple
@@ -87,7 +107,8 @@ class Requirement(object):
         return cls(name, constraints)
 
     def to_constraints(self):
-        """ Return a constraint tuple as described by from_constraints. """
+        """ Return a constraint tuple as described by :meth:`from_constraints`.
+        """
         name = self.name
 
         parts = []
@@ -105,8 +126,20 @@ class Requirement(object):
 
         Parameters
         ----------
-        requirement_string : str
+        string : str
             The requirement string, e.g. 'MKL >= 10.3, MKL < 11.0'
+        version_factory : callable, optional
+            A function from version strings to version objects.
+
+        Returns
+        -------
+        Requirement
+            A requirement matching the `string`.
+
+        Raises
+        ------
+        InvalidDependencyString
+            If the string refers to more than one package.
         """
         parser = _RawRequirementParser()
         named_constraints = parser.parse(string, version_factory)
@@ -127,6 +160,14 @@ class Requirement(object):
         ----------
         package_string : str
             The package string, e.g. 'numpy-1.8.1-1'
+        version_factory : callable, optional
+            A function from version strings to version objects.
+
+        Returns
+        -------
+        Requirement
+            A requirement matching the exact package and version in
+            `package_string`.
         """
         name, version_string = parse_package_full_name(package_string)
         version = version_factory(version_string)

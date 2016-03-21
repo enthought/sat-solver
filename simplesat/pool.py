@@ -9,6 +9,13 @@ class Pool(object):
 
     The main feature of a pool is to search for every package matching a
     given requirement.
+
+    Parameters
+    ----------
+    repositories : list of Repository, optional
+        The repositories to query for packages.
+    modifiers : ConstraintModifiers, optional
+        If given, modify the requirements prior to querying.
     """
 
     def __init__(self, repositories=None, modifiers=None):
@@ -52,6 +59,11 @@ class Pool(object):
             The requirement to match candidates against.
         use_modifiers : bool
             If True, modify the requirement according to self.modifiers.
+
+        Returns
+        -------
+        list of PackageMetadata
+            The packages satisfying `requirement`.
         """
         ret = []
         if requirement.name in self._packages_by_name_:

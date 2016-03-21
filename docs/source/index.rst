@@ -19,6 +19,7 @@ Contents:
    architecture
    sat_solving
    comparing_with_composer
+   api
    glossary
    references
    :maxdepth: 2
