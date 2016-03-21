@@ -75,9 +75,11 @@ def main(argv=None):
 
     p = argparse.ArgumentParser()
     p.add_argument("scenario", help="Path to the YAML scenario file.")
-    p.add_argument("--solve", action="store_true")
-    p.add_argument("--cpp", action="store_true")
-    p.add_argument("--debug", action="count")
+    p.add_argument("--solve", action="store_true",
+                   help=("Feed the solution to './minisat' and"
+                         " show the resulting solution."))
+    p.add_argument("--debug", action="count",
+                   help="increase the logging verbosity.")
 
     ns = p.parse_args(argv)
 
@@ -98,9 +100,12 @@ def main(argv=None):
 
     if ns.solve:
         PIPE = subprocess.PIPE
-        proc = subprocess.Popen(
-            ['./minisat', '-strict', '/dev/stdin', '/dev/stdout'],
-            stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        try:
+            cmd = ['./minisat', '-strict', '/dev/stdin', '/dev/stdout']
+            proc = subprocess.Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        except OSError as e:
+            msg = str(e) + ": {!r}".format(' '.join(cmd))
+            raise OSError(msg)
         output, stderr = proc.communicate(dimacs.encode('ascii'))
         output = output.decode('ascii')
         output = [l.strip() for l in output.splitlines()]
