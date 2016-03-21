@@ -107,9 +107,8 @@ class PackageRule(object):
         elif self._reason == RuleType.job_remove:
             rule_desc = "Remove command rule ({})".format(s)
         elif self._reason == RuleType.package_same_name:
-            parts = [pool.id_to_string(abs(literal))
-                     for literal in self.literals]
-            s = " | ".join(parts)
+            s = self._pretty_literals(
+                pool, (abs(i) for i in self.literals), unique=unique)
             rule_desc = "Can only install one of: ({})".format(s)
         elif self._reason == RuleType.package_installed:
             parts = [pool.id_to_string(abs(literal))
@@ -123,10 +122,9 @@ class PackageRule(object):
             s = self._pretty_literals(pool, self.literals[1:], unique=unique)
             rule_desc = "{} requires ({})".format(source, s)
         elif self._reason == RuleType.package_conflicts:
-            left_id, right_id = self.literals
-            # Trim the sign
-            left = pool.id_to_string(abs(left_id))[1:]
-            right = pool.id_to_string(abs(right_id))
+            left_ids, right_ids = self.literals[0:1], self.literals[1:]
+            left = self._pretty_literals(pool, left_ids, sign=False)
+            right = self._pretty_literals(pool, (abs(i) for i in right_ids))
             rule_desc = "{} conflicts with {}".format(left, right)
         elif self._reason == RuleType.package_broken:
             package_id = self.literals[0]
@@ -194,7 +192,7 @@ class RulesGenerator(object):
 
         Parameters
         ----------
-        package: PackageInfo
+        package: PackageMetadata
             The package with a requirement
         install_requires: sequence
             Sequence of packages that fulfill the requirement.
@@ -225,9 +223,9 @@ class RulesGenerator(object):
 
         Parameters
         ----------
-        issuer: PackageInfo
+        issuer: PackageMetadata
             Package declaring the conflict
-        provider: PackageInfo
+        provider: PackageMetadata
             Package causing the conflict
         reason: RuleType
             One of PackageRule.reason
@@ -242,6 +240,8 @@ class RulesGenerator(object):
             return PackageRule([-self._pool.package_id(issuer),
                                 -self._pool.package_id(provider)],
                                reason, requirements=requirements)
+        else:
+            return None
 
     def _create_install_one_of_rule(self, packages, reason, requirements=None):
         """
@@ -273,7 +273,7 @@ class RulesGenerator(object):
 
         Parameters
         ----------
-        package: PackageInfo
+        package: PackageMetadata
             The package with a requirement
         reason: RuleType
             One of PackageRule.reason
