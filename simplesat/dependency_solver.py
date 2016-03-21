@@ -14,90 +14,89 @@ from simplesat.transaction import Transaction
 from simplesat.utils import timed_context, connected_nodes
 
 
-def requirements_from_repository(repository):
+def requirements_from_packages(packages):
     """
-    Return a list of requirements, one to match each package in `repository`.
+    Return a list of requirements, one to match each package in `packages`.
 
     Parameters
     ----------
-    repository : Repository
-        The repository for which to generate requirements.
+    packages : iterable of PackageMetadata
+        The packages for which to generate requirements.
 
     Returns
     -------
-    list of Requirement
+    tuple of Requirement
         The matching requirements.
     """
     R = InstallRequirement.from_package_string
     return tuple(R("{0.name}-{0.version}".format(package))
-                 for package in repository)
+                 for package in packages)
 
 
-def repository_from_requirements(repositories, requirements, modifiers=None):
+def packages_from_requirements(packages, requirements, modifiers=None):
     """
-    Return a new repository that only has packages explicitly mentioned in the
-    requirements.
+    Return a new tuple that only contains packages explicitly mentioned
+    in the requirements.
 
     Parameters
     ----------
-    repositories : list of Repository
-        The list of repositories to draw packages from.
+    packages : iterable of PackageMetadata
+        The packages available for inclusion in the result.
     requirements : list of Requirement
-        The requirements used to identify relevent packages. All packages that
+        The requirements used to identify relevant packages. All packages that
         satisfy any of the requirements will be included.
     modifiers : ConstraintModifiers, optional
         If not None, modify requirements before resolving packages.
 
     Returns
     -------
-    Repository
-        A repository containing the relevant packages.
+    Tuple of PackageMetadata
+        A tuple containing the relevant packages.
     """
-    pool = Pool(repositories, modifiers=modifiers)
+    pool = Pool((Repository(packages),), modifiers=modifiers)
     listed_packages = set()
     for requirement in requirements:
         listed_packages.update(pool.what_provides(requirement))
-    return Repository(listed_packages)
+    return tuple(sorted(listed_packages, key=lambda p: p._key))
 
 
-def repository_is_consistent(repository, modifiers=None):
+def packages_are_consistent(packages, modifiers=None):
     """
-    Return True if all packages in a repository can be installed together.
+    Return True if all packages can be installed together.
 
     .. Note::
-        Any repository with more than one version of a package will return
-        False because we only permit one version of a package to be installed
-        at a time.
+        This will return `False` if more than one version of a package is
+        present because we only permit one at a time.
 
     Parameters
     ----------
-    repository : Repository
-        The repository to draw packages from.
+    packages : iterable of PackageMetadata
+        The packages to check for consistency.
     modifiers : ConstraintModifiers, optional
         If not None, modify requirements before resolving packages.
 
     Returns
     -------
     bool
-        True if every package in the repository can be installed
+        True if every package in `packages` can be installed
         simultaneously, otherwise False.
     """
-    requirements = requirements_from_repository(repository)
+    requirements = requirements_from_packages(packages)
     return requirements_are_satisfiable(
-        [repository], requirements, modifiers=modifiers)
+        packages, requirements, modifiers=modifiers)
 
 
-def requirements_are_complete(repositories, requirements, modifiers=None):
+def requirements_are_complete(packages, requirements, modifiers=None):
     """
-    Return True if the list of requirements includes all required transitive
-    dependencies. I.e. it will report whether all packages that are needed are
-    explicitly required.
+    Return True if `requirements` includes all required transitive
+    dependencies. I.e. it will report whether all the packages that are needed
+    are explicitly required.
 
     Parameters
     ----------
-    repositories : list of Repository
-        The list of repositories to draw packages from.
-    requirements : list of Requirement
+    packages : iterable of PackageMetadata
+        The packages available to draw from when satisfying requirements.
+    requirements : iterable of Requirement
         The requirements used to identify relevent packages.
     modifiers : ConstraintModifiers, optional
         If not None, modify requirements before resolving packages.
@@ -107,18 +106,19 @@ def requirements_are_complete(repositories, requirements, modifiers=None):
     bool
         True if the requirements specify all necessary packages.
     """
-    repo = repository_from_requirements(repositories, requirements)
+    packages = packages_from_requirements(
+        packages, requirements, modifiers=modifiers)
     return requirements_are_satisfiable(
-        [repo], requirements, modifiers=modifiers)
+        packages, requirements, modifiers=modifiers)
 
 
-def requirements_are_satisfiable(repositories, requirements, modifiers=None):
-    """ Determine if the list of requirements can be satisfied together.
+def requirements_are_satisfiable(packages, requirements, modifiers=None):
+    """ Determine if the `requirements` can be satisfied together.
 
     Parameters
     ----------
-    repositories : list of Repository
-        The list of repositories to draw packages from.
+    packages : iterable of PackageMetadata
+        The packages available to draw from when satisfying requirements.
     requirements : list of Requirement
         The requirements used to identify relevent packages.
     modifiers : ConstraintModifiers, optional
@@ -127,12 +127,12 @@ def requirements_are_satisfiable(repositories, requirements, modifiers=None):
     Returns
     -------
     bool
-        Return True if the `requirements` can be satisfied by the packages in
-        `repositories`.
+        Return True if the `requirements` can be satisfied by the `packages`.
     """
     request = Request()
     for requirement in requirements:
         request.install(requirement)
+    repositories = (Repository(packages),)
     pool = Pool(repositories, modifiers=modifiers)
 
     try:

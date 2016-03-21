@@ -5,9 +5,9 @@ from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, InstallRequirement
 from simplesat.dependency_solver import (
-    DependencySolver, requirements_are_satisfiable,
-    requirements_from_repository, repository_from_requirements,
-    repository_is_consistent, requirements_are_complete,
+    DependencySolver, packages_are_consistent,
+    requirements_from_packages, packages_from_requirements,
+    requirements_are_satisfiable, requirements_are_complete,
 )
 from simplesat.errors import MissingInstallRequires, SatisfiabilityError
 from simplesat.pool import Pool
@@ -167,11 +167,11 @@ class TestSolver(unittest.TestCase):
                     - operation: "install"
                       requirement: "numpy"
         """))
-        repositories = scenario.remote_repositories
+        packages = tuple(p for r in scenario.remote_repositories for p in r)
         requirements = [job.requirement for job in scenario.request.jobs]
 
         # When
-        result = requirements_are_satisfiable(repositories, requirements)
+        result = requirements_are_satisfiable(packages, requirements)
 
         # Then
         self.assertTrue(result)
@@ -191,11 +191,11 @@ class TestSolver(unittest.TestCase):
                 - operation: "install"
                   requirement: "MKL != 10.3-1"
         """))
-        repositories = scenario.remote_repositories
+        packages = tuple(p for r in scenario.remote_repositories for p in r)
         requirements = [job.requirement for job in scenario.request.jobs]
 
         # When
-        result = requirements_are_satisfiable(repositories, requirements)
+        result = requirements_are_satisfiable(packages, requirements)
 
         # Then
         self.assertFalse(result)
@@ -213,11 +213,11 @@ class TestSolver(unittest.TestCase):
                 - operation: install
                   requirement: MKL == 10.3-1
         """))
-        repositories = scenario.remote_repositories
+        packages = tuple(p for r in scenario.remote_repositories for p in r)
 
         # When
         requirements = [job.requirement for job in scenario.request.jobs]
-        result = requirements_are_complete(repositories, requirements)
+        result = requirements_are_complete(packages, requirements)
 
         # Then
         self.assertTrue(result)
@@ -233,16 +233,16 @@ class TestSolver(unittest.TestCase):
                 - operation: install
                   requirement: numpy
         """))
-        repositories = scenario.remote_repositories
+        packages = tuple(p for r in scenario.remote_repositories for p in r)
 
         # When
         requirements = [job.requirement for job in scenario.request.jobs]
-        result = requirements_are_complete(repositories, requirements)
+        result = requirements_are_complete(packages, requirements)
 
         # Then
         self.assertFalse(result)
 
-    def test_repository_from_requirements(self):
+    def test_packages_from_requirements(self):
         # Given
         requirements = (
             R(u'MKL == 10.3-1'),
@@ -258,14 +258,13 @@ class TestSolver(unittest.TestCase):
         )
 
         # When
-        repositories = [Repository(expected)]
-        repository = repository_from_requirements(repositories, requirements)
+        repository = packages_from_requirements(expected, requirements)
 
         # Then
         result = tuple(repository)
         self.assertEqual(result, expected)
 
-    def test_requirements_from_repository(self):
+    def test_requirements_from_packages(self):
         # Given
         packages = (
             P(u'MKL 10.3-1'),
@@ -281,13 +280,12 @@ class TestSolver(unittest.TestCase):
         )
 
         # When
-        repository = Repository(packages)
-        result = requirements_from_repository(repository)
+        result = requirements_from_packages(packages)
 
         # Then
         self.assertEqual(result, expected)
 
-    def test_repository_is_consistent(self):
+    def test_packages_are_consistent(self):
         # Given
         scenario = Scenario.from_yaml(io.StringIO(u"""
             packages:
@@ -296,8 +294,8 @@ class TestSolver(unittest.TestCase):
         """))
 
         # When
-        repository = scenario.remote_repositories[0]
-        result = repository_is_consistent(repository)
+        packages = tuple(p for r in scenario.remote_repositories for p in r)
+        result = packages_are_consistent(packages)
 
         # Then
         self.assertTrue(result)
@@ -310,8 +308,8 @@ class TestSolver(unittest.TestCase):
         """))
 
         # When
-        repository = scenario.remote_repositories[0]
-        result = repository_is_consistent(repository)
+        packages = tuple(p for r in scenario.remote_repositories for p in r)
+        result = packages_are_consistent(packages)
 
         # Then
         self.assertFalse(result)
