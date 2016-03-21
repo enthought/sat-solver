@@ -83,8 +83,8 @@ class ScenarioTestAssistant(object):
             self.assertFailureEqual(pool, failure, scenario)
         else:
             if scenario.failed:
-                msg = "Solver unexpectedly succeeded, but {0}."
-                self.fail(msg.format(scenario.failure))
+                msg = "Solver unexpectedly succeeded, but {0}"
+                self.fail(msg.format(scenario.failure['raw']))
             self.assertEqualOperations(transaction.operations,
                                        scenario.operations)
             if (scenario.pretty_operations or
