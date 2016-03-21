@@ -7,12 +7,13 @@ from .parser import _DISTRIBUTION_R, _VERSION_R, _WS_R
 
 _WS_RS = _WS_R
 _MAYBE_WS_RS = " *"
+_SEP_RS = r"(?:(?:{})|(?:{}))".format(_WS_RS, '-')
 _DISTRIBUTION_RS = "(?P<distribution>{})".format(_DISTRIBUTION_R)
 _VERSION_RS = "(?P<version>{})".format(_VERSION_R)
 _CONSTRAINT_RS = "(?P<constraint>[^,]*)"
 
 CONSTRAINT_BLOCK_RC = re.compile("(?P<kind>\w+)\s*\((?P<constraints>.*?)\)")
-PACKAGE_RC = re.compile(_DISTRIBUTION_RS + _WS_RS + _VERSION_RS)
+PACKAGE_RC = re.compile(_DISTRIBUTION_RS + _SEP_RS + _VERSION_RS)
 CONSTRAINT_RC = re.compile(_DISTRIBUTION_RS + _MAYBE_WS_RS + _CONSTRAINT_RS)
 
 CONSTRAINT_SYNONYMS = {
