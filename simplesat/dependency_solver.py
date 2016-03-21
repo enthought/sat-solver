@@ -64,6 +64,11 @@ def repository_is_consistent(repository, modifiers=None):
     """
     Return True if all packages in a repository can be installed together.
 
+    .. Note::
+        Any repository with more than one version of a package will return
+        False because we only permit one version of a package to be installed
+        at a time.
+
     Parameters
     ----------
     repository : Repository
