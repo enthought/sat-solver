@@ -10,7 +10,7 @@ from simplesat.request import JobType, Request
 from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
-from simplesat.transaction import Transaction
+from simplesat.transaction import Transaction, InstallOperation
 from simplesat.utils import timed_context, connected_nodes
 
 
@@ -129,17 +129,55 @@ def requirements_are_satisfiable(packages, requirements, modifiers=None):
     bool
         Return True if the `requirements` can be satisfied by the `packages`.
     """
+    try:
+        satisfy_requirements(packages, requirements, modifiers=modifiers)
+        return True
+    except SatisfiabilityError:
+        return False
+
+
+def satisfy_requirements(packages, requirements, modifiers=None):
+    """ Find a collection of packages that satisfy the requirements.
+
+    Parameters
+    ----------
+    packages : iterable of PackageMetadata
+        The packages available to draw from when satisfying requirements.
+    requirements : list of Requirement
+        The requirements used to identify relevent packages.
+    modifiers : ConstraintModifiers, optional
+        If not None, modify requirements before resolving packages.
+
+    Returns
+    -------
+    tuple of PackageMetadata
+        Return a list of packages that together satisfy all of the
+        `requirements`.
+
+    Raises
+    ------
+    SatisfiabilityError
+        If the `requirements` cannot be satisfied using the `packages`.
+
+    MissingInstallRequires
+        If no packages meet a dependency requirement.
+    """
     request = Request()
     for requirement in requirements:
         request.install(requirement)
     repositories = (Repository(packages),)
     pool = Pool(repositories, modifiers=modifiers)
-
-    try:
-        DependencySolver(pool, repositories, []).solve(request)
-        return True
-    except SatisfiabilityError:
-        return False
+    transaction = DependencySolver(pool, repositories, []).solve(request)
+    msg = ("""
+        Unexpected operation in the transaction. This should never occur.
+        Something in simplesat is broken.
+        {!r}""")
+    for op in transaction.operations:
+        # Our installed repository was empty so everything should be an install
+        # operation
+        assert isinstance(op, InstallOperation), msg.format(op)
+    packages = tuple(op.package for op in transaction.operations)
+    return packages
 
 
 class DependencySolver(object):
