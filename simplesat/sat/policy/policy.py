@@ -37,7 +37,7 @@ class DefaultPolicy(IPolicy):
     def add_requirements(self, assignments):
         pass
 
-    def get_next_package_id(self, assignments, _):
+    def get_next_package_id(self, assignments, *_):
         # Given a dictionary of partial assignments, get an undecided variable
         # to be decided next.
         undecided = (
