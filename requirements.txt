@@ -1,3 +1,2 @@
-setuptools>=18.4
 PyYAML
 enum34>=1.1.2
