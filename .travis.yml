@@ -8,11 +8,17 @@ python:
   - "3.5"
   - "pypy"
 
+addons:
+  apt:
+    packages:
+      - graphviz
+
 install:
   - pip install -U pip
   - pip install -U setuptools
-  - pip install -r dev_requirements.txt
+  - pip install -r doc_requirements.txt
   - pip install .
 
 script:
   - haas simplesat
+  - cd docs && make html

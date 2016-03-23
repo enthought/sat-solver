@@ -19,7 +19,7 @@ the following::
     requirements = [R('package1 > 1.2.3'), R('package4 < 2.8')]
     repositories = [installed_repository, remote_repository]
 
-    if repository_is_consistent(installed_repository):
+    if packages_are_consistent(installed_repository):
         print("Installed packages are OK!")
 
     if requirements_are_satisfiable(repositories, requirements):
@@ -32,7 +32,7 @@ the following::
     else:
         print("The requirements are incomplete. Dependencies are missing.")
 
-.. autofunction:: simplesat.dependency_solver.repository_is_consistent
+.. autofunction:: simplesat.dependency_solver.packages_are_consistent
 .. autofunction:: simplesat.dependency_solver.requirements_are_complete
 .. autofunction:: simplesat.dependency_solver.requirements_are_satisfiable
 .. automodule:: simplesat.constraints.requirement
@@ -77,8 +77,8 @@ Conveniences
 .. automodule:: simplesat.test_utils
     :members:
 
-.. autofunction:: simplesat.dependency_solver.requirements_from_repository
-.. autofunction:: simplesat.dependency_solver.repository_from_requirements
+.. autofunction:: simplesat.dependency_solver.requirements_from_packages
+.. autofunction:: simplesat.dependency_solver.packages_from_requirements
 
 Exceptions
 ----------
