@@ -1,6 +1,18 @@
 from setuptools import setup
 
 
+INSTALL_REQUIRES = [
+    "attrs >= 15.2.0",
+    "okonomiyaki == 0.14.0",
+    "six >= 1.9.0"
+]
+
+EXTRAS_REQUIRE = {
+    ':python_version=="2.7"': [
+        'enum34',
+    ],
+}
+
 PACKAGES = [
     "simplesat",
     "simplesat.constraints",
@@ -21,14 +33,16 @@ PACKAGE_DATA = {
 }
 
 
-setup(
-    name='simplesat',
-    version='0.2.0.dev1',
-    author='Enthought, Inc',
-    author_email='info@enthought.com',
-    url='https://github.com/enthought/sat-solvers',
-    description='Simple SAT solvers for use in Enstaller',
-    packages=PACKAGES,
-    package_data=PACKAGE_DATA,
-    install_requires=["attrs >= 15.2.0", "okonomiyaki == 0.14.0", "six >= 1.9.0"],
-)
+if __name__ == "__main__":
+    setup(
+        name='simplesat',
+        version='0.2.0.dev1',
+        author='Enthought, Inc',
+        author_email='info@enthought.com',
+        url='https://github.com/enthought/sat-solvers',
+        description='Simple SAT solvers for use in Enstaller',
+        packages=PACKAGES,
+        package_data=PACKAGE_DATA,
+        install_requires=INSTALL_REQUIRES,
+        extras_require=EXTRAS_REQUIRE,
+    )
