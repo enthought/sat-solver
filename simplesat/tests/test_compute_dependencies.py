@@ -13,9 +13,11 @@ PACKAGE_DEF = dedent("""\
     A 0.0.0-1; depends (B ^= 0.0.0)
     B 0.0.0-1; depends (D == 0.0.0-2)
     B 0.0.0-2; depends (D ^= 0.0.0)
-    C 0.0.0-1; depends (E ^= 1.0.0-1)
+    C 0.0.0-1; depends (E >= 1.0.0)
     D 0.0.0-2
+    E 0.0.0-1
     E 1.0.0-1
+    E 1.0.1-1
 """)
 
 
@@ -38,14 +40,13 @@ class TestComputeDependencies(unittest.TestCase):
         self.assertEqual(deps, expected_deps)
 
     def test_simple_dependency(self):
-        requirement = InstallRequirement._from_string('C ^= 0.0.0')
-        expected_deps = self._package_set_from_string(
-            'E 1.0.0-1'
-        )
+        requirement = InstallRequirement._from_string('C *')
+        expected_deps = self._package_set_from_string('E 1.0.0-1', 'E 1.0.1-1')
+
         deps = compute_dependencies(self.pool, requirement)
         self.assertEqual(deps, expected_deps)
 
-    def test_multiple_satisfying_requirements(self):
+    def test_chained_requirements(self):
         requirement = InstallRequirement._from_string('A ^= 0.0.0')
         expected_deps = self._package_set_from_string(
             'B 0.0.0-1; depends (D == 0.0.0-2)',
@@ -75,7 +76,16 @@ class TestComputeReverseDependencies(unittest.TestCase):
         deps = compute_reverse_dependencies(self.pool, requirement)
         self.assertEqual(deps, set())
 
-    def test_multiple_rev_dependencies(self):
+    def test_simple_dependency(self):
+        requirement = InstallRequirement._from_string('E *')
+        expected_deps = self._package_set_from_string(
+            'C 0.0.0-1; depends (E >= 1.0.0)'
+        )
+
+        deps = compute_reverse_dependencies(self.pool, requirement)
+        self.assertEqual(deps, expected_deps)
+
+    def test_chained_dependencies(self):
         requirement = InstallRequirement._from_string('D ^= 0.0.0')
         expected_deps = self._package_set_from_string(
             'A 0.0.0-1; depends (B ^= 0.0.0)',
