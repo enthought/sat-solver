@@ -1,13 +1,12 @@
 from collections import defaultdict
 
+from simplesat import Pool
 from simplesat.utils.graph import (package_lit_dependency_graph,
                                    transitive_neighbors)
 
 
-def _compute_dependency_dict(pool):
+def _compute_dependency_dict(pool, package_ids):
     """ Return mapping of nodes to their dependents. """
-
-    package_ids = pool._id_to_package_.keys()
     graph = package_lit_dependency_graph(pool, package_ids, closed=False)
     neighbors = transitive_neighbors(graph)
     return neighbors
@@ -33,41 +32,48 @@ def _dependencies_for_requirement(pool, neighbor_mapping, requirement):
     return result_dependencies
 
 
-def compute_dependencies(pool, requirement, transitive=False):
-    """ Compute packages in the given pool on which the given requirement
-    depends.
+def _package_ids_from_repositories(pool, repositories):
+    return set(pool.package_id(pkg) for repo in repositories for pkg in repo)
+
+
+def compute_dependencies(repositories, requirement, transitive=False):
+    """ Compute packages in the given repos on which `requirement` depends.
 
     Parameters
     ----------------
-    pool : Pool
+    repositories : iterable of Repository objects
     requirement : Requirement
         The package requirement for which to compute dependencies.
 
     Returns
     -----------
-    dependencies : sequence
+    dependencies : set
         Set of packages in the pool that the given package depends on
     """
-    neighbors = _compute_dependency_dict(pool)
+    pool = Pool(repositories)
+    package_ids = _package_ids_from_repositories(pool, repositories)
+    neighbors = _compute_dependency_dict(pool, package_ids)
     dependencies = _dependencies_for_requirement(pool, neighbors, requirement)
     return dependencies
 
 
-def compute_reverse_dependencies(pool, requirement, transitive=False):
+def compute_reverse_dependencies(repositories, requirement, transitive=False):
     """ Compute packages in the given pool that depend on the given requirement
 
     Parameters
     ----------------
-    pool : Pool
+    repositories : iterable of Repository objects
     requirement : Requirement
         The package requirement for which to compute reverse dependencies.
 
     Returns
     -----------
-    dependencies : sequence
+    dependencies : set
          Set of packages in the pool that depend on the given requirement.
     """
-    neighbors = _compute_dependency_dict(pool)
+    pool = Pool(repositories)
+    package_ids = _package_ids_from_repositories(pool, repositories)
+    neighbors = _compute_dependency_dict(pool, package_ids)
     reverse_neighbors = _reverse_mapping(neighbors)
     dependencies = _dependencies_for_requirement(pool, reverse_neighbors,
                                                  requirement)
