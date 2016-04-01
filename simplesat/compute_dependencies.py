@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+import six
+
 from simplesat import Pool
 from simplesat.utils.graph import (package_lit_dependency_graph,
                                    transitive_neighbors)
@@ -76,7 +78,7 @@ def _compute_dependency_dict(pool, package_ids, transitive=False):
 
 def _reverse_mapping(mapping):
     reversed_map = defaultdict(set)
-    for key, vals in mapping.items():
+    for key, vals in six.iteritems(mapping):
         for v in vals:
             reversed_map[v].add(key)
 
