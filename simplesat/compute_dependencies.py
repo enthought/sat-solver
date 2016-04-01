@@ -20,7 +20,7 @@ def _compute_dependency_dict(pool, package_ids, transitive=False):
 
 def _reverse_mapping(mapping):
     reversed_map = defaultdict(set)
-    for key, vals in mapping.iteritems():
+    for key, vals in mapping.items():
         for v in vals:
             reversed_map[v].add(key)
 
