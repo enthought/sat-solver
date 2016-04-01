@@ -50,11 +50,21 @@ class TestComputeDependencies(unittest.TestCase):
         requirement = InstallRequirement._from_string('A ^= 0.0.0')
         expected_deps = packages_from_definition(
             """B 0.0.0-1; depends (D == 0.0.0-2)
+            B 0.0.0-2; depends (D ^= 0.0.0) """
+        )
+
+        deps = compute_dependencies(self.repos, requirement)
+        self.assertEqual(deps, set(expected_deps))
+
+    def test_chained_requirements_transitive(self):
+        requirement = InstallRequirement._from_string('A ^= 0.0.0')
+        expected_deps = packages_from_definition(
+            """B 0.0.0-1; depends (D == 0.0.0-2)
             B 0.0.0-2; depends (D ^= 0.0.0)
             D 0.0.0-2 """
         )
 
-        deps = compute_dependencies(self.repos, requirement)
+        deps = compute_dependencies(self.repos, requirement, transitive=True)
         self.assertEqual(deps, set(expected_deps))
 
 
@@ -83,9 +93,19 @@ class TestComputeReverseDependencies(unittest.TestCase):
     def test_chained_dependencies(self):
         requirement = InstallRequirement._from_string('D ^= 0.0.0')
         expected_deps = packages_from_definition(
+            """B 0.0.0-1; depends (D == 0.0.0-2)
+            B 0.0.0-2; depends (D ^= 0.0.0)"""
+        )
+        deps = compute_reverse_dependencies(self.repos, requirement)
+        self.assertEqual(deps, set(expected_deps))
+
+    def test_chained_dependencies_transitive(self):
+        requirement = InstallRequirement._from_string('D ^= 0.0.0')
+        expected_deps = packages_from_definition(
             """A 0.0.0-1; depends (B ^= 0.0.0)
             B 0.0.0-1; depends (D == 0.0.0-2)
             B 0.0.0-2; depends (D ^= 0.0.0)"""
         )
-        deps = compute_reverse_dependencies(self.repos, requirement)
+        deps = compute_reverse_dependencies(self.repos, requirement,
+                                            transitive=True)
         self.assertEqual(deps, set(expected_deps))
