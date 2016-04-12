@@ -187,11 +187,11 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     # This is currently handled using marked packages
     def test_blocked_upgrade(self):
-        self._check_solution("simple_numpy_installed_blocking.yaml")
+        self._check_solution("preserve_marked_conflict.yaml")
 
     # This is currently handled using marked packages
     def test_blocked_downgrade(self):
-        self._check_solution("simple_numpy_installed_blocking_downgrade.yaml")
+        self._check_solution("preserve_marked_conflict_downgrade.yaml")
 
     def test_remove_no_reverse_dependencies(self):
         self._check_solution("simple_numpy_removed.yaml")

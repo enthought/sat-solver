@@ -1,4 +1,4 @@
-# Upgrade impossible because installed EPD_free depends on numpy < 1.8
+# Upgrade impossible because marked package EPD_free depends on numpy < 1.8
 packages:
     - MKL 10.2-1
     - MKL 10.3-1

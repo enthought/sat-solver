@@ -1,4 +1,4 @@
-# Downgrade impossible because installed EPD_free depends on numpy > 1.8
+# Downgrade impossible because marked EPD_free depends on numpy > 1.8
 packages:
     - MKL 10.2-1
     - MKL 10.3-1
