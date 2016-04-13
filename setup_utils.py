@@ -46,7 +46,6 @@ version_info = {version_info}
         except OSError:
             build_number = 0
 
-
     if _is_rc(version):
         release_level = "rc"
     elif not is_released:
