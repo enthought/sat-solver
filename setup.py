@@ -1,4 +1,15 @@
+import os.path
+
 from setuptools import setup
+
+from setup_utils import parse_version, write_version_py
+
+
+MAJOR = 0
+MINOR = 2
+MICRO = 0
+
+IS_RELEASED = False
 
 
 INSTALL_REQUIRES = [
@@ -34,9 +45,13 @@ PACKAGE_DATA = {
 
 
 if __name__ == "__main__":
+    version_file = os.path.join("simplesat", "_version.py")
+    write_version_py(version_file, MAJOR, MINOR, MICRO, IS_RELEASED)
+    version = parse_version(version_file)
+
     setup(
         name='simplesat',
-        version='0.2.0.dev1',
+        version=version,
         author='Enthought, Inc',
         author_email='info@enthought.com',
         url='https://github.com/enthought/sat-solvers',

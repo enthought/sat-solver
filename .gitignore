@@ -4,4 +4,5 @@
 .coverage
 .tox
 composer/
+simplesat/_version.py
 docs/build
