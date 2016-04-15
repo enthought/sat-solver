@@ -10,6 +10,15 @@ Enhancements
 
 * Details relating to unsatisfiable scenarios are captured in an ``UNSAT``
   object and attached to the ``SatisifiabilityError`` raised (#101).
+* satsolver does not depend on enstaller anymore, and only uses non-Enthought
+  libraries besides okonomiyaki (#127, #114, #113, #111, #110, #109, #107.
+  #105)
+* support ad-hoc relaxing of dependency requirements (#140)
+* added documentation
+* handle the case where a package metadata contains reference to non existing
+  requirements. Those are now by default ignored instead of just crashing the
+  solver (#156)
+* added __version__ and __git_revision__ attributes to satsolver (#173)
 
 Bugs Fixed
 ----------
@@ -17,6 +26,16 @@ Bugs Fixed
 * ``IPolicy`` constructor now ignores initialization arguments (#101).
 * Some sort operations that were using non-unique keys have been fixed (#101).
 * Assumptions are now represented as an empty Clause object (#101).
+* be stricted about distribution name and version parsing (#146)
+* cleanup setup, added missing enum34 as a dependency in setup.py (#169, #170)
+
+Internals
+---------
+
+* internal API to check consistency of a set of requirements (#157)
+* fix debug output in scripts/solve.py (#159)
+* add utility script to export a scenario into DIMACS format (#162)
+* internal API to compute reverse dependencies of a requirement (#175)
 
 Version 0.1.0
 =============
