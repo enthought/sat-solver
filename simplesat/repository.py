@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import bisect
-import collections
 import operator
 import six
 
@@ -36,7 +35,8 @@ class Repository(object):
     >>> assert numpies == [numpy1921, numpy1922]
     """
     def __init__(self, packages=None):
-        self._name_to_packages = collections.defaultdict(list)
+        self._name_to_packages = {}
+        self._default_factory = lambda: []
         # Sorted list of keys in self._name_to_packages, to keep iteration
         # over a repository reproducible
         self._names = []
@@ -54,12 +54,14 @@ class Repository(object):
     def __contains__(self, package_metadata):
         return (
             package_metadata in
-            self._name_to_packages.get(package_metadata.name, ())
+            self._name_to_packages.get(
+                package_metadata.name, self._default_factory()
+            )
         )
 
     def __iter__(self):
         for name in self._names:
-            for package in self._name_to_packages[name]:
+            for package in self._name_to_packages.get(name, self._default_factory()):
                 yield package
 
     def add_package(self, package_metadata):
@@ -75,9 +77,12 @@ class Repository(object):
         If the same package is added multiple times to a repository, every copy
         will be available when calling find_package or when iterating.
         """
-        if len(self._name_to_packages[package_metadata.name]) == 0:
+        if package_metadata.name not in self._name_to_packages:
             bisect.insort(self._names, package_metadata.name)
 
+        self._name_to_packages.setdefault(
+            package_metadata.name, self._default_factory()
+        )
         self._name_to_packages[package_metadata.name].append(package_metadata)
         # Fixme: this should not be that costly as long as we don't have
         # many versions for a given package.
@@ -101,7 +106,7 @@ class Repository(object):
         package : PackageMetadata
             The corresponding metadata.
         """
-        candidates = self._name_to_packages[name]
+        candidates = self._name_to_packages.get(name, self._default_factory())
         for candidate in candidates:
             if candidate.version == version:
                 return candidate
@@ -126,7 +131,7 @@ class Repository(object):
             Iterable of PackageMetadata instances (order is from lower to
             higher version)
         """
-        return tuple(self._name_to_packages[name])
+        return tuple(self._name_to_packages.get(name, self._default_factory()))
 
     def update(self, iterable):
         """ Add the packages from the given iterable into this repository.
