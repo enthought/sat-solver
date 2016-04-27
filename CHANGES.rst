@@ -2,6 +2,13 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Changes since version 0.2.0
+===========================
+
+* fix `Repository.add_package` when `Repository.find_packages` was previously
+  used for non existing packages (#185)
+* fix error handling when metadata conflict (#187)
+
 Version 0.2.0
 =============
 
