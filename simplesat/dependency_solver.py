@@ -296,13 +296,16 @@ def _connected_packages(solution, root_ids, pool):
     # Our strategy is as follows:
     # ... -> pkg.install_requires -> pkg names -> ids -> _id_to_package -> ...
 
-    def get_name(pkg_id):
-        return pool.id_to_package(abs(pkg_id)).name
+    def get_names(pkg_id):
+        provides = pool.id_to_package(abs(pkg_id)).provides
+        return tuple(name for name, _ in provides)
 
-    root_names = {get_name(pkg_id) for pkg_id in root_ids}
+    root_names = {name for pkg_id in root_ids for name in get_names(pkg_id)}
 
     solution_name_to_id = {
-        get_name(pkg_id): pkg_id for pkg_id in solution
+        name: pkg_id
+        for pkg_id in solution
+        for name in get_names(pkg_id)
         if pkg_id > 0
     }
 
