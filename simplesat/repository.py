@@ -52,12 +52,13 @@ class Repository(object):
         )
 
     def __contains__(self, package_metadata):
-        return (
-            package_metadata in
-            self._name_to_packages.get(
-                package_metadata.name, self._default_factory()
+        if package_metadata.name in self._name_to_packages:
+            return (
+                package_metadata
+                in self._name_to_packages[package_metadata.name]
             )
-        )
+        else:
+            return False
 
     def __iter__(self):
         for name in self._names:
