@@ -154,6 +154,15 @@ class TestNoInstallSet(ScenarioTestAssistant, TestCase):
     def test_conflicting_single_package_dependencies(self):
         self._check_solution("broken_metadata_self_conflict.yaml")
 
+    def test_simple_provides(self):
+        self._check_solution("simple_provides.yaml")
+
+    def test_multiple_provides(self):
+        self._check_solution("multiple_provides.yaml")
+
+    def test_conflict_by_provides(self):
+        self._check_solution("conflict_by_provides.yaml")
+
 
 class TestInstallSet(ScenarioTestAssistant, TestCase):
 
