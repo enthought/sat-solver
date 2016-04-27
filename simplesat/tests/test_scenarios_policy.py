@@ -151,6 +151,9 @@ class TestNoInstallSet(ScenarioTestAssistant, TestCase):
     def test_three_way_conflict(self):
         self._check_solution("three_way_conflict.yaml")
 
+    def test_conflicting_single_package_dependencies(self):
+        self._check_solution("broken_metadata_self_conflict.yaml")
+
 
 class TestInstallSet(ScenarioTestAssistant, TestCase):
 
