@@ -212,3 +212,62 @@ class TestRepository(unittest.TestCase):
         # When/Then
         self.assertTrue(dummy_repository1 in repository)
         self.assertFalse(dummy_repository2 in repository)
+
+    def test_add_package(self):
+        # Given
+        repository_info1 = RepositoryInfo("repo1")
+
+        packages_definition = textwrap.dedent(u"""\
+        dummy 1.0.1-1
+        dummy_with_appinst 1.0.0-1
+        dummy_with_entry_points 1.0.0-1
+        dummy_with_proxy 1.3.40-3
+        dummy_with_proxy_scripts 1.0.0-1
+        dummy_with_proxy_softlink 1.0.0-1
+        nose 1.2.1-1
+        nose 1.3.0-1
+        nose 1.3.0-2\
+        """)
+        packages = self.packages_from_definition(
+            packages_definition, repository_info1
+        )
+        repository = Repository()
+
+        # When
+        repository.add_package(packages[0])
+
+        # Then
+        self.assertTrue(packages[0] in repository)
+        self.assertEqual(len(repository), 1)
+        self.assertEqual(list(repository), packages[:1])
+
+    def test_regression_185(self):
+        # Given
+        repository_info1 = RepositoryInfo("repo1")
+
+        packages_definition = textwrap.dedent(u"""\
+        dummy 1.0.1-1
+        dummy_with_appinst 1.0.0-1
+        dummy_with_entry_points 1.0.0-1
+        dummy_with_proxy 1.3.40-3
+        dummy_with_proxy_scripts 1.0.0-1
+        dummy_with_proxy_softlink 1.0.0-1
+        nose 1.2.1-1
+        nose 1.3.0-1
+        nose 1.3.0-2\
+        """)
+        packages = self.packages_from_definition(
+            packages_definition, repository_info1
+        )
+        repository = Repository()
+
+        package = packages[0]
+
+        # When
+        repository.find_packages(package.name)
+        repository.add_package(package)
+
+        # Then
+        self.assertTrue(packages[0] in repository)
+        self.assertEqual(len(repository), 1)
+        self.assertEqual(list(repository), [package])
