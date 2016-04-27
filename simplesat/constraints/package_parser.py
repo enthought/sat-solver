@@ -19,6 +19,7 @@ CONSTRAINT_SYNONYMS = {
     'depends': ConstraintKinds.install_requires,
     'install_requires': ConstraintKinds.install_requires,
     'conflicts': ConstraintKinds.conflicts,
+    'provides': ConstraintKinds.provides,
 }
 
 
@@ -32,7 +33,7 @@ class PrettyPackageStringParser(object):
 
         Pretty package strings are of the form::
 
-            numpy 1.8.1-1; install_requires (MKL == 10.3, nose ^= 1.3.4); conflicts (numeric)  # noqa
+            numpy 1.8.1-1; install_requires (MKL == 10.3, nose ^= 1.3.4); conflicts (numeric); provides (numeric)  # noqa
         """
         pretty_string = pretty_string.strip()
         pkg = {}
@@ -91,22 +92,21 @@ class PrettyPackageStringParser(object):
         return PackageMetadata(distribution, version, **pkg_dict)
 
 
-def constraints_to_pretty_strings(install_requires):
+def constraints_to_pretty_strings(constraint_tuples):
     """ Convert a sequence of constraint tuples as used in PackageMetadata to a
     list of pretty constraint strings.
 
     Parameters
     ----------
-    install_requires : seq
-        Sequence of constraint tuples, e.g. ("MKL", (("< 11", ">= 10.1"),))
+    constraint_tuples : tuple of constraint
+        Sequence of constraint tuples, e.g. (("MKL", (("< 11", ">= 10.1"),)),)
     """
     flat_strings = [
         "{} {}".format(dist, constraint_string).strip()
-        for dist, disjunction in install_requires
+        for dist, disjunction in constraint_tuples
         for conjunction in disjunction
         for constraint_string in conjunction
     ]
-
     return flat_strings
 
 
@@ -116,8 +116,14 @@ def package_to_pretty_string(package):
     constraint_kinds = (
         (ConstraintKinds.install_requires, package.install_requires),
         (ConstraintKinds.conflicts, package.conflicts),
+        (ConstraintKinds.provides, package.provides),
     )
     for constraint_kind, constraints in constraint_kinds:
+        # FIXME: perhaps 'provides' just shouldn't include the package name
+        if constraint_kind == ConstraintKinds.provides:
+            constraints = tuple((dist, disjunction)
+                                for dist, disjunction in constraints
+                                if dist != package.name)
         if len(constraints) > 0:
             string = ', '.join(constraints_to_pretty_strings(constraints))
             template += "; {} ({})".format(constraint_kind.value, string)
