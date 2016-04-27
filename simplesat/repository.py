@@ -75,7 +75,7 @@ class Repository(object):
         If the same package is added multiple times to a repository, every copy
         will be available when calling find_package or when iterating.
         """
-        if package_metadata.name not in self._name_to_packages:
+        if len(self._name_to_packages[package_metadata.name]) == 0:
             bisect.insort(self._names, package_metadata.name)
 
         self._name_to_packages[package_metadata.name].append(package_metadata)
