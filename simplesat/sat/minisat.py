@@ -114,7 +114,7 @@ class UNSAT(object):
         # If there aren't two end points then none of this makes any sense.
         # Just return what we have.
         if len(end_clauses) < 2:
-            return end_clauses
+            return (end_clauses,)
 
         ends = OrderedDict.fromkeys(end_clauses)
         ends = tuple(ends.keys())
