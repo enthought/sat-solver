@@ -124,10 +124,16 @@ class PackageMetadata(object):
         return self._hash
 
     def __eq__(self, other):
-        return self._key == other._key
+        try:
+            return self._key == other._key
+        except AttributeError:
+            return NotImplemented
 
     def __ne__(self, other):
-        return self._key != other._key
+        try:
+            return self._key != other._key
+        except AttributeError:
+            return NotImplemented
 
 
 class RepositoryPackageMetadata(object):
@@ -173,7 +179,13 @@ class RepositoryPackageMetadata(object):
         return self._hash
 
     def __eq__(self, other):
-        return self._key == other._key
+        try:
+            return self._key == other._key
+        except AttributeError:
+            return NotImplemented
 
     def __ne__(self, other):
-        return self._key != other._key
+        try:
+            return self._key != other._key
+        except AttributeError:
+            return NotImplemented
