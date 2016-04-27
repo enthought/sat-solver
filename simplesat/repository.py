@@ -61,7 +61,7 @@ class Repository(object):
 
     def __iter__(self):
         for name in self._names:
-            for package in self._name_to_packages.get(name, self._default_factory()):
+            for package in self._name_to_packages[name]:
                 yield package
 
     def add_package(self, package_metadata):
