@@ -11,7 +11,7 @@ from simplesat.request import JobType, Request
 from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
-from simplesat.transaction import Transaction
+from simplesat.transaction import Transaction, InstallOperation
 from simplesat.utils import timed_context, connected_nodes
 
 
