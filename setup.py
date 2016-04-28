@@ -14,7 +14,7 @@ IS_RELEASED = False
 
 INSTALL_REQUIRES = [
     "attrs >= 15.2.0",
-    "okonomiyaki == 0.14.0",
+    "okonomiyaki >= 0.14.0",
     "six >= 1.9.0"
 ]
 
