@@ -90,12 +90,12 @@ class TestRulesGenerator(unittest.TestCase):
         self.assertEqual(len(rules), 2)
 
         # Given/When
-        conflict = rules[0]
+        rule = rules[0]
         r_literals = (-5, 1, 2, 3, 4)
 
         # Then
-        self.assertEqual(conflict.reason, RuleType.package_requires)
-        self.assertEqual(conflict.literals, r_literals)
+        self.assertEqual(rule.reason, RuleType.package_requires)
+        self.assertEqual(rule.literals, r_literals)
 
     def test_conflicts(self):
         # Given
