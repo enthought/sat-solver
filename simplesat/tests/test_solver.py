@@ -399,6 +399,7 @@ class TestSolver(unittest.TestCase):
             P(u"C 1.0.0-1; depends (B > 2.0.0-1)"),
             P(u"D 1.0.0-1;"),
             P(u"E 1.0.0-1; depends (C > 2.0, D < 1.0)"),
+            P(u"F 1.0.0-1; depends (NONEXISTENT)"),
         )
 
         modifiers = ConstraintModifiers(
@@ -408,6 +409,10 @@ class TestSolver(unittest.TestCase):
 
         # When / Then
         with self.assertRaises(SatisfiabilityError):
+            satisfy_requirements(packages, requirements, modifiers=modifiers)
+
+        with self.assertRaises(SatisfiabilityError):
+            requirements = (R(u'F'),)
             satisfy_requirements(packages, requirements, modifiers=modifiers)
 
     def test_simplify_requirements(self):

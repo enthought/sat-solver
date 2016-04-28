@@ -165,9 +165,6 @@ def satisfy_requirements(packages, requirements, modifiers=None):
     ------
     SatisfiabilityError
         If the `requirements` cannot be satisfied using the `packages`.
-
-    MissingInstallRequires
-        If no packages meet a dependency requirement.
     """
     request = Request(modifiers=modifiers)
     for requirement in requirements:
