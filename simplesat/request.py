@@ -1,4 +1,4 @@
-from attr import attr, attributes
+from attr import attr, attributes, Factory
 from attr.validators import instance_of
 from enum import Enum
 
@@ -17,6 +17,7 @@ class _Job(object):
     kind = attr(validator=instance_of(JobType))
 
 
+@attributes
 class Request(object):
     """
     A proposed change to the state of the installed repository.
@@ -45,9 +46,8 @@ class Request(object):
     {'allow_older': [], 'allow_any': ['MKL'], 'allow_newer': []}
     """
 
-    def __init__(self, modifiers=None):
-        self.jobs = []
-        self.modifiers = modifiers or ConstraintModifiers()
+    modifiers = attr(default=Factory(ConstraintModifiers))
+    jobs = attr(default=Factory(list))
 
     def install(self, requirement):
         self._add_job(requirement, JobType.install)
