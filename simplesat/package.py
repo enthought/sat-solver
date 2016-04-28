@@ -77,7 +77,7 @@ class PackageMetadata(object):
             A tuple of tuples mapping distribution names to disjunctions of
             conjunctions of version constraints.
 
-            For example, a consider a package that depends on the following:
+            For example, consider a package that depends on the following:
                 - nose
                 - six (> 1.2, <= 1.2.3), or >= 1.2.5-2
                     Written as intervals, (1.2, 1.2.3] or [1.2.5-2, \infty)
@@ -93,15 +93,17 @@ class PackageMetadata(object):
 
             This works the same way as install_requires, but instead denotes
             packages that must *not* be installed with this package.
-        provides : iterable of package names
-            The packages that are provided by this distribution. Useful when
-            this does not match the package name.
+        provides :  tuple(tuple(str, tuple(tuple(str))))
+            A tuple of tuples mapping package and virtual package names to
+            disjunctions of conjunctions of version constraints.
 
-            For example, a package ``foo`` is abandoned by its maintainer and a
-            fork ``bar`` is created to continue development. If ``bar`` is
-            intended to be a transparent replacement for ``foo``, then ``bar``
-            `provides` ``foo``.
+            For example, consider a package ``numpy-nomkl`` which should be a
+            drop-in replacement for the normal ``numpy`` or ``numeric``
+            packages. ``numpy-nomkl`` would have the following `provides`:
+                (("numpy", (("*",),)), ("numeric", (("*",),)))
 
+            At this time, no version constraint is permitted for names
+            specified in `provides`.
         """
         self._name = name
         self._provides = tuple(provides or ())
