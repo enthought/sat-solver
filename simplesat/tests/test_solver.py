@@ -8,6 +8,7 @@ from simplesat.dependency_solver import (
     DependencySolver, packages_are_consistent,
     requirements_from_packages, packages_from_requirements,
     requirements_are_satisfiable, requirements_are_complete,
+    simplify_requirements,
 )
 from simplesat.errors import MissingInstallRequires, SatisfiabilityError
 from simplesat.pool import Pool
@@ -347,6 +348,28 @@ class TestSolver(unittest.TestCase):
         # Then
         with self.assertRaises(SatisfiabilityError):
             self.resolve(request)
+
+    def test_simplify_requirements(self):
+
+        # Given
+        requirements = (
+            R(u'MKL == 10.3-1'),
+            R(u'mismatch == 1.2.3-5'),
+            R(u'numpy == 1.9.1-1'),
+        )
+        packages = (
+            P(u'MKL 10.3-1'),
+            P(u'numpy 1.9.1-1; depends (MKL == 10.3-1, mismatch == 1.2.3-4)'),
+            P(u'mismatch 1.2.3-5'),
+            P(u'unused 1.2.3-0'),
+        )
+
+        # When
+        result = simplify_requirements(packages, requirements)
+        expected = requirements[1:]
+
+        # Then
+        self.assertEqual(result, expected)
 
     def test_strange_key_error_bug_on_failure(self):
         # Given
