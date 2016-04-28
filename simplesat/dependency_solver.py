@@ -158,8 +158,8 @@ def satisfy_requirements(packages, requirements, modifiers=None):
     Returns
     -------
     tuple of PackageMetadata
-        Return a list of packages that together satisfy all of the
-        `requirements`.
+        Return a tuple of packages that together satisfy all of the
+        `requirements`. The packages are in topological order.
 
     Raises
     ------
