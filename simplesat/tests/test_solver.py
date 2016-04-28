@@ -3,12 +3,14 @@ import unittest
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints import PrettyPackageStringParser, InstallRequirement
+from simplesat.constraints import (
+    ConstraintModifiers, PrettyPackageStringParser, InstallRequirement
+)
 from simplesat.dependency_solver import (
     DependencySolver, packages_are_consistent,
     requirements_from_packages, packages_from_requirements,
     requirements_are_satisfiable, requirements_are_complete,
-    simplify_requirements,
+    satisfy_requirements, simplify_requirements,
 )
 from simplesat.errors import MissingInstallRequires, SatisfiabilityError
 from simplesat.pool import Pool
@@ -348,6 +350,65 @@ class TestSolver(unittest.TestCase):
         # Then
         with self.assertRaises(SatisfiabilityError):
             self.resolve(request)
+
+    def test_satisfy_requirements(self):
+        requirements = (
+            R(u'B ^= 1.0.0'),
+            R(u'E'),
+        )
+
+        packages = (
+            P(u"A 0.0.1-1;"),
+            P(u"A 1.0.0-1;"),
+            P(u"A 2.0.0-1;"),
+            P(u"A 2.1.0-1;"),
+            P(u"B 1.0.0-1; depends (A ^= 1.0, A != 2.1.0-1)"),
+            P(u"B 2.0.0-1; depends (A != 2.1.0-1)"),
+            P(u"C 1.0.0-1; depends (B > 2.0.0-1)"),
+            P(u"D 1.0.0-1;"),
+            P(u"E 1.0.0-1; depends (C > 2.0, D < 1.0)"),
+        )
+
+        modifiers = ConstraintModifiers(
+            allow_newer=[u'A'],
+            allow_older=[u'B'],
+            allow_any=[u'C', u'D'],
+        )
+
+        # When
+        result = satisfy_requirements(
+            packages, requirements, modifiers=modifiers)
+        expected = tuple(packages[i] for i in (2, 7, 4, 6, 8))
+
+        # Then
+        self.assertEqual(result, expected)
+
+    def test_satisfy_requirements_fail(self):
+        requirements = (
+            R(u'B ^= 1.0.0'),
+            R(u'E'),
+        )
+
+        packages = (
+            P(u"A 0.0.1-1;"),
+            P(u"A 1.0.0-1;"),
+            P(u"A 2.0.0-1;"),
+            P(u"A 2.1.0-1;"),
+            P(u"B 1.0.0-1; depends (A ^= 1.0, A != 2.1.0-1)"),
+            P(u"B 2.0.0-1; depends (A != 2.1.0-1)"),
+            P(u"C 1.0.0-1; depends (B > 2.0.0-1)"),
+            P(u"D 1.0.0-1;"),
+            P(u"E 1.0.0-1; depends (C > 2.0, D < 1.0)"),
+        )
+
+        modifiers = ConstraintModifiers(
+            allow_newer=[u'A'],
+            allow_any=[u'C', u'D'],
+        )
+
+        # When / Then
+        with self.assertRaises(SatisfiabilityError):
+            satisfy_requirements(packages, requirements, modifiers=modifiers)
 
     def test_simplify_requirements(self):
 
