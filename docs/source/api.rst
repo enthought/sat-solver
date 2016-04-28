@@ -35,6 +35,7 @@ the following::
 .. autofunction:: simplesat.dependency_solver.packages_are_consistent
 .. autofunction:: simplesat.dependency_solver.requirements_are_complete
 .. autofunction:: simplesat.dependency_solver.requirements_are_satisfiable
+.. autofunction:: simplesat.dependency_solver.satisfy_requirements
 .. automodule:: simplesat.constraints.requirement
     :members:
 
