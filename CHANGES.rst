@@ -2,6 +2,13 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Version 0.2.2
+=============
+
+Released on 29/04/2016.
+
+* update `install_requires` to allow `okonomiyaki >= 0.14` (#198)
+
 Version 0.2.1
 =============
 
