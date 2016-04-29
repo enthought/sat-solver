@@ -1,4 +1,5 @@
 import collections
+import itertools
 
 import six
 
@@ -10,7 +11,7 @@ from simplesat.request import JobType, Request
 from simplesat.rules_generator import RulesGenerator
 from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.sat import MiniSATSolver
-from simplesat.transaction import Transaction
+from simplesat.transaction import Transaction, InstallOperation
 from simplesat.utils import timed_context, connected_nodes
 
 
@@ -140,6 +141,79 @@ def requirements_are_satisfiable(packages, requirements, modifiers=None):
         return True
     except SatisfiabilityError:
         return False
+
+
+def satisfy_requirements(packages, requirements, modifiers=None):
+    """ Find a collection of packages that satisfy the requirements.
+
+    Parameters
+    ----------
+    packages : iterable of PackageMetadata
+        The packages available to draw from when satisfying requirements.
+    requirements : list of Requirement
+        The requirements used to identify relevent packages.
+    modifiers : ConstraintModifiers, optional
+        If not None, modify requirements before resolving packages.
+
+    Returns
+    -------
+    tuple of PackageMetadata
+        Return a tuple of packages that together satisfy all of the
+        `requirements`. The packages are in topological order.
+
+    Raises
+    ------
+    SatisfiabilityError
+        If the `requirements` cannot be satisfied using the `packages`.
+    """
+    request = Request(modifiers=modifiers)
+    for requirement in requirements:
+        request.install(requirement)
+    repositories = (Repository(packages),)
+    pool = Pool(repositories, modifiers=modifiers)
+    transaction = DependencySolver(pool, repositories, []).solve(request)
+    msg = ("""
+        Unexpected operation in the transaction. This should never occur.
+        Something in simplesat is broken.
+        {!r}""")
+    for op in transaction.operations:
+        # Our installed repository was empty so everything should be an install
+        # operation
+        assert isinstance(op, InstallOperation), msg.format(op)
+    packages = tuple(op.package for op in transaction.operations)
+    return packages
+
+
+def simplify_requirements(packages, requirements):
+    """ Return a reduced, but equivalent set of requirements.
+
+    Parameters
+    ----------
+    packages : iterable of PackageMetadata
+        The packages available to draw from when satisfying requirements.
+    requirements : list of Requirement
+        The requirements used to identify relevent packages.
+
+    Returns
+    -------
+    tuple of Requirement
+        The reduced requirements.
+    """
+
+    needed_packages = packages_from_requirements(packages, requirements)
+    pool = Pool([Repository(packages)])
+    R = InstallRequirement.from_constraints
+    dependencies = set(itertools.chain.from_iterable(
+        pool.what_provides(R(con))
+        for package in needed_packages
+        for con in package.install_requires
+    ))
+    simple_requirements = requirements_from_packages(
+        package
+        for package in needed_packages
+        if package not in dependencies
+    )
+    return simple_requirements
 
 
 class DependencySolver(object):
