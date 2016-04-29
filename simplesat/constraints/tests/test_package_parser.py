@@ -1,7 +1,6 @@
 import sys
 import unittest
 
-from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints.package_parser import (
@@ -11,10 +10,6 @@ from simplesat.constraints.requirement import Requirement
 from simplesat.package import PackageMetadata
 from simplesat.errors import InvalidConstraint
 
-
-RUNNING_PYTHON = PythonImplementation(
-    "cp", sys.version_info[0], sys.version_info[1]
-)
 
 V = EnpkgVersion.from_string
 
