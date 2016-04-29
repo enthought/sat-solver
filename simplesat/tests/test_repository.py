@@ -1,7 +1,6 @@
 import textwrap
 import unittest
 
-from okonomiyaki.platforms import PythonImplementation
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser
