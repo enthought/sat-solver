@@ -1,10 +1,12 @@
 import unittest
 
+import re
 import six
 
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints import PrettyPackageStringParser, InstallRequirement
+from simplesat.errors import InvalidConstraint
 from simplesat.repository import Repository
 from simplesat.request import Request
 
@@ -144,3 +146,33 @@ class TestPool(unittest.TestCase):
 
         # Then
         self.assertEqual(result, expected)
+
+    def test_reject_version_constraint_on_provides_metadata(self):
+
+        # Given
+        constraints = (
+            u"A > 1.8",
+            u"A >= 1.8",
+            u"A <= 1.8",
+            u"A < 1.8",
+            u"A ^= 1.8",
+            u"A == 1.8-1",
+        )
+
+        # When
+        for constraint in constraints:
+            repository = Repository(self.packages_from_definition(
+                u"numpy 1.9.2-1; provides ({})".format(constraint)))
+            constraint_re = re.escape(constraint)
+
+            # Then
+            with self.assertRaisesRegexp(InvalidConstraint, constraint_re):
+                Pool([repository])
+
+    def test_accept_anyversion_constraint_on_provides_metadata(self):
+        # When
+        repository = Repository(self.packages_from_definition(
+            u"numpy 1.9.2-1; provides (A, B *)"))
+
+        # Then
+        Pool([repository])

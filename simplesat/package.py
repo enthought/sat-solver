@@ -8,6 +8,7 @@ from okonomiyaki.versions import EnpkgVersion
 class ConstraintKinds(enum.Enum):
     install_requires = 'install_requires'
     conflicts = 'conflicts'
+    provides = 'provides'
 
 
 class IRepositoryInfo(six.with_metaclass(abc.ABCMeta)):
@@ -62,7 +63,8 @@ class PackageMetadata(object):
         parser = PrettyPackageStringParser(EnpkgVersion.from_string)
         return parser.parse_to_package(s)
 
-    def __init__(self, name, version, install_requires=None, conflicts=None):
+    def __init__(self, name, version, install_requires=None, conflicts=None,
+                 provides=None):
         """ Return a new PackageMetdata object.
 
         Parameters
@@ -75,7 +77,7 @@ class PackageMetadata(object):
             A tuple of tuples mapping distribution names to disjunctions of
             conjunctions of version constraints.
 
-            For example, a consider a package that depends on the following:
+            For example, consider a package that depends on the following:
                 - nose
                 - six (> 1.2, <= 1.2.3), or >= 1.2.5-2
                     Written as intervals, (1.2, 1.2.3] or [1.2.5-2, \infty)
@@ -85,15 +87,26 @@ class PackageMetadata(object):
                 (("MKL", ((">= 10.1", "< 11"),)),
                  ("nose", (("*",),)),
                  ("six", (("> 1.2", "<= 1.2.3"), (">= 1.2.5-2",)))
-
         conflicts : tuple(tuple(str, tuple(tuple(str))))
             A tuple of tuples mapping distribution names to disjunctions of
             conjunctions of version constraints.
 
             This works the same way as install_requires, but instead denotes
             packages that must *not* be installed with this package.
+        provides :  tuple(tuple(str, tuple(tuple(str))))
+            A tuple of tuples mapping package and virtual package names to
+            disjunctions of conjunctions of version constraints.
+
+            For example, consider a package ``numpy-nomkl`` which should be a
+            drop-in replacement for the normal ``numpy`` or ``numeric``
+            packages. ``numpy-nomkl`` would have the following `provides`:
+                (("numpy", (("*",),)), ("numeric", (("*",),)))
+
+            At this time, no version constraint is permitted for names
+            specified in `provides`.
         """
         self._name = name
+        self._provides = tuple(provides or ())
         self._version = version
         self._install_requires = install_requires or ()
         self._conflicts = conflicts or ()
@@ -103,6 +116,12 @@ class PackageMetadata(object):
     @property
     def name(self):
         return self._name
+
+    @property
+    def provides(self):
+        constraint_str = "*"
+        this_pkg = ((self._name, ((constraint_str,),)),)
+        return this_pkg + self._provides
 
     @property
     def version(self):
@@ -124,10 +143,16 @@ class PackageMetadata(object):
         return self._hash
 
     def __eq__(self, other):
-        return self._key == other._key
+        try:
+            return self._key == other._key
+        except AttributeError:
+            return NotImplemented
 
     def __ne__(self, other):
-        return self._key != other._key
+        try:
+            return self._key != other._key
+        except AttributeError:
+            return NotImplemented
 
 
 class RepositoryPackageMetadata(object):
@@ -146,6 +171,10 @@ class RepositoryPackageMetadata(object):
     @property
     def name(self):
         return self._package.name
+
+    @property
+    def provides(self):
+        return self._package.provides
 
     @property
     def version(self):
@@ -173,7 +202,13 @@ class RepositoryPackageMetadata(object):
         return self._hash
 
     def __eq__(self, other):
-        return self._key == other._key
+        try:
+            return self._key == other._key
+        except AttributeError:
+            return NotImplemented
 
     def __ne__(self, other):
-        return self._key != other._key
+        try:
+            return self._key != other._key
+        except AttributeError:
+            return NotImplemented

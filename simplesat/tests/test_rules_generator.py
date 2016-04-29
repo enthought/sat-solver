@@ -59,6 +59,44 @@ class TestRulesGenerator(unittest.TestCase):
         # Then
         self.assertIs(package, installed_repo_package)
 
+    def test_provides(self):
+        yaml = u"""
+            packages:
+              - A 1.0-1; provides (X)
+              - B 1.0-1; provides (X)
+              - C 1.0-1; provides (X)
+              - X 1.0-1
+              - Z 1.0; depends (X)
+
+            request:
+              - operation: "install"
+                requirement: "Z"
+        """
+
+        scenario = Scenario.from_yaml(io.StringIO(yaml))
+
+        # When
+        repos = list(scenario.remote_repositories)
+        repos.append(scenario.installed_repository)
+        pool = Pool(repos)
+        installed_package_ids = {
+            pool.package_id(p): p for p in scenario.installed_repository}
+        rules_generator = RulesGenerator(
+            pool, scenario.request,
+            installed_package_ids=installed_package_ids)
+        rules = list(rules_generator.iter_rules())
+
+        # Then
+        self.assertEqual(len(rules), 2)
+
+        # Given/When
+        rule = rules[0]
+        r_literals = (-5, 1, 2, 3, 4)
+
+        # Then
+        self.assertEqual(rule.reason, RuleType.package_requires)
+        self.assertEqual(rule.literals, r_literals)
+
     def test_conflicts(self):
         # Given
         yaml = u"""

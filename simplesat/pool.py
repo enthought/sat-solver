@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 
 from .utils import DefaultOrderedDict
-from simplesat.constraints import modify_requirement
+from simplesat.constraints import (
+    ConstraintModifiers, Requirement, modify_requirement
+)
+from simplesat.errors import InvalidConstraint
 
 
 class Pool(object):
@@ -47,7 +50,13 @@ class Pool(object):
             self._id += 1
             self._id_to_package_[current_id] = package
             self._package_to_id_[package] = current_id
-            self._packages_by_name_[package.name].append(package)
+            for constraints in package.provides:
+                req = Requirement.from_constraints(constraints)
+                if req.has_any_version_constraint:
+                    msg = ('Version constraints are not supported for'
+                           ' package.provides metadata: {}')
+                    raise InvalidConstraint(msg.format(req))
+                self._packages_by_name_[req.name].append(package)
 
     def what_provides(self, requirement, use_modifiers=True):
         """ Computes the list of packages fulfilling the given

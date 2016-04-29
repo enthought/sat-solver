@@ -221,17 +221,21 @@ class TestPrettyPackageStringParser(unittest.TestCase):
 
         # Given
         package_string = '; '.join((
-            "bokeh 0.2.0-3",
+            "bokeh_git 0.2.0-3",
             "install_requires (zope *, numpy ^= 1.8.0, requests >= 0.2)",
-            "conflicts (requests ^= 0.2.5, requests > 0.4, bokeh_git)",
+            "conflicts (requests ^= 0.2.5, requests > 0.4, bokeh)",
+            "provides (webplot ^= 0.1, bokeh)",
         ))
         r_install_requires = (
             ("numpy", (("^= 1.8.0",),)),
             ("requests", ((">= 0.2",),)),
             ("zope", (("*",),)))
         r_conflicts = (
-            ("bokeh_git", (('',),)),
+            ("bokeh", (('',),)),
             ("requests", (("^= 0.2.5", "> 0.4"),)))
+        r_provides = (
+            ("bokeh", (('',),)),
+            ("webplot", (("^= 0.1",),)))
 
         # When
         package = parse(package_string)
@@ -239,12 +243,14 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         version = package['version']
         install_requires = package['install_requires']
         conflicts = package['conflicts']
+        provides = package['provides']
 
         # Then
-        self.assertEqual(name, "bokeh")
+        self.assertEqual(name, "bokeh_git")
         self.assertEqual(version, V("0.2.0-3"))
         self.assertEqual(install_requires, r_install_requires)
         self.assertEqual(conflicts, r_conflicts)
+        self.assertEqual(provides, r_provides)
 
 
 class TestPackagePrettyString(unittest.TestCase):
@@ -310,6 +316,31 @@ class TestPackagePrettyString(unittest.TestCase):
         # Then
         self.assertEqual(pretty_string, r_pretty_string)
 
+    def test_provides(self):
+        # Given
+        provides = ((u"dance", ((u">= 10.3-1",),)),)
+        package = PackageMetadata(u"zumba", V("1.8.1-1"), provides=provides)
+
+        r_pretty_string = u"zumba 1.8.1-1; provides (dance >= 10.3-1)"
+
+        # When
+        pretty_string = package_to_pretty_string(package)
+
+        # Then
+        self.assertEqual(pretty_string, r_pretty_string)
+
+        # Given
+        provides = (("cardio", (("*",),)),)
+        package = PackageMetadata(u"zumba", V("1.8.1-1"), provides=provides)
+
+        r_pretty_string = "zumba 1.8.1-1; provides (cardio *)"
+
+        # When
+        pretty_string = package_to_pretty_string(package)
+
+        # Then
+        self.assertEqual(pretty_string, r_pretty_string)
+
     def test_complicated(self):
         # Given
         install_requires = (
@@ -317,17 +348,21 @@ class TestPackagePrettyString(unittest.TestCase):
             ("requests", ((">= 0.2",),)),
             ("zope", (("*",),)))
         conflicts = (
-            ("bokeh_git", (('',),)),
+            ("bokeh", (('',),)),
             ("requests", ((">= 0.2.5", "< 0.4"),)))
+        provides = (
+            ("bokeh", (('*',),)),)
         package = PackageMetadata(
-            u"bokeh", V("0.2.0-3"),
+            u"bokeh_git", V("0.2.0-3"),
             install_requires=install_requires,
-            conflicts=conflicts)
+            conflicts=conflicts,
+            provides=provides)
 
         r_pretty_string = '; '.join((
-            "bokeh 0.2.0-3",
+            "bokeh_git 0.2.0-3",
             "install_requires (numpy ^= 1.8.0, requests >= 0.2, zope *)",
-            "conflicts (bokeh_git, requests >= 0.2.5, requests < 0.4)",
+            "conflicts (bokeh, requests >= 0.2.5, requests < 0.4)",
+            "provides (bokeh *)",
         ))
 
         # When
@@ -364,6 +399,64 @@ class TestToPackage(unittest.TestCase):
         self.assertEqual(package.name, "numpy")
         self.assertEqual(package.version, V('1.8.1'))
         self.assertEqual(package.install_requires, (("MKL", (("^= 10.3",),)),))
+
+    def test_with_conflicts(self):
+        # Given
+        s = u"numpy 1.8.1; conflicts (MKL <= 10.3)"
+        parser = PrettyPackageStringParser(V)
+
+        # When
+        package = parser.parse_to_package(s)
+
+        # Then
+        self.assertEqual(package.name, "numpy")
+        self.assertEqual(package.version, V('1.8.1'))
+        self.assertEqual(package.conflicts, (("MKL", (("<= 10.3",),)),))
+
+    def test_with_provides(self):
+        # Given
+        s = u"numpy 1.8.1-4; provides (numeric)"
+        parser = PrettyPackageStringParser(V)
+
+        # When
+        package = parser.parse_to_package(s)
+
+        # Then
+        self.assertEqual(package.name, "numpy")
+        self.assertEqual(package.version, V('1.8.1-4'))
+        self.assertEqual(package.provides,
+                         (('numpy', (('*',),)),
+                          ("numeric", (("",),))))
+
+    def test_complicated(self):
+        # Given
+        install_requires = (
+            ("numpy", (("^= 1.8.0",),)),
+            ("requests", ((">= 0.2",),)),
+            ("zope", (("*",),)))
+        conflicts = (
+            ("bokeh", (('',),)),
+            ("requests", ((">= 0.2.5", "< 0.4"),)))
+        provides = (
+            ("bokeh", (('*',),)),)
+        expected = PackageMetadata(
+            u"bokeh_git", V("0.2.0-3"),
+            install_requires=install_requires,
+            conflicts=conflicts,
+            provides=provides)
+        parser = PrettyPackageStringParser(V)
+
+        # When
+        s = '; '.join((
+            "bokeh_git 0.2.0-3",
+            "install_requires (numpy ^= 1.8.0, requests >= 0.2, zope *)",
+            "conflicts (bokeh, requests >= 0.2.5, requests < 0.4)",
+            "provides (bokeh *)",
+        ))
+        result = parser.parse_to_package(s)
+
+        # Then
+        self.assertEqual(result, expected)
 
 
 class TestParseScaryPackages(unittest.TestCase):
