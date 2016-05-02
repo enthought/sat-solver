@@ -90,7 +90,10 @@ class UndeterminedClausePolicy(IPolicy):
             "Trying to assign to a variable which is already assigned."
 
         if not self.prefer_installed:
-            # If this exact package version is available locally, use that one
+            # If this exact package version is available locally, use it.
+            # NOTE: when repository priority is implemented, this will cause
+            # the virtual <installed> repository to act as if it always has the
+            # highest priority.
             key = self._package_key(candidate_id)
             candidate_id = self._preferred_package_ids.get(key, candidate_id)
 
