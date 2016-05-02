@@ -45,3 +45,58 @@ to the right of it. ``*`` is a wild-card that matches any version.
 ``== 1.1.1-1``    ``>= 1.1.1-1``   ``<= 1.1.1-1``   ``*``
 ``!= 1.1.1-1``    ``!= 1.1.1-1``   ``!= 1.1.1-1``   ``!= 1.1.1-1``
 ===============  ===============   ===============  ===============
+
+
+Requirements
+------------
+
+There are currently three different ``Requirement`` classes:
+:class:`Requirement<simplesat.constraints.requirement.Requirement>`,
+:class:`InstallRequirement
+<simplesat.constraints.requirement.InstallRequirement>` and
+:class:`ConflictRequirement
+<simplesat.constraints.requirement.ConflictRequirement>`. They have no internal
+differences, but this split allows us to reliably track the origin of a
+requirement via its type and avoid using it in an inappropriate context.
+
+We care about the difference between a requirement created from
+``package.install_requires`` vs one created from ``package.conflicts`` vs one
+created from parsing a pretty string into a Job. It only makes sense for
+``modifiers`` to apply to constraints created from ``install_requires``; we
+don't want to modify a constraint that the user explicitly gave us and we don't
+know what it means to ``allow_newer`` for a conflicts constraint at all.
+By creating an ``InstallRequirement`` only when reading
+``package.install_requires`` and then explicitly checking for that class at the
+only point where we might modify it, we can prevent ourselves from modifying
+the wrong kind of requirement. The same goes for ``ConflictRequirement``,
+although there is currently no use case differentiating it from a plain
+``Requirement``.
+
+So user-given requirements like ``install foo^=1.0`` or ``update bar`` are
+turned into normal ``Requirement`` objects
+because they should _not_ be modified. **Getting this wrong can lead to "install
+inconsistent sets of packages" bugs.**
+
+When to use each requirement class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`InstallRequirement <simplesat.constraints.requirement.InstallRequirement>`
+  Requirements derived from ``package.install_requires`` metadata. For
+  example::
+
+      for constraints in package.install_requires:
+        req = InstallRequirement.from_constraints(constraints)
+
+  .. note::
+    Currently, this is the only type of requirement that can be passed to
+    ``modify_requirement``.
+
+:class:`ConflictRequirement <simplesat.constraints.requirement.ConflictRequirement>`
+  Requirements derived from ``package.conflicts`` metadata. For example::
+
+      for constraints in package.conflicts:
+        req = InstallRequirement.from_constraints(constraints)
+
+:class:`Requirement<simplesat.constraints.requirement.Requirement>`,
+  All other requirements, including those coming directly from a user via a
+  :class:``simplesat.request.Request``.
