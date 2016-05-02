@@ -72,10 +72,15 @@ the wrong kind of requirement. The same goes for ``ConflictRequirement``,
 although there is currently no use case differentiating it from a plain
 ``Requirement``.
 
+Top-level ("Job") requirements are created by external code because the only
+way to communicate a requirement to the system is via a ``Requirement`` object
+attached to a ``Request``. All others are created as needed by the
+``RulesGenerator`` while it puts together rules based on package metadata.
+
 So user-given requirements like ``install foo^=1.0`` or ``update bar`` are
-turned into normal ``Requirement`` objects
-because they should _not_ be modified. **Getting this wrong can lead to "install
-inconsistent sets of packages" bugs.**
+turned into normal ``Requirement`` objects because they should _not_ be
+modified. **Getting this wrong can lead to "install inconsistent sets of
+packages" bugs.**
 
 When to use each requirement class
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
