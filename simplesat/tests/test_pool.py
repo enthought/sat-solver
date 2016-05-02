@@ -1,3 +1,4 @@
+from textwrap import dedent
 import unittest
 
 import re
@@ -5,7 +6,9 @@ import six
 
 from okonomiyaki.versions import EnpkgVersion
 
-from simplesat.constraints import PrettyPackageStringParser, InstallRequirement
+from simplesat.constraints import (
+    InstallRequirement, PrettyPackageStringParser, Requirement
+)
 from simplesat.errors import InvalidConstraint
 from simplesat.repository import Repository
 from simplesat.request import Request
@@ -176,3 +179,23 @@ class TestPool(unittest.TestCase):
 
         # Then
         Pool([repository])
+
+    def test_what_provides_requirement_ignores_modifier(self):
+        # Given
+        repository = Repository(self.packages_from_definition(
+            dedent(u"""\
+                numpy 1.7.0-1
+                numpy 1.8.0-1\
+            """)
+        ))
+        request = Request()
+        request.modifiers.allow_newer.add('numpy')
+
+        # When
+        pool = Pool([repository], modifiers=request.modifiers)
+        requirement = Requirement._from_string('numpy ^= 1.7.0')
+        candidates = pool.what_provides(requirement)
+
+        # Then
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0].version, V("1.7.0-1"))
