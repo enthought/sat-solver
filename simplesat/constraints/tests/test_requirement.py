@@ -216,23 +216,17 @@ class TestRequirementFromString(unittest.TestCase):
 
 
 class TestParsePackageFullName(unittest.TestCase):
+
     def test_simple(self):
         # Given
-        package_s = "numpy-1.8.1-1"
+        for package_s in ("numpy-1.8.1-1", "numpy 1.8.1-1"):
 
-        # When
-        name, version = parse_package_full_name(package_s)
+            # When
+            name, version = parse_package_full_name(package_s)
 
-        # Then
-        self.assertEqual(name, "numpy")
-        self.assertEqual(version, "1.8.1-1")
-
-        # Given
-        package_s = "numpy 1.8.1"
-
-        # When/Then
-        with self.assertRaises(SolverException):
-            parse_package_full_name(package_s)
+            # Then
+            self.assertEqual(name, "numpy")
+            self.assertEqual(version, "1.8.1-1")
 
 
 class TestRequirement(unittest.TestCase):

@@ -10,14 +10,18 @@ from simplesat.errors import (
 
 from .kinds import Any, Equal
 from .multi import MultiConstraints
-from .parser import _RawConstraintsParser, _RawRequirementParser
+from .parser import (
+    _RawConstraintsParser, _RawRequirementParser,
+    _DISTRIBUTION_NAME_R, _VERSION_R
+)
 
 
-_FULL_PACKAGE_RE = re.compile("""\
-                              (?P<name>[^-.]+)
-                              -
-                              (?P<version>(.*))
-                              $""", re.VERBOSE)
+_FULL_PACKAGE_RC = re.compile("""\
+        (?P<name>{})
+        (?:-|\s+)
+        (?P<version>{})
+        $""".format(_DISTRIBUTION_NAME_R, _VERSION_R),
+    re.VERBOSE)
 
 
 def parse_package_full_name(full_name):
@@ -25,7 +29,7 @@ def parse_package_full_name(full_name):
     Parse a package full name (e.g. 'numpy-1.6.0-1') into a (name,
     version_string) pair.
     """
-    m = _FULL_PACKAGE_RE.match(full_name)
+    m = _FULL_PACKAGE_RC.match(full_name)
     if m:
         return m.group("name"), m.group("version")
     else:
