@@ -99,4 +99,4 @@ When to use each requirement class
 
 :class:`Requirement<simplesat.constraints.requirement.Requirement>`,
   All other requirements, including those coming directly from a user via a
-  :class:``simplesat.request.Request``.
+  :class:`simplesat.request.Request`.
