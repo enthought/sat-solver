@@ -13,7 +13,7 @@ where the ``+`` operator indicates that the package should be installed and
 ``numpy-1.8.1``, ``numpy-1.8.2``, or ``numpy-1.8.3``."
 
 To build up a total set of rules, we start at each of our ``Job`` rules and
-cycle recursively though package dependencies, adding new rules as we discover
+cycle recursively though package metadata, adding new rules as we discover
 new packages. This is done by running each of our requirements through the
 ``Pool`` and asking it which packages match.
 
