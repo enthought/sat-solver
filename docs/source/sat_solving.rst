@@ -78,7 +78,7 @@ attached to a ``Request``. All others are created as needed by the
 ``RulesGenerator`` while it puts together rules based on package metadata.
 
 So user-given requirements like ``install foo^=1.0`` or ``update bar`` are
-turned into normal ``Requirement`` objects because they should _not_ be
+turned into normal ``Requirement`` objects because they should *not* be
 modified. **Getting this wrong can lead to "install inconsistent sets of
 packages" bugs.**
 
