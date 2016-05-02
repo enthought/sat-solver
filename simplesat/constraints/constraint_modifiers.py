@@ -88,7 +88,7 @@ class ConstraintModifiers(object):
     allow_older = attr(**_coerced_set)
 
     def asdict(self):
-        return asdict(self)
+        return {k: sorted(v) for k, v in six.iteritems(asdict(self))}
 
     @property
     def targets(self):
