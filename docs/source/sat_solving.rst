@@ -95,7 +95,7 @@ When to use each requirement class
   Requirements derived from ``package.conflicts`` metadata. For example::
 
       for constraints in package.conflicts:
-        req = InstallRequirement.from_constraints(constraints)
+        req = ConflictRequirement.from_constraints(constraints)
 
 :class:`Requirement<simplesat.constraints.requirement.Requirement>`,
   All other requirements, including those coming directly from a user via a
