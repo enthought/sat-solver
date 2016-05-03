@@ -5,6 +5,8 @@
 Changes since version 0.2.2
 ===========================
 
+* fix package name parsing in requirement (#193)
+
 Version 0.2.2
 =============
 
