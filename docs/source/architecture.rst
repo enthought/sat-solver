@@ -54,8 +54,8 @@ then the solver will fail with a :exc:`simplesat.errors.SatisifiabilityError`.
     }
 
 
-ConstraintModifiers
-~~~~~~~~~~~~~~~~~~~
+Constraint Modifiers
+~~~~~~~~~~~~~~~~~~~~
 
 Additionally, one may attach
 :class:`ConstraintModifiers<simplesat.constraints.ConstraintModifiers>` to the
@@ -251,7 +251,7 @@ work to resolve the request.
 
 As the ``MiniSat`` explores the search space, it will update the
 ``AssignmentSet``. When it reaches a point where it must make a guess to
-continue, it will ask the ``Policy`` for a new package to try. The ``Policy``
+continue it will ask the ``Policy`` for a new package to try. The ``Policy``
 looks at the ``AssignmentSet`` and :class:`Pool<simplesat.pool.Pool>` to choose
 a suitable candidate. This continues until either the ``MiniSat`` finds a
 solution or determines that the problem is unsatisifiable.
