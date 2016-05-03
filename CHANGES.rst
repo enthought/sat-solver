@@ -2,8 +2,30 @@
 ``simplesat`` CHANGELOG
 =======================
 
-Changes since version 0.2.2
-===========================
+Version 0.3.0
+=============
+
+Features
+--------
+
+* add support for `provides` metadata (#194)
+* add new api for simplifying and satisfying requests (#195)
+
+Enhancements
+------------
+
+* update `install_requires` to allow `okonomiyaki >= 0.14` (#197)
+* Request now uses `attrs` (#196)
+* update internal documentation for the various Requirement types (#201)
+
+Bug fixes
+---------
+
+* fix `Repository.add_package` when `Repository.find_packages` was previously
+  used for non existing packages (#185)
+* fix error handling when metadata conflict (#187)
+* fix package name parsing in requirement (#193)
+* call to `asdict` must be deterministic (#200)
 
 Version 0.2.2
 =============
