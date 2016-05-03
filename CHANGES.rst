@@ -5,6 +5,8 @@
 Version 0.3.0
 =============
 
+Released on 03/05/2016.
+
 Features
 --------
 
