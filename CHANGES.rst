@@ -2,8 +2,20 @@
 ``simplesat`` CHANGELOG
 =======================
 
-Changes since version 0.2.0
+Changes since version 0.2.2
 ===========================
+
+Version 0.2.2
+=============
+
+Released on 29/04/2016.
+
+* update `install_requires` to allow `okonomiyaki >= 0.14` (#198)
+
+Version 0.2.1
+=============
+
+Released on 27/04/2016.
 
 * fix `Repository.add_package` when `Repository.find_packages` was previously
   used for non existing packages (#185)
