@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from .utils import DefaultOrderedDict
 from simplesat.constraints import (
-    ConstraintModifiers, Requirement, modify_requirement
+    InstallRequirement, Requirement, modify_requirement
 )
 from simplesat.errors import InvalidConstraint
 
@@ -85,7 +85,9 @@ class Pool(object):
 
     def modify_requirement(self, requirement):
         """Return requirement modified by the pool's ConstraintModifiers."""
-        if self.modifiers:
+        # It only makes sense for modifiers to apply to InstallRequirements,
+        # which are created from ``package.install_requires``
+        if self.modifiers and isinstance(requirement, InstallRequirement):
             requirement = modify_requirement(requirement, self.modifiers)
         return requirement
 
