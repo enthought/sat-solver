@@ -120,7 +120,7 @@ class TestMiniSATSolver(unittest.TestCase):
         # Then
         self.assertIsNone(s.status)
         self.assertEqual(len(s.watches), 0)
-        self.assertEqual(len(s.clauses), 0)
+        self.assertEqual(len(s.clauses), 1)
         self.assertTrue(mock_enqueue.called)
 
     @mock.patch.object(MiniSATSolver, 'enqueue')

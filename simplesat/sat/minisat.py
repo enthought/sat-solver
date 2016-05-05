@@ -339,7 +339,9 @@ class MiniSATSolver(object):
             # Clause is guaranteed to be false under the current variable
             # assignments.
             self.status = False
-        elif len(clause) == 1:
+            return
+
+        if len(clause) == 1:
             # Unit facts are enqueued.
             if not self.enqueue(clause[0], cause=clause):
                 # Bail out if we've found a conflict
@@ -353,7 +355,7 @@ class MiniSATSolver(object):
             self.watches[-p].append(clause)
             self.watches[-q].append(clause)
 
-            self.clauses.append(clause)
+        self.clauses.append(clause)
 
     def _setup_assignments(self):
         """Initialize assignments table.
