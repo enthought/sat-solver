@@ -132,6 +132,9 @@ class ScenarioTestAssistant(object):
 
 class TestNoInstallSet(ScenarioTestAssistant, TestCase):
 
+    def test_one_directly_implied_requirement(self):
+        self._check_solution("one_directly_implied_requirement.yaml")
+
     def test_directly_implied_solution(self):
         self._check_solution("directly_implied_solution.yaml")
 
