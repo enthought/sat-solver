@@ -2,6 +2,16 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Version 0.3.1
+=============
+
+Released on 6th May 2016.
+
+Bug fixes
+---------
+
+* fix assertion handling (#209
+
 Version 0.3.0
 =============
 
