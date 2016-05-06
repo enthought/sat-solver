@@ -90,6 +90,12 @@ class ConstraintModifiers(object):
     def asdict(self):
         return {k: sorted(v) for k, v in six.iteritems(asdict(self))}
 
+    def update(self, other_modifiers):
+        """ Update modifiers with values from ConstraintModifiers instance. """
+        self.allow_any.update(other_modifiers.allow_any)
+        self.allow_newer.update(other_modifiers.allow_newer)
+        self.allow_older.update(other_modifiers.allow_older)
+
     @property
     def targets(self):
         return set.union(self.allow_newer, self.allow_any, self.allow_older)

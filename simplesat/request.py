@@ -46,7 +46,8 @@ class Request(object):
     {'allow_older': [], 'allow_any': ['MKL'], 'allow_newer': []}
     """
 
-    modifiers = attr(default=Factory(ConstraintModifiers))
+    modifiers = attr(default=Factory(ConstraintModifiers),
+                     validator=instance_of(ConstraintModifiers))
     jobs = attr(default=Factory(list))
 
     def install(self, requirement):
