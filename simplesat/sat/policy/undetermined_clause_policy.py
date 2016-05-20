@@ -100,11 +100,13 @@ class UndeterminedClausePolicy(IPolicy):
         return candidate_id
 
     def _without_assigned(self, package_ids, assignments):
-        return package_ids.difference(assignments.assigned_ids)
+        ids_with_clauses = package_ids.intersection(self._id_to_clauses)
+        return ids_with_clauses.difference(assignments.assigned_ids)
 
     def _best_sorted_candidate(self, package_ids, assignments):
         for p_id in package_ids:
-            if p_id not in assignments.assigned_ids:
+            if (p_id not in assignments.assigned_ids and
+               p_id in self._id_to_clauses):
                 return p_id
 
     def _best_candidate(self, package_ids, assignments, update=False):
