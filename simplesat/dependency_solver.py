@@ -327,7 +327,8 @@ class DependencySolver(object):
 
         for job in request.jobs:
             assert job.kind in (
-                JobType.install, JobType.remove, JobType.update
+                JobType.install, JobType.remove, JobType.hard_update,
+                JobType.soft_update
             ), 'Unknown job kind: {}'.format(job.kind)
 
             requirement = job.requirement
@@ -337,7 +338,7 @@ class DependencySolver(object):
             if len(providers) == 0:
                 raise NoPackageFound(requirement, str(requirement))
 
-            if job.kind == JobType.update:
+            if job.kind == JobType.hard_update:
                 # An update request *must* install the latest package version
                 def key(package):
                     return (package.version, package in installed_repository)

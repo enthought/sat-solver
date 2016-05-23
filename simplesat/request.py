@@ -8,7 +8,8 @@ from .constraints import Requirement, ConstraintModifiers
 class JobType(Enum):
     install = 1
     remove = 2
-    update = 3
+    soft_update = 3
+    hard_update = 4
 
 
 @attributes
@@ -56,8 +57,11 @@ class Request(object):
     def remove(self, requirement):
         self._add_job(requirement, JobType.remove)
 
-    def update(self, requirement):
-        self._add_job(requirement, JobType.update)
+    def hard_update(self, requirement):
+        self._add_job(requirement, JobType.hard_update)
+
+    def soft_update(self, requirement):
+        self._add_job(requirement, JobType.soft_update)
 
     def allow_newer(self, package_name):
         self.modifiers.allow_newer.add(package_name)

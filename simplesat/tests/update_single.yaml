@@ -48,7 +48,7 @@ packages:
     - unrelated 0.2.3-1
 
 request:
-    - operation: "update"
+    - operation: "hard_update"
       requirement: "scipy"
 
 installed:
