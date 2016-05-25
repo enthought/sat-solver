@@ -5,7 +5,6 @@ from collections import defaultdict
 
 import six
 
-from simplesat.utils import DefaultOrderedDict
 from .policy import IPolicy, pkg_id_to_version
 from .policy_logger import LoggedPolicy
 
@@ -24,7 +23,7 @@ class UndeterminedClausePolicy(IPolicy):
             (pool.package_id(package) for package in installed_repository),
             key=by_version
         )
-        self._preferred_package_ids = {
+        self._local_package_ids = {
             self._package_key(package_id): package_id
             for package_id in self._installed_ids
         }
@@ -95,7 +94,7 @@ class UndeterminedClausePolicy(IPolicy):
             # the virtual <installed> repository to act as if it always has the
             # highest priority.
             key = self._package_key(candidate_id)
-            candidate_id = self._preferred_package_ids.get(key, candidate_id)
+            candidate_id = self._local_package_ids.get(key, candidate_id)
 
         return candidate_id
 
@@ -117,20 +116,6 @@ class UndeterminedClausePolicy(IPolicy):
             return max(unassigned, key=by_version)
         except ValueError:
             return None
-
-    def _group_packages_by_name(self, decision_set):
-        installed_packages = []
-        new_package_map = DefaultOrderedDict(list)
-        installed_ids = set(self._installed_ids)
-
-        for package_id in sorted(decision_set):
-            package = self._pool.id_to_package(package_id)
-            if package_id in installed_ids:
-                installed_packages.append(package)
-            else:
-                new_package_map[package.name].append(package)
-
-        return installed_packages, new_package_map
 
     def _refresh_decision_set(self, assignments):
         self._update_cache_from_assignments(assignments)
