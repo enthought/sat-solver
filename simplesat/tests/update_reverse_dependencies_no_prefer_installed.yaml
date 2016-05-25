@@ -28,9 +28,22 @@ packages:
 
 
 request:
-  - operation: "install"
+  - operation: "soft_update"
     requirement: "E ^= 1.0.0"
-
+  - operation: "soft_update"
+    requirement: "A"
+  - operation: "soft_update"
+    requirement: "B"
+  - operation: "soft_update"
+    requirement: "C"
+  - operation: "soft_update"
+    requirement: "D"
+  - operation: "soft_update"
+    requirement: "X"
+  - operation: "soft_update"
+    requirement: "Y"
+  - operation: "soft_update"
+    requirement: "Z"
 
 marked:
   - E

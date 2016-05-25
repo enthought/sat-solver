@@ -191,6 +191,12 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_simple_numpy(self):
         self._check_solution("simple_numpy_installed.yaml")
 
+    def test_simple_numpy_installed_upgrade(self):
+        self._check_solution("simple_numpy_installed_upgrade.yaml")
+
+    def test_soft_update_with_deps(self):
+        self._check_solution("soft_update_with_deps.yaml")
+
     def test_numpy_downgrade(self):
         self._check_solution("numpy_downgrade.yaml")
 

@@ -159,8 +159,34 @@ packages:
   - zeromq 4.0.5-1
 
 request:
-    - operation: "install"
+    - operation: "soft_update"
       requirement: "ipython >= 4.0"
+    - operation: "soft_update"
+      requirement: "zeromq"
+    - operation: "soft_update"
+      requirement: "ssl_match_hostname"
+    - operation: "soft_update"
+      requirement: "ptyprocess"
+    - operation: "soft_update"
+      requirement: "certifi"
+    - operation: "soft_update"
+      requirement: "tornado"
+    - operation: "soft_update"
+      requirement: "terminado"
+    - operation: "soft_update"
+      requirement: "pyzmq"
+    - operation: "soft_update"
+      requirement: "mistune"
+    - operation: "soft_update"
+      requirement: "jsonschema"
+    - operation: "soft_update"
+      requirement: "appinst"
+    - operation: "soft_update"
+      requirement: "Pygments"
+    - operation: "soft_update"
+      requirement: "MarkupSafe"
+    - operation: "soft_update"
+      requirement: "Jinja2"
 
 installed:
   - zeromq 4.0.5-1

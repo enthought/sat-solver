@@ -15,17 +15,23 @@ class UndeterminedClausePolicy(IPolicy):
     truth value is not yet known and suggests them in descending order by
     package version number. """
 
-    def __init__(self, pool, installed_repository, prefer_installed=True):
+    def __init__(self, pool, installed_repository,
+                 ignore_installed_packages=None):
+        if ignore_installed_packages is None:
+            ignore_installed_packages = set()
         self._pool = pool
-        self.prefer_installed = prefer_installed
+
         by_version = six.functools.partial(pkg_id_to_version, self._pool)
-        self._installed_ids = sorted(
-            (pool.package_id(package) for package in installed_repository),
-            key=by_version
-        )
+        installed_packages = set(package for package in installed_repository)
+        prefer_installed = installed_packages - ignore_installed_packages
+        self._prefer_installed_pkg_ids = sorted(
+            (pool.package_id(pkg) for pkg in prefer_installed), key=by_version)
+
+        installed_package_ids = (pool.package_id(pkg)
+                                 for pkg in installed_repository)
         self._local_package_ids = {
             self._package_key(package_id): package_id
-            for package_id in self._installed_ids
+            for package_id in installed_package_ids
         }
         self._decision_set = set()
         self._requirements = set()
@@ -69,9 +75,8 @@ class UndeterminedClausePolicy(IPolicy):
         candidate_id = None
         best = self._best_candidate
 
-        if self.prefer_installed:
-            candidate_id = self._best_sorted_candidate(
-                self._installed_ids, assignments)
+        candidate_id = self._best_sorted_candidate(
+            self._prefer_installed_pkg_ids, assignments)
 
         if candidate_id is None:
             candidate_id = best(self._requirements, assignments)
@@ -88,13 +93,12 @@ class UndeterminedClausePolicy(IPolicy):
         assert assignments.get(candidate_id) is None, \
             "Trying to assign to a variable which is already assigned."
 
-        if not self.prefer_installed:
-            # If this exact package version is available locally, use it.
-            # NOTE: when repository priority is implemented, this will cause
-            # the virtual <installed> repository to act as if it always has the
-            # highest priority.
-            key = self._package_key(candidate_id)
-            candidate_id = self._local_package_ids.get(key, candidate_id)
+        # If this exact package version is available locally, use it.
+        # NOTE: when repository priority is implemented, this will cause
+        # the virtual <installed> repository to act as if it always has the
+        # highest priority.
+        key = self._package_key(candidate_id)
+        candidate_id = self._local_package_ids.get(key, candidate_id)
 
         return candidate_id
 

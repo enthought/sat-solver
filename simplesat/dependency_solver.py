@@ -322,9 +322,9 @@ class DependencySolver(object):
         pool = self._pool
         installed_repository = self._installed_repository
 
-        policy = InstalledFirstPolicy(pool, installed_repository)
         all_requirement_ids = []
 
+        soft_update_packages = set()
         for job in request.jobs:
             assert job.kind in (
                 JobType.install, JobType.remove, JobType.hard_update,
@@ -343,15 +343,22 @@ class DependencySolver(object):
                 def key(package):
                     return (package.version, package in installed_repository)
                 providers = [max(providers, key=key)]
+            elif job.kind == JobType.soft_update:
+                soft_update_packages.update((pkg for pkg in providers
+                                            if pkg in installed_repository))
 
-            requirement_ids = [pool.package_id(p) for p in providers]
-            policy.add_requirements(requirement_ids)
-            all_requirement_ids.extend(requirement_ids)
+            all_requirement_ids.extend([pool.package_id(p) for p in providers])
 
         installed_package_ids = collections.OrderedDict()
         for package in installed_repository:
             package_id = pool.package_id(package)
             installed_package_ids[package_id] = package
+
+        # Prefer the installed versions of all packages
+        policy = InstalledFirstPolicy(
+            pool, installed_repository,
+            ignore_installed_packages=soft_update_packages)
+        policy.add_requirements(all_requirement_ids)
 
         rules_generator = RulesGenerator(
             pool, request, installed_package_ids=installed_package_ids,
