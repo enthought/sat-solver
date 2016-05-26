@@ -4,7 +4,7 @@ import unittest
 import six
 
 from simplesat.constraints import ConstraintModifiers, Requirement
-from simplesat.errors import NoPackageFound
+from simplesat.errors import NoPackageFound, UnexpectedlySatisfiable
 from simplesat.test_utils import packages_from_definition
 
 from ..dependency_solver import (
@@ -179,3 +179,24 @@ class TestMinUnsat(unittest.TestCase):
 
         # Then
         six.assertCountEqual(self, min_unsat, r_min_unsat)
+
+    def test_raises_unexpectedly_satisfiable(self):
+        # Given
+        packages_definition = textwrap.dedent("""
+        MKL 11.1.4-1
+        numpy 1.9.2-3; depends (MKL == 11.1.4-1)
+        """)
+        packages = packages_from_definition(packages_definition)
+
+        requirements_definition = textwrap.dedent("""
+        MKL == 11.1.4-1
+        numpy == 1.9.2-3
+        """)
+        requirements = requirements_from_definition(requirements_definition)
+
+        def callback(requirements):
+            return requirements_are_satisfiable(packages, requirements)
+
+        # When/Then
+        with self.assertRaises(UnexpectedlySatisfiable):
+            minimal_unsatisfiable_subset(requirements, callback)

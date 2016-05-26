@@ -262,7 +262,7 @@ def minimal_unsatisfiable_subset(clauses, callback):
     this property.
     """
     clauses = tuple(clauses)
-    if callable(clauses):
+    if callback(clauses):
         raise UnexpectedlySatisfiable()
 
     def split(s):
