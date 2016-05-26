@@ -3,6 +3,7 @@ import itertools
 
 import six
 
+from simplesat.constraints import ConstraintModifiers
 from simplesat.constraints.requirement import InstallRequirement
 from simplesat.errors import NoPackageFound, SatisfiabilityError
 from simplesat.pool import Pool
@@ -130,7 +131,9 @@ def requirements_are_satisfiable(packages, requirements, modifiers=None):
     bool
         Return True if the `requirements` can be satisfied by the `packages`.
     """
-    request = Request()
+    modifiers = modifiers or ConstraintModifiers()
+
+    request = Request(modifiers=modifiers)
     for requirement in requirements:
         request.install(requirement)
     repositories = (Repository(packages),)
