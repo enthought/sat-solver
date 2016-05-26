@@ -253,8 +253,8 @@ def minimal_unsatisfiable_subset(clauses, callback):
     of B such that A* U B* is UNSAT. Then A* U B* will be a minimal
     unsatisfiable subset of the original set of clauses.
 
-    Proof: If some proper subset C of A* U B* is UNSAT, then there is some
-    clause c in A* U B* not in C. If c is in A*, then that means (A* - {c}) U
+    Proof: If some proper subset S of A* U B* is UNSAT, then there is some
+    clause c in A* U B* not in S. If c is in A*, then that means (A* - {c}) U
     B* is UNSAT, and hence (A* - {c}) U B is UNSAT, since it is a superset,
     which contradicts A* being the minimal subset of A with such property.
     Similarly, if c is in B, then A* U (B* - {c}) is UNSAT, but B* - {c} is a
