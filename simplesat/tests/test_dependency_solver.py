@@ -180,6 +180,37 @@ class TestMinUnsat(unittest.TestCase):
         # Then
         six.assertCountEqual(self, min_unsat, r_min_unsat)
 
+    def test_more_than_2_clauses(self):
+        # Given
+        packages_definition = textwrap.dedent("""
+        A 1.0-1; provides (X)
+        B 1.0-1; provides (X, Y, Z)
+        C 1.0-1; provides (Y)
+        D 1.0-1; provides (Y, Z)
+        P 1.0-1; depends (X)
+        Q 1.0-1; depends (Y); conflicts (A ^= 1.0)
+        R 1.0-1; depends (Z); conflicts (B ^= 1.0)
+        """)
+        packages = packages_from_definition(packages_definition)
+
+        requirements_definition = textwrap.dedent("""
+        P
+        Q
+        R
+        """)
+        requirements = requirements_from_definition(requirements_definition)
+
+        def callback(requirements):
+            return requirements_are_satisfiable(packages, requirements)
+
+        r_min_unsat = [R("P"), R("Q"), R("R")]
+
+        # When
+        min_unsat = minimal_unsatisfiable_subset(requirements, callback)
+
+        # Then
+        six.assertCountEqual(self, min_unsat, r_min_unsat)
+
     def test_raises_unexpectedly_satisfiable(self):
         # Given
         packages_definition = textwrap.dedent("""
