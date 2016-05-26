@@ -347,7 +347,7 @@ class DependencySolver(object):
                 soft_update_packages.update((pkg for pkg in providers
                                             if pkg in installed_repository))
 
-            all_requirement_ids.extend([pool.package_id(p) for p in providers])
+            all_requirement_ids.extend(pool.package_id(p) for p in providers)
 
         installed_package_ids = collections.OrderedDict()
         for package in installed_repository:

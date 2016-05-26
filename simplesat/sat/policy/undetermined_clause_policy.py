@@ -22,10 +22,11 @@ class UndeterminedClausePolicy(IPolicy):
         self._pool = pool
 
         by_version = six.functools.partial(pkg_id_to_version, self._pool)
-        installed_packages = set(package for package in installed_repository)
-        prefer_installed = installed_packages - ignore_installed_packages
+        installed_packages = set(installed_repository)
+        prefer_installed_pkgs = installed_packages - ignore_installed_packages
         self._prefer_installed_pkg_ids = sorted(
-            (pool.package_id(pkg) for pkg in prefer_installed), key=by_version)
+            (pool.package_id(pkg) for pkg in prefer_installed_pkgs),
+            key=by_version)
 
         installed_package_ids = (pool.package_id(pkg)
                                  for pkg in installed_repository)

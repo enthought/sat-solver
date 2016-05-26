@@ -495,7 +495,7 @@ class RulesGenerator(object):
 
     def _add_job_rules(self):
         for job in self.request.jobs:
-            if job.kind == JobType.install or job.kind == JobType.soft_update:
+            if job.kind in (JobType.install, JobType.soft_update):
                 self._add_install_job_rules(job)
             elif job.kind == JobType.remove:
                 self._add_remove_job_rules(job)
