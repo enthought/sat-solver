@@ -6,6 +6,10 @@ class SolverException(Exception):
     pass
 
 
+class UnexpectedlySatisfiable(SolverException):
+    pass
+
+
 class InvalidConstraint(SolverException):
     pass
 
