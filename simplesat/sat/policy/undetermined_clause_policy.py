@@ -28,21 +28,11 @@ class UndeterminedClausePolicy(IPolicy):
             (pool.package_id(pkg) for pkg in prefer_installed_pkgs),
             key=by_version)
 
-        installed_package_ids = (pool.package_id(pkg)
-                                 for pkg in installed_repository)
-        self._local_package_ids = {
-            self._package_key(package_id): package_id
-            for package_id in installed_package_ids
-        }
         self._decision_set = set()
         self._requirements = set()
         self._unsatisfied_clauses = set()
         self._id_to_clauses = defaultdict(list)
         self._all_ids = set()
-
-    def _package_key(self, package_id):
-        package = self._pool.id_to_package(package_id)
-        return (package.name, package.version)
 
     def add_requirements(self, package_ids):
         self._requirements.update(package_ids)
@@ -93,13 +83,6 @@ class UndeterminedClausePolicy(IPolicy):
 
         assert assignments.get(candidate_id) is None, \
             "Trying to assign to a variable which is already assigned."
-
-        # If this exact package version is available locally, use it.
-        # NOTE: when repository priority is implemented, this will cause
-        # the virtual <installed> repository to act as if it always has the
-        # highest priority.
-        key = self._package_key(candidate_id)
-        candidate_id = self._local_package_ids.get(key, candidate_id)
 
         return candidate_id
 

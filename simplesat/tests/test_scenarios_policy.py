@@ -200,6 +200,10 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_numpy_downgrade(self):
         self._check_solution("numpy_downgrade.yaml")
 
+    def test_complex_numpy_downgrade(self):
+        # Regression test for infinite loop in policy
+        self._check_solution("complex_numpy_downgrade.yaml")
+
     def test_ipython(self):
         self._check_solution("ipython_with_installed.yaml")
 
