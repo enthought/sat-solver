@@ -1,8 +1,10 @@
 import argparse
 import collections
+import json
 import operator
 import sys
 
+import six
 import yaml
 
 from okonomiyaki.versions import EnpkgVersion
@@ -12,10 +14,63 @@ from simplesat.constraints.package_parser import constraints_to_pretty_strings
 from simplesat.constraints.kinds import (
     Any, EnpkgUpstreamMatch, Equal
 )
-from simplesat.test_utils import repository_from_index
+from simplesat.package import (
+    PackageMetadata, RepositoryInfo, RepositoryPackageMetadata
+)
+from simplesat.repository import Repository
 
 
-# TODO Can use new enstaller pretty printer here...
+def parse_index_packages_to_install_requires(packages):
+    name_to_install_requires = {}
+
+    for dependency in packages:
+        parts = dependency.split(None, 1)
+        name = parts[0]
+        name_to_install_requires.setdefault(name, [])
+
+        if len(parts) == 1:
+            constraint = "*"
+        else:
+            version_part = parts[1]
+            package_version = EnpkgVersion.from_string(version_part)
+            if package_version.build == 0:
+                constraint = "^= {0}".format(version_part)
+            else:
+                constraint = "== {0}".format(version_part)
+
+        name_to_install_requires[name].append(constraint)
+
+    return dict(
+        (name, tuple(value))
+        for name, value in six.iteritems(name_to_install_requires)
+    )
+
+
+def repository_from_index(index_path):
+    with open(index_path, "rt") as fp:
+        json_dict = json.load(fp)
+
+    repository = Repository()
+    repository_info = RepositoryInfo("remote")
+
+    for key, entry in six.iteritems(json_dict):
+        raw_name = key.split("-")[0]
+        version_string = "{0}-{1}".format(entry["version"], entry["build"])
+        version = EnpkgVersion.from_string(version_string)
+        name_to_install_requires =  parse_index_packages_to_install_requires(
+            entry.get("packages", [])
+        )
+        install_requires = tuple(
+            (name, (constraints,))
+            for name, constraints in six.iteritems(name_to_install_requires)
+        )
+        package = RepositoryPackageMetadata(
+            PackageMetadata(raw_name, version, install_requires), repository_info
+        )
+        repository.add_package(package)
+
+    return repository
+
 
 def dependency_to_string(dependency):
     req = InstallRequirement._from_string(dependency)
@@ -30,11 +85,11 @@ def dependency_to_string(dependency):
         return "{0} == {1}".format(req.name, str(constraint.version))
     else:  # EnpkgUpstreamMatch
         assert isinstance(constraint.version, EnpkgVersion)
-        return "{0} ~= {1}".format(req.name, str(constraint.version.upstream))
+        return "{0} ^= {1}".format(req.name, str(constraint.version.upstream))
 
 
 def requirements_string(package):
-    name = package.key.split("-")[0]
+    name = package.name
     template = "{name} {version}"
     if len(package.install_requires) > 0:
         template += "; depends ({install_requires})"
@@ -57,8 +112,7 @@ def main(argv=None):
 
     data = collections.defaultdict(list)
 
-    for package in sorted(repository.iter_packages(),
-                          key=operator.attrgetter("name")):
+    for package in repository:
         data["packages"].append(requirements_string(package))
 
     data = dict(data)
