@@ -49,8 +49,8 @@ def packages_from_definition(packages_definition):
     parser = PrettyPackageStringParser(EnpkgVersion.from_string)
 
     return [
-        parser.parse_to_package(line)
-        for line in packages_definition.splitlines()
+        parser.parse_to_package(line.strip())
+        for line in packages_definition.splitlines() if line.strip()
     ]
 
 
