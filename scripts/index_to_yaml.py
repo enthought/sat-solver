@@ -25,7 +25,7 @@ def parse_index_packages_to_install_requires(packages):
 
     for dependency in packages:
         parts = dependency.split(None, 1)
-        name = parts[0]
+        name = parts[0].lower()
         name_to_install_requires.setdefault(name, [])
 
         if len(parts) == 1:
@@ -54,7 +54,7 @@ def repository_from_index(index_path):
     repository_info = RepositoryInfo("remote")
 
     for key, entry in six.iteritems(json_dict):
-        raw_name = key.split("-")[0]
+        raw_name = key.split("-")[0].lower()
         version_string = "{0}-{1}".format(entry["version"], entry["build"])
         version = EnpkgVersion.from_string(version_string)
         name_to_install_requires =  parse_index_packages_to_install_requires(
