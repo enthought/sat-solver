@@ -2,6 +2,16 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Version 0.3.2
+=============
+
+Released on 29th May 2016.
+
+New features
+------------
+
+* add functionality to find minimal unsatisifiable subsets (PR #222).
+
 Version 0.3.1
 =============
 
