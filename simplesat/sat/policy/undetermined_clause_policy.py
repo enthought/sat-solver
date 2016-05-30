@@ -58,6 +58,11 @@ class UndeterminedClausePolicy(IPolicy):
         for c in clauses:
             for l in c.lits:
                 table[abs(l)].append(c)
+
+        # Make sure all installed packages appear in the table
+        for pid in self._installed_ids:
+            table[pid]
+
         self._all_ids = set(six.iterkeys(table))
         return dict(table)
 
@@ -100,13 +105,11 @@ class UndeterminedClausePolicy(IPolicy):
         return candidate_id
 
     def _without_assigned(self, package_ids, assignments):
-        ids_with_clauses = package_ids.intersection(self._id_to_clauses)
-        return ids_with_clauses.difference(assignments.assigned_ids)
+        return package_ids.difference(assignments.assigned_ids)
 
     def _best_sorted_candidate(self, package_ids, assignments):
         for p_id in package_ids:
-            if (p_id not in assignments.assigned_ids and
-               p_id in self._id_to_clauses):
+            if p_id not in assignments.assigned_ids:
                 return p_id
 
     def _best_candidate(self, package_ids, assignments, update=False):
