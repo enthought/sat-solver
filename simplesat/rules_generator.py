@@ -495,11 +495,11 @@ class RulesGenerator(object):
 
     def _add_job_rules(self):
         for job in self.request.jobs:
-            if job.kind == JobType.install:
+            if job.kind in (JobType.install, JobType.soft_update):
                 self._add_install_job_rules(job)
             elif job.kind == JobType.remove:
                 self._add_remove_job_rules(job)
-            elif job.kind == JobType.update:
+            elif job.kind == JobType.hard_update:
                 self._add_update_job_rules(job)
             else:
                 msg = "Job kind {0!r} not supported".format(job.kind)

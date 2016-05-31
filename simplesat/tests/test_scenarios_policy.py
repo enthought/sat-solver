@@ -6,7 +6,6 @@ import six
 from simplesat.errors import NoPackageFound, SatisfiabilityError
 from simplesat.dependency_solver import DependencySolver
 from simplesat.pool import Pool
-from simplesat.sat.policy import InstalledFirstPolicy
 from simplesat.test_utils import Scenario
 from simplesat.transaction import (
     InstallOperation, RemoveOperation, UpdateOperation
@@ -69,11 +68,9 @@ class ScenarioTestAssistant(object):
         # When
         pool = Pool(scenario.remote_repositories)
         pool.add_repository(scenario.installed_repository)
-        policy = InstalledFirstPolicy(pool, scenario.installed_repository,
-                                      prefer_installed=prefer_installed)
+
         solver = DependencySolver(
             pool, scenario.remote_repositories, scenario.installed_repository,
-            policy=policy,
         )
 
         # Then
@@ -194,6 +191,12 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_simple_numpy(self):
         self._check_solution("simple_numpy_installed.yaml")
 
+    def test_simple_numpy_installed_upgrade(self):
+        self._check_solution("simple_numpy_installed_upgrade.yaml")
+
+    def test_soft_update_with_deps(self):
+        self._check_solution("soft_update_with_deps.yaml")
+
     def test_installed_pkg_missing_in_remote(self):
         self._check_solution("installed_pkg_missing_in_remote.yaml")
 
@@ -204,6 +207,10 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
 
     def test_numpy_downgrade(self):
         self._check_solution("numpy_downgrade.yaml")
+
+    def test_complex_numpy_downgrade(self):
+        # Regression test for infinite loop in policy
+        self._check_solution("complex_numpy_downgrade.yaml")
 
     def test_ipython(self):
         self._check_solution("ipython_with_installed.yaml")

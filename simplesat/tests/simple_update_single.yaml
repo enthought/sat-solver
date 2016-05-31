@@ -4,7 +4,7 @@ packages:
     - MKL 10.3-1
 
 request:
-    - operation: "update"
+    - operation: "hard_update"
       requirement: "MKL"
 
 installed:

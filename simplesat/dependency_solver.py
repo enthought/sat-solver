@@ -319,9 +319,6 @@ class DependencySolver(object):
         Repositories containing package available for installation.
     installed_repository : Repository
         Repository containing the packages which are currently installed.
-    policy : Policy, optional
-        The policy for suggesting new packages during the search phase. If none
-        is given, then ``simplsat.policy.InstalledFirstPolicy`` is used.
     use_pruning : bool, optional
         When True, attempt to prune package operations that are not strictly
         necessary for meeting the requirements. Without this, packages whose
@@ -352,7 +349,7 @@ class DependencySolver(object):
     """
 
     def __init__(self, pool, remote_repositories, installed_repository,
-                 policy=None, use_pruning=True, strict=False):
+                 use_pruning=True, strict=False):
         self._pool = pool
         self._installed_repository = installed_repository
         self._remote_repositories = remote_repositories
@@ -362,10 +359,6 @@ class DependencySolver(object):
 
         self.strict = strict
         self.use_pruning = use_pruning
-
-        self._policy = policy or InstalledFirstPolicy(
-            pool, installed_repository
-        )
 
     def solve(self, request):
         """Given a request return a Transaction that would satisfy it.
@@ -388,11 +381,12 @@ class DependencySolver(object):
         modifiers = request.modifiers
         self._pool.modifiers = modifiers if modifiers.targets else None
         with self._last_rules_time:
-            requirement_ids, rules = self._create_rules_and_initialize_policy(
+            init_rules_and_policy = self._create_rules_and_initialize_policy
+            requirement_ids, rules, policy = init_rules_and_policy(
                 request
             )
         with self._last_solver_init_time:
-            sat_solver = MiniSATSolver.from_rules(rules, self._policy)
+            sat_solver = MiniSATSolver.from_rules(rules, policy)
         with self._last_solve_time:
             solution = sat_solver.search()
         solution_ids = _solution_to_ids(solution)
@@ -416,9 +410,11 @@ class DependencySolver(object):
 
         all_requirement_ids = []
 
+        soft_update_packages = set()
         for job in request.jobs:
             assert job.kind in (
-                JobType.install, JobType.remove, JobType.update
+                JobType.install, JobType.remove, JobType.hard_update,
+                JobType.soft_update
             ), 'Unknown job kind: {}'.format(job.kind)
 
             requirement = job.requirement
@@ -428,26 +424,33 @@ class DependencySolver(object):
             if len(providers) == 0:
                 raise NoPackageFound(requirement, str(requirement))
 
-            if job.kind == JobType.update:
+            if job.kind == JobType.hard_update:
                 # An update request *must* install the latest package version
                 def key(package):
                     return (package.version, package in installed_repository)
                 providers = [max(providers, key=key)]
+            elif job.kind == JobType.soft_update:
+                soft_update_packages.update((pkg for pkg in providers
+                                            if pkg in installed_repository))
 
-            requirement_ids = [pool.package_id(p) for p in providers]
-            self._policy.add_requirements(requirement_ids)
-            all_requirement_ids.extend(requirement_ids)
+            all_requirement_ids.extend(pool.package_id(p) for p in providers)
 
         installed_package_ids = collections.OrderedDict()
         for package in installed_repository:
             package_id = pool.package_id(package)
             installed_package_ids[package_id] = package
 
+        # Prefer the installed versions of all packages
+        policy = InstalledFirstPolicy(
+            pool, installed_repository,
+            ignore_installed_packages=soft_update_packages)
+        policy.add_requirements(all_requirement_ids)
+
         rules_generator = RulesGenerator(
             pool, request, installed_package_ids=installed_package_ids,
             strict=self.strict)
 
-        return all_requirement_ids, list(rules_generator.iter_rules())
+        return all_requirement_ids, list(rules_generator.iter_rules()), policy
 
 
 def _connected_packages(solution, root_ids, pool):

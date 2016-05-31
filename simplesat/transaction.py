@@ -29,16 +29,24 @@ class RemoveOperation(Operation):
 class Transaction(object):
 
     def __init__(self, pool, decisions, installed_package_ids):
+        self._pool = pool
+        self._local_packages = {
+            self._package_key(package_id): package_id
+            for package_id in installed_package_ids
+        }
         self.operations = self._safe_operations(
-            pool, decisions, installed_package_ids)
-        self.pretty_operations = self._as_pretty_operations(
-            pool, self.operations)
+            decisions, installed_package_ids)
+        self.pretty_operations = self._as_pretty_operations(self.operations)
 
     def __iter__(self):
         return iter(self.operations)
 
     def __str__(self):
         return self.to_string(self.operations)
+
+    def _package_key(self, package_id):
+        package = self._pool.id_to_package(package_id)
+        return (package.name, package.version)
 
     @staticmethod
     def to_string(operations):
@@ -78,12 +86,12 @@ class Transaction(object):
 
         return "\n".join(lines)
 
-    def _as_pretty_operations(self, pool, operations):
+    def _as_pretty_operations(self, operations):
         pkg_to_ops = OrderedDict((op.package, [op]) for op in operations)
 
         for pkg in reversed(tuple(pkg_to_ops.keys())):
             if pkg in pkg_to_ops:
-                for update in self._find_other_providers(pool, pkg):
+                for update in self._find_other_providers(pkg):
                     pkg_to_ops[pkg] += pkg_to_ops.pop(update, [])
 
         combine = self._merge_operations
@@ -96,11 +104,11 @@ class Transaction(object):
         first, second = sorted(ops, key=lambda o: rank.index(o.__class__))
         return UpdateOperation(first.package, second.package)
 
-    def _safe_operations(self, pool, decisions, installed_package_ids):
-        graph = package_lit_dependency_graph(pool, decisions, closed=True)
+    def _safe_operations(self, decisions, installed_package_ids):
+        graph = package_lit_dependency_graph(self._pool, decisions,
+                                             closed=True)
         removals = []
         installs = []
-        operations = []
 
         # This builds from the bottom (no dependencies) up
         for group in toposort(graph):
@@ -113,23 +121,40 @@ class Transaction(object):
                       package_id not in installed_package_ids):
                     installs.append(package_id)
 
-        # Removals should happen top down
-        for package_id in reversed(removals):
-            package = pool.id_to_package(package_id)
-            operations.append(RemoveOperation(package))
+        install_operations = []
+        remove_operations = []
 
         # Installations should happen bottom up
         for package_id in installs:
-            package = pool.id_to_package(package_id)
-            operations.append(InstallOperation(package))
+            # The solver may suggest removing a currently installed package and
+            # installing another version of that same package from a different
+            # repo. Filter out operations which would install the same version
+            # of a currently installed package and discard the associated
+            # remove operation.
+            key = self._package_key(package_id)
+            preferred_id = self._local_packages.get(key, package_id)
 
-        return operations
+            if preferred_id != package_id:
+                # Because we are not installing the remote package, do not
+                # remove original version
+                if preferred_id in removals:
+                    removals.remove(preferred_id)
+            else:
+                package = self._pool.id_to_package(package_id)
+                install_operations.append(InstallOperation(package))
 
-    def _find_other_providers(self, pool, package):
+        # Removals should happen top down
+        for package_id in reversed(removals):
+            package = self._pool.id_to_package(package_id)
+            remove_operations.append(RemoveOperation(package))
+
+        return remove_operations + install_operations
+
+    def _find_other_providers(self, package):
         # NOTE: this assumes that the name of the package is also the name of
         # the thing that is being provided. This is not always true. Consider
         # that apache2 and nginx can both provide "webserver", etc.
         requirement = InstallRequirement._from_string(package.name)
         return [
-            p for p in pool.what_provides(requirement) if p != package
+            p for p in self._pool.what_provides(requirement) if p != package
         ]

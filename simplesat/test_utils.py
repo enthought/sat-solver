@@ -162,7 +162,7 @@ class Scenario(object):
             getattr(request, kind)(requirement)
 
         if update_all:
-            request_job = request.update
+            request_job = request.hard_update
         else:
             request_job = request.install
 
