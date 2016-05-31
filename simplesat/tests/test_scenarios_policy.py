@@ -197,6 +197,14 @@ class TestInstallSet(ScenarioTestAssistant, TestCase):
     def test_soft_update_with_deps(self):
         self._check_solution("soft_update_with_deps.yaml")
 
+    def test_installed_pkg_missing_in_remote(self):
+        self._check_solution("installed_pkg_missing_in_remote.yaml")
+
+    def test_installed_pkg_missing_in_remote_not_requested(self):
+        self._check_solution(
+            "installed_pkg_missing_in_remote_not_requested.yaml"
+        )
+
     def test_numpy_downgrade(self):
         self._check_solution("numpy_downgrade.yaml")
 

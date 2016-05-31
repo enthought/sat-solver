@@ -3,8 +3,11 @@ import itertools
 
 import six
 
+from simplesat.constraints import ConstraintModifiers
 from simplesat.constraints.requirement import InstallRequirement
-from simplesat.errors import NoPackageFound, SatisfiabilityError
+from simplesat.errors import (
+    NoPackageFound, SatisfiabilityError, UnexpectedlySatisfiable
+)
 from simplesat.pool import Pool
 from simplesat.repository import Repository
 from simplesat.request import JobType, Request
@@ -130,7 +133,9 @@ def requirements_are_satisfiable(packages, requirements, modifiers=None):
     bool
         Return True if the `requirements` can be satisfied by the `packages`.
     """
-    request = Request()
+    modifiers = modifiers or ConstraintModifiers()
+
+    request = Request(modifiers=modifiers)
     for requirement in requirements:
         request.install(requirement)
     repositories = (Repository(packages),)
@@ -214,6 +219,87 @@ def simplify_requirements(packages, requirements):
         if package not in dependencies
     )
     return simple_requirements
+
+
+def minimal_unsatisfiable_subset(clauses, callback):
+    """
+    Given a set of clauses, find a minimal unsatisfiable subset (an
+    unsatisfiable core)
+
+    A set is a minimal unsatisfiable subset if no proper subset is
+    unsatisfiable.  A set of clauses may have many minimal unsatisfiable
+    subsets of different sizes.
+
+    Parameters
+    ----------
+    clauses : seq
+        Iterator over a set of clauses. Clause should follow the format
+        expected by callback
+    callback : callable
+        A function of the form f: <clauses subset> -> bool, returning True if
+        the given subset of clauses is satisfiable, False otherwise. It should
+        follow the constraint A <= B iff (f(B) <= f(A)), with False < True.
+
+    Note
+    ----
+    Function adapted from conda (conda.logic as of 4.0.5), itself implemented
+    from http://www.slideshare.net/pvcpvc9/lecture17-31382688. The conda
+    function mentions the following:
+
+    We do a binary search on the clauses by splitting them in halves A and B.
+    If A or B is UNSAT, we use that and repeat. Otherwise, we recursively check
+    A, but each time we do a sat query, we include B, until we have a minimal
+    subset A* of A such that A* U B is UNSAT. Then we find a minimal subset B*
+    of B such that A* U B* is UNSAT. Then A* U B* will be a minimal
+    unsatisfiable subset of the original set of clauses.
+
+    Proof: If some proper subset S of A* U B* is UNSAT, then there is some
+    clause c in A* U B* not in S. If c is in A*, then that means (A* - {c}) U
+    B* is UNSAT, and hence (A* - {c}) U B is UNSAT, since it is a superset,
+    which contradicts A* being the minimal subset of A with such property.
+    Similarly, if c is in B, then A* U (B* - {c}) is UNSAT, but B* - {c} is a
+    strict subset of B*, contradicting B* being the minimal subset of B with
+    this property.
+    """
+    clauses = tuple(clauses)
+    if callback(clauses):
+        raise UnexpectedlySatisfiable()
+
+    def split(s):
+        """
+        Split s into two roughly equal parts
+        """
+        s = tuple(s)
+        size = len(s)
+        return s[:size//2], s[size//2:]
+
+    def minimal_unsat(clauses, include=()):
+        """
+        Return a minimal subset A of clauses such that A + include is
+        unsatisfiable.
+
+        Implicitly assumes that clauses + include is unsatisfiable.
+        """
+        # Base case: Since clauses + include is implicitly assumed to be
+        # unsatisfiable, if clauses has only one element, it must be its own
+        # minimal subset
+        if len(clauses) == 1:
+            return clauses
+
+        A, B = split(clauses)
+
+        # If one half is unsatisfiable (with include), we can discard the
+        # other half.
+        if not callback(A + include):
+            return minimal_unsat(A, include)
+        if not callback(B + include):
+            return minimal_unsat(B, include)
+
+        Astar = minimal_unsat(A, B + include)
+        Bstar = minimal_unsat(B, Astar + include)
+        return Astar + Bstar
+
+    return minimal_unsat(clauses)
 
 
 class DependencySolver(object):

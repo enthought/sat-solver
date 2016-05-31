@@ -54,6 +54,11 @@ class UndeterminedClausePolicy(IPolicy):
         for c in clauses:
             for l in c.lits:
                 table[abs(l)].append(c)
+
+        # Make sure all installed packages appear in the table
+        for pid in self._prefer_installed_pkg_ids:
+            table[pid]
+
         self._all_ids = set(six.iterkeys(table))
         return dict(table)
 
