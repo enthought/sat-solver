@@ -2,6 +2,26 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Version 0.4.0
+=============
+
+Features
+--------
+
+* `ConstraintModifiers` enhancements: Add `update` method; use validator for
+  modifiers on `Request` (#211)
+* Add function to compute some minimal unsatisfiable subsets of a set of
+  clauses (#219)
+* Add `soft-update` job to `Request`. For a soft-update, the policy prefers to
+  suggest newer versions rather than the installed version. (#220)
+
+Bug fixes
+---------
+
+* Track clauses with only one literal in solver to avoid crash in policy (#209)
+* Avoid failure in policy if an installed package has no associated clauses
+  (#218)
+
 Version 0.3.0
 =============
 
