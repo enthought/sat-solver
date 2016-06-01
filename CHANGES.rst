@@ -5,6 +5,8 @@
 Version 0.4.0
 =============
 
+Released on 1st June 2016.
+
 Features
 --------
 
@@ -24,6 +26,8 @@ Bug fixes
 
 Version 0.3.0
 =============
+
+Released on 5th May 2016.
 
 Features
 --------
