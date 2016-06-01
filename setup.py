@@ -7,7 +7,7 @@ from setup_utils import parse_version, write_version_py
 
 MAJOR = 0
 MINOR = 4
-MICRO = 0
+MICRO = 1
 
 IS_RELEASED = False
 
