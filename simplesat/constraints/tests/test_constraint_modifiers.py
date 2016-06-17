@@ -41,6 +41,26 @@ class TestConstraintModifiers(unittest.TestCase):
         self.assertEqual(modifiers.allow_newer, set(('u', 'v')))
         self.assertEqual(modifiers.allow_older, set())
 
+    def test_remove(self):
+        # Given
+        modifiers = ConstraintModifiers(allow_any='x',
+                                        allow_newer=('x', 'u', 'v'),
+                                        allow_older=('x', 'y'))
+
+        # When
+        modifiers.remove(['x'])
+
+        # Then
+        self.assertEqual(modifiers.allow_any, set())
+        self.assertEqual(modifiers.allow_newer, set(('u', 'v')))
+        self.assertEqual(modifiers.allow_older, set(['y']))
+        with self.assertRaises(TypeError):
+            modifiers.remove("Don't pass a string")
+        with self.assertRaises(TypeError):
+            modifiers.remove(u"Don't pass unicode")
+        with self.assertRaises(TypeError):
+            modifiers.remove(b"Don't pass bytes")
+
     def test_targets(self):
         # Given
         modifiers = ConstraintModifiers(allow_any=('a', 'b', 'c'),
