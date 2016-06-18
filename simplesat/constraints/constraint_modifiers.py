@@ -101,7 +101,7 @@ class ConstraintModifiers(object):
 
         Parameters
         ----------
-        packages : a list, tuple, or set of strings
+        packages : an iterable of strings
             The package names that should be completely removed.
         """
         disallowed = (type(b""), type(u""))
