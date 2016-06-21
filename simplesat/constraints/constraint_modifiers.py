@@ -76,7 +76,7 @@ def as_set(container):
     """
     if isinstance(container, six.string_types):
         container = (container,)
-    else:
+    elif (len(container) and not isinstance(container[0], six.string_types)):
         try:
             container = [
                 element for entry in container for element in entry
