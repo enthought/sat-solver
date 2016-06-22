@@ -1,4 +1,5 @@
 import io
+import textwrap
 import unittest
 
 from okonomiyaki.versions import EnpkgVersion
@@ -174,10 +175,11 @@ class TestSolver(unittest.TestCase):
         requirements = [job.requirement for job in scenario.request.jobs]
 
         # When
-        result = requirements_are_satisfiable(packages, requirements)
+        result, err_msg = requirements_are_satisfiable(packages, requirements)
 
         # Then
         self.assertTrue(result)
+        self.assertEqual(err_msg, "")
 
     def test_requirements_are_not_satisfiable(self):
         # Given
@@ -194,14 +196,24 @@ class TestSolver(unittest.TestCase):
                 - operation: "install"
                   requirement: "MKL != 10.3-1"
         """))
+        r_msg = textwrap.dedent("""\
+        Conflicting requirements:
+        Requirements: 'numpy' <- 'MKL == 10.3-1' <- 'MKL'
+            Can only install one of: (+MKL-10.3-1 | +MKL-10.2-1)
+        Requirements: 'numpy' <- 'MKL == 10.3-1'
+            numpy-1.8.1-1 requires (+MKL-10.3-1)
+        Requirements: 'numpy'
+            Install command rule (+numpy-1.7.1-1 | +numpy-1.8.1-1)
+        """)
         packages = tuple(p for r in scenario.remote_repositories for p in r)
         requirements = [job.requirement for job in scenario.request.jobs]
 
         # When
-        result = requirements_are_satisfiable(packages, requirements)
+        result, err_msg = requirements_are_satisfiable(packages, requirements)
 
         # Then
         self.assertFalse(result)
+        self.assertMultiLineEqual(err_msg, r_msg)
 
     def test_requirements_are_complete(self):
         # Given
@@ -220,10 +232,11 @@ class TestSolver(unittest.TestCase):
 
         # When
         requirements = [job.requirement for job in scenario.request.jobs]
-        result = requirements_are_complete(packages, requirements)
+        result, err_msg = requirements_are_complete(packages, requirements)
 
         # Then
         self.assertTrue(result)
+        self.assertEqual(err_msg, "")
 
     def test_requirements_are_not_complete(self):
         # Given
@@ -236,14 +249,22 @@ class TestSolver(unittest.TestCase):
                 - operation: install
                   requirement: numpy
         """))
+        r_msg = textwrap.dedent("""\
+        Conflicting requirements:
+        Requirements: 'numpy' <- 'MKL == 10.3-1'
+            +numpy-1.8.1-1 was ignored because it depends on missing packages
+        Requirements: 'numpy'
+            Install command rule (+numpy-1.8.1-1)
+        """)
         packages = tuple(p for r in scenario.remote_repositories for p in r)
 
         # When
         requirements = [job.requirement for job in scenario.request.jobs]
-        result = requirements_are_complete(packages, requirements)
+        result, err_msg = requirements_are_complete(packages, requirements)
 
         # Then
         self.assertFalse(result)
+        self.assertMultiLineEqual(err_msg, r_msg)
 
     def test_packages_from_requirements(self):
         # Given
@@ -309,13 +330,21 @@ class TestSolver(unittest.TestCase):
             packages:
                 - numpy 1.8.1-1; depends (MKL == 10.3-1)
         """))
+        r_msg = textwrap.dedent("""\
+        Conflicting requirements:
+        Requirements: 'numpy == 1.8.1-1' <- 'MKL == 10.3-1'
+            +numpy-1.8.1-1 was ignored because it depends on missing packages
+        Requirements: 'numpy == 1.8.1-1'
+            Install command rule (+numpy-1.8.1-1)
+        """)
 
         # When
         packages = tuple(p for r in scenario.remote_repositories for p in r)
-        result = packages_are_consistent(packages)
+        result, err_msg = packages_are_consistent(packages)
 
         # Then
         self.assertFalse(result)
+        self.assertMultiLineEqual(err_msg, r_msg)
 
     def test_missing_direct_dependency_fails(self):
         # Given

@@ -143,9 +143,9 @@ def requirements_are_satisfiable(packages, requirements, modifiers=None):
 
     try:
         DependencySolver(pool, repositories, []).solve(request)
-        return True
-    except SatisfiabilityError:
-        return False
+        return True, ""
+    except SatisfiabilityError as e:
+        return False, e.unsat.to_string(pool=pool)
 
 
 def satisfy_requirements(packages, requirements, modifiers=None):

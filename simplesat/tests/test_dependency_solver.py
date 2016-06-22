@@ -28,19 +28,23 @@ class TestRequirementsAreSatistifiable(unittest.TestCase):
 
         # When/Then
         requirements = [R("numpy")]
-        self.assertTrue(requirements_are_satisfiable(packages,  requirements))
+        result, _ = requirements_are_satisfiable(packages,  requirements)
+        self.assertTrue(result)
 
         # When/Then
         requirements = [R("numpy < 1.10")]
-        self.assertTrue(requirements_are_satisfiable(packages,  requirements))
+        result, _ = requirements_are_satisfiable(packages,  requirements)
+        self.assertTrue(result)
 
         # When/Then
         requirements = [R("numpy < 1.10"), R("MKL >= 11")]
-        self.assertFalse(requirements_are_satisfiable(packages,  requirements))
+        result, _ = requirements_are_satisfiable(packages,  requirements)
+        self.assertFalse(result)
 
         # When/Then
         requirements = [R("numpy > 1.10"), R("MKL >= 11")]
-        self.assertTrue(requirements_are_satisfiable(packages,  requirements))
+        result, _ = requirements_are_satisfiable(packages,  requirements)
+        self.assertTrue(result)
 
     def test_raises_if_unresolvable_requirement(self):
         # Given
@@ -73,10 +77,10 @@ class TestRequirementsAreSatistifiable(unittest.TestCase):
         modifiers = ConstraintModifiers(allow_newer=("MKL",))
 
         # When/Then
-        self.assertFalse(requirements_are_satisfiable(packages, requirements))
-        self.assertTrue(
-            requirements_are_satisfiable(packages, requirements, modifiers)
-        )
+        result, _ = requirements_are_satisfiable(packages, requirements)
+        self.assertFalse(result)
+        result, _ = requirements_are_satisfiable(packages, requirements, modifiers)
+        self.assertTrue(result)
 
 
 def requirements_from_definition(s):
@@ -95,7 +99,7 @@ class TestMinUnsat(unittest.TestCase):
         packages = packages_from_definition(packages_definition)
 
         def callback(requirements):
-            return requirements_are_satisfiable(packages, requirements)
+            return requirements_are_satisfiable(packages, requirements)[0]
 
         r_min_unsat = [
             Requirement._from_string("numpy < 1.10"),
@@ -125,7 +129,7 @@ class TestMinUnsat(unittest.TestCase):
         packages = packages_from_definition(packages_definition)
 
         def callback(requirements):
-            return requirements_are_satisfiable(packages, requirements)
+            return requirements_are_satisfiable(packages, requirements)[0]
 
         r_min_unsat = [
             Requirement._from_string("MKL < 11"),
@@ -170,7 +174,7 @@ class TestMinUnsat(unittest.TestCase):
         requirements = requirements_from_definition(requirements_definition)
 
         def callback(requirements):
-            return requirements_are_satisfiable(packages, requirements)
+            return requirements_are_satisfiable(packages, requirements)[0]
 
         r_min_unsat = [R("MKL == 11.1.4-1"), R("pandas == 0.12.0-1")]
 
@@ -201,7 +205,7 @@ class TestMinUnsat(unittest.TestCase):
         requirements = requirements_from_definition(requirements_definition)
 
         def callback(requirements):
-            return requirements_are_satisfiable(packages, requirements)
+            return requirements_are_satisfiable(packages, requirements)[0]
 
         r_min_unsat = [R("P"), R("Q"), R("R")]
 
