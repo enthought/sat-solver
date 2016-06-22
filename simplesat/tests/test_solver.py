@@ -178,7 +178,7 @@ class TestSolver(unittest.TestCase):
         result = requirements_are_satisfiable(packages, requirements)
 
         # Then
-        self.assertTrue(result.resolvable)
+        self.assertTrue(result.result)
         self.assertEqual(result.message, "")
 
     def test_requirements_are_not_satisfiable(self):
@@ -212,7 +212,7 @@ class TestSolver(unittest.TestCase):
         result = requirements_are_satisfiable(packages, requirements)
 
         # Then
-        self.assertFalse(result.resolvable)
+        self.assertFalse(result.result)
         self.assertMultiLineEqual(result.message, r_msg)
 
     def test_requirements_are_complete(self):
@@ -235,7 +235,7 @@ class TestSolver(unittest.TestCase):
         result = requirements_are_complete(packages, requirements)
 
         # Then
-        self.assertTrue(result.resolvable)
+        self.assertTrue(result.result)
         self.assertEqual(result.message, "")
 
     def test_requirements_are_not_complete(self):
@@ -263,7 +263,7 @@ class TestSolver(unittest.TestCase):
         result = requirements_are_complete(packages, requirements)
 
         # Then
-        self.assertFalse(result.resolvable)
+        self.assertFalse(result.result)
         self.assertMultiLineEqual(result.message, r_msg)
 
     def test_packages_from_requirements(self):
@@ -343,7 +343,7 @@ class TestSolver(unittest.TestCase):
         result = packages_are_consistent(packages)
 
         # Then
-        self.assertFalse(result.resolvable)
+        self.assertFalse(result.result)
         self.assertMultiLineEqual(result.message, r_msg)
 
     def test_missing_direct_dependency_fails(self):
