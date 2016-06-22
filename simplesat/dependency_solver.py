@@ -134,6 +134,7 @@ def requirements_are_satisfiable(packages, requirements, modifiers=None):
         Return True if the `requirements` can be satisfied by the `packages`.
     """
     modifiers = modifiers or ConstraintModifiers()
+    Result = collections.namedtuple("Result", "resolvable message")
 
     request = Request(modifiers=modifiers)
     for requirement in requirements:
@@ -143,9 +144,9 @@ def requirements_are_satisfiable(packages, requirements, modifiers=None):
 
     try:
         DependencySolver(pool, repositories, []).solve(request)
-        return True, ""
+        return Result(resolvable=True, message="")
     except SatisfiabilityError as e:
-        return False, e.unsat.to_string(pool=pool)
+        return Result(resolvable=False, message=e.unsat.to_string(pool=pool))
 
 
 def satisfy_requirements(packages, requirements, modifiers=None):

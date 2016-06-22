@@ -175,11 +175,11 @@ class TestSolver(unittest.TestCase):
         requirements = [job.requirement for job in scenario.request.jobs]
 
         # When
-        result, err_msg = requirements_are_satisfiable(packages, requirements)
+        result = requirements_are_satisfiable(packages, requirements)
 
         # Then
-        self.assertTrue(result)
-        self.assertEqual(err_msg, "")
+        self.assertTrue(result.resolvable)
+        self.assertEqual(result.message, "")
 
     def test_requirements_are_not_satisfiable(self):
         # Given
@@ -209,11 +209,11 @@ class TestSolver(unittest.TestCase):
         requirements = [job.requirement for job in scenario.request.jobs]
 
         # When
-        result, err_msg = requirements_are_satisfiable(packages, requirements)
+        result = requirements_are_satisfiable(packages, requirements)
 
         # Then
-        self.assertFalse(result)
-        self.assertMultiLineEqual(err_msg, r_msg)
+        self.assertFalse(result.resolvable)
+        self.assertMultiLineEqual(result.message, r_msg)
 
     def test_requirements_are_complete(self):
         # Given
@@ -232,11 +232,11 @@ class TestSolver(unittest.TestCase):
 
         # When
         requirements = [job.requirement for job in scenario.request.jobs]
-        result, err_msg = requirements_are_complete(packages, requirements)
+        result = requirements_are_complete(packages, requirements)
 
         # Then
-        self.assertTrue(result)
-        self.assertEqual(err_msg, "")
+        self.assertTrue(result.resolvable)
+        self.assertEqual(result.message, "")
 
     def test_requirements_are_not_complete(self):
         # Given
@@ -260,11 +260,11 @@ class TestSolver(unittest.TestCase):
 
         # When
         requirements = [job.requirement for job in scenario.request.jobs]
-        result, err_msg = requirements_are_complete(packages, requirements)
+        result = requirements_are_complete(packages, requirements)
 
         # Then
-        self.assertFalse(result)
-        self.assertMultiLineEqual(err_msg, r_msg)
+        self.assertFalse(result.resolvable)
+        self.assertMultiLineEqual(result.message, r_msg)
 
     def test_packages_from_requirements(self):
         # Given
@@ -340,11 +340,11 @@ class TestSolver(unittest.TestCase):
 
         # When
         packages = tuple(p for r in scenario.remote_repositories for p in r)
-        result, err_msg = packages_are_consistent(packages)
+        result = packages_are_consistent(packages)
 
         # Then
-        self.assertFalse(result)
-        self.assertMultiLineEqual(err_msg, r_msg)
+        self.assertFalse(result.resolvable)
+        self.assertMultiLineEqual(result.message, r_msg)
 
     def test_missing_direct_dependency_fails(self):
         # Given
