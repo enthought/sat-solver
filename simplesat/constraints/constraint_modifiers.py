@@ -107,6 +107,7 @@ class ConstraintModifiers(object):
         disallowed = (type(b""), type(u""))
         if isinstance(packages, disallowed):
             raise TypeError("`packages` should be a collection, not a string.")
+        packages = set(packages)
         self.allow_any.difference_update(packages)
         self.allow_newer.difference_update(packages)
         self.allow_older.difference_update(packages)
