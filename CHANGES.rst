@@ -2,8 +2,7 @@
 ``simplesat`` CHANGELOG
 =======================
 
-Changes since 0.5.0
-===================
+Released on July 12th, 2016.
 
 Version 0.5.0
 =============
