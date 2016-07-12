@@ -96,6 +96,22 @@ class ConstraintModifiers(object):
         self.allow_newer.update(other_modifiers.allow_newer)
         self.allow_older.update(other_modifiers.allow_older)
 
+    def remove(self, packages):
+        """ Remove all modifiers related to `packages`.
+
+        Parameters
+        ----------
+        packages : an iterable of strings
+            The package names that should be completely removed.
+        """
+        disallowed = (type(b""), type(u""))
+        if isinstance(packages, disallowed):
+            raise TypeError("`packages` should be a collection, not a string.")
+        packages = set(packages)
+        self.allow_any.difference_update(packages)
+        self.allow_newer.difference_update(packages)
+        self.allow_older.difference_update(packages)
+
     @property
     def targets(self):
         return set.union(self.allow_newer, self.allow_any, self.allow_older)
