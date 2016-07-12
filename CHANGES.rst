@@ -2,8 +2,19 @@
 ``simplesat`` CHANGELOG
 =======================
 
-Changes since 0.4.0
+Changes since 0.5.0
 ===================
+
+Version 0.5.0
+=============
+
+Features
+--------
+
+* Return error message text when checking for satisfiability/completeness of
+  requirements (#231)
+* Add `remove` method to ConstraintModifiers that deletes constraints
+  associated with a particular package (#229)
 
 Version 0.4.0
 =============
