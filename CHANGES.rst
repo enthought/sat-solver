@@ -2,6 +2,9 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Changes since 0.5.0
+===================
+
 Version 0.5.0
 =============
 
