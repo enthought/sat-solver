@@ -7,9 +7,9 @@ from setup_utils import parse_version, write_version_py
 
 MAJOR = 0
 MINOR = 5
-MICRO = 0
+MICRO = 1
 
-IS_RELEASED = True
+IS_RELEASED = False
 
 
 INSTALL_REQUIRES = [
