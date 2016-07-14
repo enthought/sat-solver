@@ -26,7 +26,7 @@ def compute_dependencies(repositories, requirement, transitive=False):
         the given requirement depend on.
     """
     pool = Pool(repositories)
-    package_ids = _package_ids_from_repositories(pool, repositories)
+    package_ids = set(pool.iter_package_ids())
 
     neighbors = _compute_dependency_dict(pool, package_ids, transitive)
     dependencies = _neighbors_for_requirement(pool, neighbors, requirement)
@@ -52,7 +52,7 @@ def compute_reverse_dependencies(repositories, requirement, transitive=False):
         packages satisfying the given requirement.
     """
     pool = Pool(repositories)
-    package_ids = _package_ids_from_repositories(pool, repositories)
+    package_ids = set(pool.iter_package_ids())
     neighbors = _compute_dependency_dict(pool, package_ids, transitive)
 
     # Reverse mapping so that package ids point to the packages which depend
@@ -117,9 +117,3 @@ def _package_ids_satisfying_requirement(pool, requirement):
     """ Yield package ids found in `pool` which satisfy `requirement`. """
     for package in pool.what_provides(requirement):
         yield pool.package_id(package)
-
-
-def _package_ids_from_repositories(pool, repositories):
-    """ Return set of package ids in `pool` for all packages in the given repos
-    """
-    return set(pool.package_id(pkg) for repo in repositories for pkg in repo)

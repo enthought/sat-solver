@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
+import six
+
 from .utils import DefaultOrderedDict
-from simplesat.constraints import (
-    ConstraintModifiers, Requirement, modify_requirement
-)
+from simplesat.constraints import Requirement, modify_requirement
 from simplesat.errors import InvalidConstraint
 
 
@@ -118,6 +118,16 @@ class Pool(object):
 
     def name_to_packages(self, name):
         return tuple(self._packages_by_name_[name])
+
+    def iter_packages(self):
+        """ Iterate over all PackageMetadata objects. """
+        for package in six.iterkeys(self._package_to_id_):
+            yield package
+
+    def iter_package_ids(self):
+        """ Iterate over all package ids. """
+        for pid in six.iterkeys(self._id_to_package_):
+            yield pid
 
     @property
     def package_ids(self):
