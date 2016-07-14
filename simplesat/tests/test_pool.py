@@ -176,3 +176,27 @@ class TestPool(unittest.TestCase):
 
         # Then
         Pool([repository])
+
+    def test_iter_packages(self):
+        # Given
+        numpy_packages = self.packages_from_definition(NUMPY_PACKAGES)
+        repository = Repository(numpy_packages)
+
+        # When
+        pool = Pool([repository])
+
+        # Then
+        packages = set(pool.iter_packages())
+        self.assertEqual(packages, set(numpy_packages))
+
+    def test_iter_package_ids(self):
+        # Given
+        numpy_packages = self.packages_from_definition(NUMPY_PACKAGES)
+        repository = Repository(numpy_packages)
+
+        # When
+        pool = Pool([repository])
+
+        # Then
+        package_ids = set(pool.iter_package_ids())
+        self.assertEqual(package_ids, set(pool._id_to_package_.keys()))
