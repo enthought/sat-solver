@@ -7,9 +7,9 @@ from setup_utils import parse_version, write_version_py
 
 MAJOR = 0
 MINOR = 5
-MICRO = 1
+MICRO = "0.post1"
 
-IS_RELEASED = False
+IS_RELEASED = True
 
 
 INSTALL_REQUIRES = [
