@@ -2,10 +2,20 @@
 ``simplesat`` CHANGELOG
 =======================
 
-Released on July 12th, 2016.
+Version 0.5.0.post1
+===================
+
+Released on July 15th, 2016.
+
+Features
+--------
+
+* Backport support for post-release version number
 
 Version 0.5.0
 =============
+
+Released on July 12th, 2016.
 
 Features
 --------
