@@ -10,6 +10,7 @@ MINOR = 5
 MICRO = 0
 
 IS_RELEASED = False
+POST_RELEASE = None
 
 
 INSTALL_REQUIRES = [
@@ -46,7 +47,9 @@ PACKAGE_DATA = {
 
 if __name__ == "__main__":
     version_file = os.path.join("simplesat", "_version.py")
-    write_version_py(version_file, MAJOR, MINOR, MICRO, IS_RELEASED)
+    write_version_py(
+        version_file, MAJOR, MINOR, MICRO, IS_RELEASED, post_release=POST_RELEASE
+    )
     version = parse_version(version_file)
 
     setup(

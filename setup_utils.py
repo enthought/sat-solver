@@ -13,7 +13,7 @@ def parse_version(path):
 
 
 def write_version_py(filename, major, minor, micro, is_released,
-                     previous_version=None):
+                     previous_version=None, post_release=None):
     template = """\
 # THIS FILE IS GENERATED FROM SETUP_EXT
 version = '{final_version}'
@@ -25,7 +25,10 @@ msi_version = '{msi_version}'
 
 version_info = {version_info}
 """
-    version = full_version = "{0}.{1}.{2}".format(major, minor, micro)
+    base_version = "{0}.{1}.{2}".format(major, minor, micro)
+    if post_release is not None:
+        base_version += ".{0}".format(post_release)
+    version = full_version = base_version
     is_released = is_released
 
     if not os.path.exists('.git'):
