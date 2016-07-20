@@ -2,8 +2,17 @@
 ``simplesat`` CHANGELOG
 =======================
 
-Changes since 0.5.0
+Changes since 0.6.0
 ===================
+
+Version 0.6.0
+=============
+
+Features
+--------
+
+* Add support for post-release version number (#239)
+* Add package and package id iteration to Pool (#237)
 
 Version 0.5.0
 =============
