@@ -8,6 +8,8 @@ Changes since 0.6.0
 Version 0.6.0
 =============
 
+Released on July 20th, 2016.
+
 Features
 --------
 
@@ -16,6 +18,8 @@ Features
 
 Version 0.5.0
 =============
+
+Released on July 12th, 2016.
 
 Features
 --------
@@ -27,6 +31,8 @@ Features
 
 Version 0.4.0
 =============
+
+Released on 1st June 2016.
 
 Features
 --------
@@ -47,6 +53,8 @@ Bug fixes
 
 Version 0.3.0
 =============
+
+Released on 5th May 2016.
 
 Features
 --------
