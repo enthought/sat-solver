@@ -8,6 +8,8 @@ Changes since 0.6.0
 Version 0.6.0
 =============
 
+Released on July 20th, 2016.
+
 Features
 --------
 
