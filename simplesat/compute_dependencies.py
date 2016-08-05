@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import six
 
-from simplesat import Pool
+from simplesat import InstallRequirement, Pool
 from simplesat.utils.graph import (package_lit_dependency_graph,
                                    transitive_neighbors)
 
@@ -61,6 +61,42 @@ def compute_reverse_dependencies(repositories, requirement, transitive=False):
     dependencies = _neighbors_for_requirement(pool, reverse_neighbors,
                                               requirement)
     return dependencies
+
+
+def compute_leaf_packages(repositories):
+    """ Compute the leaf packages in `repositories`. Leaf packages are packages
+    with no reverse dependencies.
+
+    Parameters
+    ----------------
+    repositories : iterable of Repository objects
+
+    Returns
+    -----------
+    dependencies : set
+        Set of leaf packages in the given repositories.
+    """
+    pool = Pool(repositories)
+    package_ids = set(pool.iter_package_ids())
+    neighbors = _compute_dependency_dict(pool, package_ids, transitive=False)
+
+    # Reverse mapping so that package ids point to the packages which depend
+    # on them
+    reverse_neighbors = _reverse_mapping(neighbors)
+
+    leaf_packages = set()
+    for repository in repositories:
+        for package in repository:
+            package_string = package.name + "-" + str(package.version)
+            requirement = InstallRequirement.from_package_string(
+                package_string
+            )
+            dependencies = _neighbors_for_requirement(pool, reverse_neighbors,
+                                                      requirement)
+            if not dependencies:
+                leaf_packages.add(package)
+
+    return leaf_packages
 
 
 def _compute_dependency_dict(pool, package_ids, transitive=False):
