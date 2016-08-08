@@ -73,16 +73,13 @@ def compute_leaf_packages(repositories):
     reverse_neighbors = _reverse_neighbors_in_repositories(pool)
 
     leaf_packages = set()
-    for repository in repositories:
-        for package in repository:
-            package_string = package.name + "-" + str(package.version)
-            requirement = InstallRequirement.from_package_string(
-                package_string
-            )
-            dependencies = _neighbors_for_requirement(pool, reverse_neighbors,
-                                                      requirement)
-            if not dependencies:
-                leaf_packages.add(package)
+    for package in pool.iter_packages():
+        package_string = package.name + "-" + str(package.version)
+        requirement = InstallRequirement.from_package_string(package_string)
+        dependencies = _neighbors_for_requirement(pool, reverse_neighbors,
+                                                  requirement)
+        if not dependencies:
+            leaf_packages.add(package)
 
     return leaf_packages
 
