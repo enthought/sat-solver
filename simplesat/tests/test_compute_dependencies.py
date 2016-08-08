@@ -24,6 +24,11 @@ PACKAGE_DEF_1 = dedent("""\
     E 1.0.1-1
 """)
 
+PACKAGE_DEF_2 = dedent("""\
+    B 0.0.0-1; depends (D == 0.0.0-2)
+    C 0.0.0-1; depends (E >= 1.0.0)
+""")
+
 
 class TestComputeDependencies(unittest.TestCase):
 
@@ -117,7 +122,8 @@ class TestComputeLeafPackages(unittest.TestCase):
     def setUp(self):
         repo_0 = Repository(packages_from_definition(PACKAGE_DEF_0))
         repo_1 = Repository(packages_from_definition(PACKAGE_DEF_1))
-        self.repos = [repo_0, repo_1]
+        repo_2 = Repository(packages_from_definition(PACKAGE_DEF_2))
+        self.repos = [repo_0, repo_1, repo_2]
 
     def test_simple(self):
         expected_leaf_packages = packages_from_definition(
