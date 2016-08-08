@@ -8,6 +8,8 @@ Changes since 0.7.0
 Version 0.7.0
 =============
 
+Released on August 8th, 2016.
+
 Features
 --------
 
