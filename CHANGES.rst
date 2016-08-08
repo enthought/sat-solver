@@ -2,8 +2,16 @@
 ``simplesat`` CHANGELOG
 =======================
 
-Changes since 0.6.0
+Changes since 0.7.0
 ===================
+
+Version 0.7.0
+=============
+
+Features
+--------
+
+* Add function to compute the leaf packages in a set of repositories.
 
 Version 0.6.0
 =============
