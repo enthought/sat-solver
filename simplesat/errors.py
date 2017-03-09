@@ -47,3 +47,23 @@ class SatisfiabilityError(SolverException):
     @property
     def reason(self):
         return self.unsat.to_string()
+
+
+class SatisfiabilityErrorWithHint(SatisfiabilityError):
+    """ A satistibiality error class with information about minimally
+    unsatisfiable problem.
+
+    This is used when one wants to give more human-readable error messages
+    about conflicts and other satistiability issues.
+    """
+    def __init__(self, unsat, conflicting_jobs):
+        self.conflicting_jobs = conflicting_jobs
+        super(SatisfiabilityErrorWithHint, self).__init__(unsat)
+
+    @property
+    def hint_pretty_string(self):
+        return (
+            u"The following jobs are conflicting:\n{}".format(
+                u"\n".join("    {}".format(str(job)) for job in self.conflicting_jobs)
+            )
+        )

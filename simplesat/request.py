@@ -17,6 +17,9 @@ class _Job(object):
     requirement = attr(validator=instance_of(Requirement))
     kind = attr(validator=instance_of(JobType))
 
+    def __str__(self):
+        return u"{} {}".format(self.kind.name, self.requirement)
+
 
 @attributes
 class Request(object):

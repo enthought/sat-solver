@@ -6,8 +6,8 @@ import six
 from simplesat.constraints import ConstraintModifiers
 from simplesat.constraints.requirement import InstallRequirement
 from simplesat.errors import (
-    NoPackageFound, SatisfiabilityError, UnexpectedlySatisfiable
-)
+    NoPackageFound, SatisfiabilityError, SatisfiabilityErrorWithHint,
+    UnexpectedlySatisfiable)
 from simplesat.pool import Pool
 from simplesat.repository import Repository
 from simplesat.request import JobType, Request
@@ -406,6 +406,44 @@ class DependencySolver(object):
             )
 
         return Transaction(self._pool, solution_ids, installed_package_ids)
+
+    def solve_with_hint(self, request):
+        """Given a request return a Transaction that would satisfy it.
+
+        If the solver cannot find a solution, it will raise a
+        SatisfiabilityErrorWithHint exception, that contains enough information
+        to give a human-readable error message.
+
+        Parameters
+        ----------
+        request : Request
+            The request that should be satisifed.
+
+        Returns
+        -------
+        Transaction
+            The operations to apply to resolve the `request`.
+
+        Raises
+        ------
+        SatisfiabilityErrorWithHint
+            If no resolution is found.
+        """
+        try:
+            return self.solve(request)
+        except SatisfiabilityError as exc:
+            def callback(jobs, modifiers=None):
+                modifiers = modifiers or ConstraintModifiers()
+                request = Request(modifiers=modifiers)
+                for job in jobs:
+                    request.jobs.append(job)
+                try:
+                    self.solve(request)
+                    return True
+                except SatisfiabilityError:
+                    return False
+            conflicting_jobs = minimal_unsatisfiable_subset(request.jobs, callback)
+            raise SatisfiabilityErrorWithHint(exc.unsat, conflicting_jobs)
 
     def _create_rules_and_initialize_policy(self, request):
         pool = self._pool
