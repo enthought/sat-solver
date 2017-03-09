@@ -2,8 +2,22 @@
 ``simplesat`` CHANGELOG
 =======================
 
-Changes since 0.7.0
-===================
+Version 0.8.0
+=============
+
+Released on March 9th, 2017.
+
+Features
+--------
+
+* new upgrade job kind, to update every installed package to the latest (#253)
+* new solver method solve_with_hint for a more human-readable message for
+  unsatisfiable problems (#254)
+
+Internals
+---------
+
+* update runtime dependencies constraints to latest okonomiyaki (#252)
 
 Version 0.7.0
 =============
