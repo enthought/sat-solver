@@ -44,7 +44,7 @@ class SolverHelpersMixin(object):
     def resolve(self, request, strict=False):
         pool = Pool([self.repository, self.installed_repository])
         solver = DependencySolver(
-            pool, self.repository, self.installed_repository,
+            pool, [self.repository], self.installed_repository,
             use_pruning=False, strict=strict
         )
         return solver.solve(request)
@@ -52,7 +52,7 @@ class SolverHelpersMixin(object):
     def resolve_with_hint(self, request, strict=False):
         pool = Pool([self.repository, self.installed_repository])
         solver = DependencySolver(
-            pool, self.repository, self.installed_repository,
+            pool, [self.repository], self.installed_repository,
             use_pruning=False, strict=strict
         )
         return solver.solve_with_hint(request)
@@ -516,6 +516,65 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
         with self.assertRaises(MissingInstallRequires):
             self.resolve(request, strict=True)
 
+    def test_upgrade_simple(self):
+        # Given
+        mkl_11_3_1 = P(u"mkl 11.3.1-1")
+        mkl_2017_0_1_1 = P(u"mkl 2017.0.1-1")
+        mkl_2017_0_1_2 = P(u"mkl 2017.0.1-2")
+
+        numpy_1_10_4 = P(u"numpy 1.10.4-1; depends (mkl ^= 11.3.1)")
+        numpy_1_11_3 = P(u"numpy 1.11.3-1; depends (mkl ^= 2017.0.1)")
+
+        scipy_0_17_1 = P(u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
+        scipy_0_18_1 = P(u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
+
+        self.repository.update([
+            mkl_11_3_1, mkl_2017_0_1_1, mkl_2017_0_1_2, numpy_1_10_4,
+            numpy_1_11_3, scipy_0_17_1, scipy_0_18_1
+        ])
+        self.installed_repository.update([mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
+
+        r_operations = [
+            RemoveOperation(scipy_0_17_1),
+            RemoveOperation(numpy_1_10_4),
+            RemoveOperation(mkl_11_3_1),
+            InstallOperation(mkl_2017_0_1_2),
+            InstallOperation(numpy_1_11_3),
+            InstallOperation(scipy_0_18_1),
+        ]
+
+        # When
+        request = Request()
+        request.upgrade()
+
+        transaction = self.resolve(request)
+
+        # Then
+        self.assertEqualOperations(transaction.operations, r_operations)
+
+    def test_upgrade_fail(self):
+        # Given
+        mkl_11_3_1 = P(u"mkl 11.3.1-1")
+        mkl_2017_0_1_1 = P(u"mkl 2017.0.1-1")
+        mkl_2017_0_1_2 = P(u"mkl 2017.0.1-2")
+
+        numpy_1_10_4 = P(u"numpy 1.10.4-1; depends (mkl ^= 11.3.1)")
+
+        scipy_0_17_1 = P(u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
+
+        self.repository.update([
+            mkl_11_3_1, mkl_2017_0_1_1, mkl_2017_0_1_2, numpy_1_10_4,
+            scipy_0_17_1
+        ])
+        self.installed_repository.update([mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
+
+        # When/Then
+        request = Request()
+        request.upgrade()
+
+        with self.assertRaises(SatisfiabilityError):
+            self.resolve(request)
+
 
 class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
     def test_no_conflict(self):
@@ -572,3 +631,36 @@ class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
 
         self.assertMultiLineEqual(
             ctx.exception.hint_pretty_string, r_hint_pretty_string)
+
+    def test_upgrade_fail(self):
+        # Given
+        mkl_11_3_1 = P(u"mkl 11.3.1-1")
+        mkl_2017_0_1_1 = P(u"mkl 2017.0.1-1")
+        mkl_2017_0_1_2 = P(u"mkl 2017.0.1-2")
+
+        numpy_1_10_4 = P(u"numpy 1.10.4-1; depends (mkl ^= 11.3.1)")
+
+        scipy_0_17_1 = P(u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
+
+        self.repository.update([
+            mkl_11_3_1, mkl_2017_0_1_1, mkl_2017_0_1_2, numpy_1_10_4,
+            scipy_0_17_1
+        ])
+        self.installed_repository.update([mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
+
+        r_hint_pretty_string = textwrap.dedent(u"""\
+            The following jobs are conflicting:
+                install mkl == 2017.0.1-2
+                install numpy == 1.10.4-1"""
+        )
+
+        # When/Then
+        request = Request()
+        request.upgrade()
+
+        with self.assertRaises(SatisfiabilityErrorWithHint) as ctx:
+            self.resolve_with_hint(request)
+
+        self.assertMultiLineEqual(
+            ctx.exception.hint_pretty_string, r_hint_pretty_string)
+

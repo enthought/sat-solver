@@ -1,21 +1,32 @@
+import enum
+
 from attr import attr, attributes, Factory
-from attr.validators import instance_of
-from enum import Enum
+from attr.validators import instance_of, optional
 
 from .constraints import Requirement, ConstraintModifiers
 
 
-class JobType(Enum):
+@enum.unique
+class JobType(enum.Enum):
     install = 1
     remove = 2
     soft_update = 3
     hard_update = 4
+    upgrade = 5
 
 
 @attributes
 class _Job(object):
-    requirement = attr(validator=instance_of(Requirement))
+    requirement = attr(validator=optional(instance_of(Requirement)))
     kind = attr(validator=instance_of(JobType))
+
+    def __attrs_post_init__(self):
+        if self.requirement is None and self.kind != JobType.upgrade:
+            raise ValueError(
+                u"_Job requirement cannot be none if kind != {}",format(
+                    JobType.upgrade
+                )
+            )
 
     def __str__(self):
         return u"{} {}".format(self.kind.name, self.requirement)
@@ -60,6 +71,9 @@ class Request(object):
     def remove(self, requirement):
         self._add_job(requirement, JobType.remove)
 
+    def upgrade(self):
+        self._add_job(None, JobType.upgrade)
+
     def hard_update(self, requirement):
         self._add_job(requirement, JobType.hard_update)
 
@@ -76,4 +90,10 @@ class Request(object):
         self.modifiers.allow_older.add(package_name)
 
     def _add_job(self, requirement, job_type):
+        if len(self.jobs) > 0:
+            if (job_type is JobType.upgrade or
+                any(job.kind == JobType.upgrade for job in self.jobs)
+            ):
+                raise ValueError(
+                    u"Requests with upgrade job can only have one job")
         self.jobs.append(_Job(requirement, job_type))
