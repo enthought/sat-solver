@@ -1,6 +1,7 @@
 import collections
 import itertools
 
+import attr
 import six
 
 from simplesat.constraints import ConstraintModifiers
@@ -355,6 +356,13 @@ class DependencySolver(object):
                  use_pruning=True, strict=False):
         self._pool = pool
         self._installed_repository = installed_repository
+
+        if isinstance(remote_repositories, Repository):
+            raise ValueError(
+                u"remote_repositories should be a sequence of "
+                 "repositories, not a repository"
+            )
+
         self._remote_repositories = remote_repositories
         self._last_rules_time = timed_context("Generate Rules")
         self._last_solver_init_time = timed_context("Solver Init")
@@ -381,6 +389,10 @@ class DependencySolver(object):
         SatisfiabilityError
             If no resolution is found.
         """
+        request = _convert_upgrade_request_if_needed(
+            request, self._remote_repositories, self._installed_repository
+        )
+
         modifiers = request.modifiers
         self._pool.modifiers = modifiers if modifiers.targets else None
         with self._last_rules_time:
@@ -432,13 +444,18 @@ class DependencySolver(object):
         try:
             return self.solve(request)
         except SatisfiabilityError as exc:
-            def callback(jobs, modifiers=None):
-                modifiers = modifiers or ConstraintModifiers()
-                request = Request(modifiers=modifiers)
+            # XXX: we recompute the upgrade request here so that we get the
+            # corresponding jobs to be used by minimal_unsatisfiable_subset.
+            request = _convert_upgrade_request_if_needed(
+                request, self._remote_repositories, self._installed_repository
+            )
+
+            def callback(jobs):
+                callback_request = Request(modifiers=request.modifiers)
                 for job in jobs:
-                    request.jobs.append(job)
+                    callback_request.jobs.append(job)
                 try:
-                    self.solve(request)
+                    self.solve(callback_request)
                     return True
                 except SatisfiabilityError:
                     return False
@@ -492,6 +509,30 @@ class DependencySolver(object):
             strict=self.strict)
 
         return all_requirement_ids, list(rules_generator.iter_rules()), policy
+
+
+def _convert_upgrade_request_if_needed(request, remote_repositories,
+                                       installed_repository):
+
+    if len(request.jobs) == 1 and request.jobs[0].kind == JobType.upgrade:
+        upgrade_request = attr.assoc(request, jobs=[])
+        remote_repository = Repository()
+        for repository in remote_repositories:
+            remote_repository.update(repository)
+
+        latest_packages = (
+            remote_repository.find_packages(package.name)[-1]
+            for package in installed_repository
+        )
+
+        for p in latest_packages:
+            upgrade_request.install(
+                InstallRequirement._from_string("{} == {}".format(p.name, p.version))
+            )
+
+        return upgrade_request
+    else:
+        return request
 
 
 def _connected_packages(solution, root_ids, pool):
