@@ -13,7 +13,9 @@ from simplesat.dependency_solver import (
     requirements_are_satisfiable, requirements_are_complete,
     satisfy_requirements, simplify_requirements,
 )
-from simplesat.errors import MissingInstallRequires, SatisfiabilityError
+from simplesat.errors import (
+    MissingInstallRequires, SatisfiabilityError, SatisfiabilityErrorWithHint
+)
 from simplesat.pool import Pool
 from simplesat.repository import Repository
 from simplesat.request import Request
@@ -27,7 +29,7 @@ R = InstallRequirement._from_string
 P = PrettyPackageStringParser(EnpkgVersion.from_string).parse_to_package
 
 
-class TestSolver(unittest.TestCase):
+class SolverHelpersMixin(object):
     def setUp(self):
         self.repository = Repository()
         self.installed_repository = Repository()
@@ -47,9 +49,19 @@ class TestSolver(unittest.TestCase):
         )
         return solver.solve(request)
 
+    def resolve_with_hint(self, request, strict=False):
+        pool = Pool([self.repository, self.installed_repository])
+        solver = DependencySolver(
+            pool, self.repository, self.installed_repository,
+            use_pruning=False, strict=strict
+        )
+        return solver.solve_with_hint(request)
+
     def assertEqualOperations(self, operations, r_operations):
         self.assertEqual(operations, r_operations)
 
+
+class TestSolver(SolverHelpersMixin, unittest.TestCase):
     def test_simple_install(self):
         # Given
         mkl = self.package_factory(u"mkl 10.3-1")
@@ -503,3 +515,60 @@ class TestSolver(unittest.TestCase):
         # Then
         with self.assertRaises(MissingInstallRequires):
             self.resolve(request, strict=True)
+
+
+class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
+    def test_no_conflict(self):
+        # Given
+        mkl_2017_0_1_1 = P(u"mkl 2017.0.1-1")
+        numpy_1_11_3 = P(u"numpy 1.11.3-1; depends (mkl ^= 2017.0.1)")
+        scipy_0_18_1 = P(u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
+
+        r_operations = [
+            InstallOperation(mkl_2017_0_1_1),
+            InstallOperation(numpy_1_11_3),
+            InstallOperation(scipy_0_18_1),
+        ]
+
+        self.repository.update([mkl_2017_0_1_1, numpy_1_11_3, scipy_0_18_1])
+
+        request = Request()
+        request.install(R(u"scipy >= 0.18.0"))
+        request.install(R(u"numpy >= 1.10.0"))
+
+
+        # When
+        transaction = self.resolve_with_hint(request)
+
+        # Then
+        self.assertEqualOperations(transaction.operations, r_operations)
+
+    def test_direct_dependency_conflict(self):
+        # Given
+        mkl_11_3_1 = P(u"mkl 11.3.1-1")
+        mkl_2017_0_1_1 = P(u"mkl 2017.0.1-1")
+        numpy_1_11_3 = P(u"numpy 1.11.3-1; depends (mkl ^= 2017.0.1)")
+        scipy_0_18_1 = P(u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
+
+        self.repository.update([
+            mkl_11_3_1, mkl_2017_0_1_1, numpy_1_11_3, scipy_0_18_1,
+        ])
+
+        request = Request()
+        request.install(R(u"scipy >= 0.18.0"))
+        request.install(R(u"numpy >= 1.10.0"))
+        request.install(R(u"mkl < 12"))  # MKL < 12 conflicts with scipy >= 0.18.0
+
+        r_hint_pretty_string = textwrap.dedent(u"""\
+            The following jobs are conflicting:
+                install numpy >= 1.10.0-0
+                install mkl < 12-0"""
+        )
+
+
+        # When/Then
+        with self.assertRaises(SatisfiabilityErrorWithHint) as ctx:
+            self.resolve_with_hint(request)
+
+        self.assertMultiLineEqual(
+            ctx.exception.hint_pretty_string, r_hint_pretty_string)
