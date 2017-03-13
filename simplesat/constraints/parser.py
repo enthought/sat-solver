@@ -200,10 +200,9 @@ class _RawRequirementParser(object):
 
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
-                if not isinstance(distribution, DistributionNameToken):
-                    if re.match(_DISTRIBUTION_R, distribution.value) is None:
-                        raise InvalidConstraint(
-                            msg + ' (bad distirbution name)')
+                if (not isinstance(distribution, DistributionNameToken) and
+                        re.match(_DISTRIBUTION_R, distribution.value) is None):
+                    raise InvalidConstraint(msg + ' (bad distirbution name)')
                 if not isinstance(version, VersionToken):
                     raise InvalidConstraint(msg + ' (bad version)')
                 name = distribution.value
