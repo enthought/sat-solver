@@ -17,7 +17,7 @@ from simplesat.errors import InvalidConstraint
 # case-insensitivity into the regex manually.
 _DISTRIBUTION_NAME_R = r"(?!\.)(?:\.?\w+)+(?<!\.)"
 _DISTRIBUTION_R = "({})".format(_DISTRIBUTION_NAME_R)
-_VERSION_R = r"((?=\d){}(?:-\w+)?)".format(_DISTRIBUTION_NAME_R)
+_VERSION_R = r"((?=\d){}(?:-\w+)?\b(?!\s))".format(_DISTRIBUTION_NAME_R)
 _EQUAL_R = r"=="
 _GEQ_R = r">="
 _GT_R = r">"
@@ -200,8 +200,7 @@ class _RawRequirementParser(object):
 
             if len(requirement_block) == 3:
                 distribution, operator, version = requirement_block
-                if (not isinstance(distribution, DistributionNameToken) and
-                        re.match(_DISTRIBUTION_R, distribution.value) is None):
+                if not isinstance(distribution, DistributionNameToken):
                     raise InvalidConstraint(msg + ' (bad distirbution name)')
                 if not isinstance(version, VersionToken):
                     raise InvalidConstraint(msg + ' (bad version)')
