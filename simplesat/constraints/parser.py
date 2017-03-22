@@ -17,7 +17,7 @@ from simplesat.errors import InvalidConstraint
 # case-insensitivity into the regex manually.
 _DISTRIBUTION_NAME_R = r"(?!\.)(?:\.?\w+)+(?<!\.)"
 _DISTRIBUTION_R = "({})".format(_DISTRIBUTION_NAME_R)
-_VERSION_R = r"((?=\d){}(?:-\w+)?)".format(_DISTRIBUTION_NAME_R)
+_VERSION_R = r"((?=\d){}(?:-\w+)?$)".format(_DISTRIBUTION_NAME_R)
 _EQUAL_R = r"=="
 _GEQ_R = r">="
 _GT_R = r">"
