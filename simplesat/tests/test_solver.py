@@ -575,6 +575,33 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
         with self.assertRaises(SatisfiabilityError):
             self.resolve(request)
 
+    def test_upgrade_no_candidate(self):
+        # Given
+        mkl_11_3_1 = P(u"mkl 11.3.1-1")
+        mkl_2017_0_1_1 = P(u"mkl 2017.0.1-1")
+        mkl_2017_0_1_2 = P(u"mkl 2017.0.1-2")
+
+        numpy_1_10_4 = P(u"numpy 1.10.4-1; depends (mkl ^= 11.3.1)")
+
+        scipy_0_17_1 = P(u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
+
+        gnureadline_6_3 = P(u"gnureadline 6.3-1")
+
+        # gnureadline is not available in the remote repository
+        self.repository.update([
+            mkl_11_3_1, mkl_2017_0_1_1, mkl_2017_0_1_2, numpy_1_10_4,
+            scipy_0_17_1
+        ])
+        self.installed_repository.update([mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
+        self.installed_repository.update([gnureadline_6_3])
+
+        # When/Then
+        request = Request()
+        request.upgrade()
+
+        with self.assertRaises(SatisfiabilityError):
+            self.resolve(request)
+
 
 class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
     def test_no_conflict(self):
