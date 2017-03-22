@@ -2,6 +2,18 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Version 0.8.1
+=============
+
+Released on March 22nd, 2017.
+
+Bug fixes
+---------
+
+* fix edge case in upgrade-all, when no remote candidate is available for an
+  already installed package (#261)
+* fix parsing of requirements that start with a digit (#260)
+
 Version 0.8.0
 =============
 
