@@ -9,7 +9,7 @@ MAJOR = 0
 MINOR = 8
 MICRO = 1
 
-IS_RELEASED = False
+IS_RELEASED = True
 POST_RELEASE = None
 
 
