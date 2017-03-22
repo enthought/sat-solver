@@ -520,10 +520,14 @@ def _convert_upgrade_request_if_needed(request, remote_repositories,
         for repository in remote_repositories:
             remote_repository.update(repository)
 
-        latest_packages = (
-            remote_repository.find_packages(package.name)[-1]
-            for package in installed_repository
-        )
+        latest_packages = []
+        for package in installed_repository:
+            candidates = remote_repository.find_packages(package.name)
+            # candidates may be empty (e.g. when repository configuration
+            # changed, and an installed package is coming from a repository not
+            # configured in the remote list)
+            if len(candidates) > 0:
+                latest_packages.append(candidates[-1])
 
         for p in latest_packages:
             upgrade_request.install(
