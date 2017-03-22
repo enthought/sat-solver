@@ -463,6 +463,7 @@ class TestParseScaryPackages(unittest.TestCase):
 
     # NOTE: gathered with 'scripts/index_to_scary_package_strings.py'
     SCARY_PACKAGE_STRINGS = """
+        7z 9.20-1
         wb 19-4
         qt 2.5-1
         pytz 19-4
