@@ -170,6 +170,27 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
         self.assertEqualOperations(
             transaction.pretty_operations, r_pretty_operations)
 
+    def test_install_when_some_unrelated_packages_are_installed(self):
+        # Given
+        foo = self.package_factory(u'foo 1.2.3-1')
+        self.installed_repository.add_package(foo)
+
+        bar_1 = self.package_factory(u'bar 1.2.3-1')
+        bar_2 = self.package_factory(u'bar 1.2.3-2')
+        self.repository.add_package(bar_1)
+        self.repository.add_package(bar_2)
+
+        request = Request()
+        request.install(R('bar'))
+
+        # When
+        transaction = self.resolve(request)
+
+        # Then
+        self.assertEqualOperations(
+            transaction.operations, [InstallOperation(bar_2)]
+        )
+
     def test_requirements_are_satisfiable(self):
         # Given
         scenario = Scenario.from_yaml(io.StringIO(u"""

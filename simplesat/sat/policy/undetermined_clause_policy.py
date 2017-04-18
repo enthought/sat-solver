@@ -96,7 +96,8 @@ class UndeterminedClausePolicy(IPolicy):
 
     def _best_sorted_candidate(self, package_ids, assignments):
         for p_id in package_ids:
-            if p_id not in assignments.assigned_ids:
+            if p_id not in assignments.assigned_ids and \
+               p_id in assignments.unassigned_ids:
                 return p_id
 
     def _best_candidate(self, package_ids, assignments, update=False):
