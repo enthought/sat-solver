@@ -16,6 +16,17 @@ class TestConstraintModifiers(unittest.TestCase):
         self.assertEqual(modifiers.allow_newer, set(('u', 'v')))
         self.assertEqual(modifiers.allow_older, set(('x', 'y')))
 
+    def test_initialization_iterables(self):
+        # Given
+        modifiers = ConstraintModifiers(allow_any=(("a", "b"), ("c")),
+                                        allow_newer=[["x", "y"], ["z"]],
+                                        allow_older=(["h"], ["k"]))
+
+        # Then
+        self.assertEqual(modifiers.allow_any, set(("a", "b", "c")))
+        self.assertEqual(modifiers.allow_newer, set(("x", "y", "z")))
+        self.assertEqual(modifiers.allow_older, set(("h", "k")))
+
     def test_asdict(self):
         # Given
         modifiers = ConstraintModifiers(allow_any=('c', 'b'),

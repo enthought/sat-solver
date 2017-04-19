@@ -65,15 +65,26 @@ ALLOW_ANY_MAP = {
 
 
 def as_set(container):
-    """ Return a set from an iterable, being careful not to disassemble
-    strings.
+    """ Return a set from an iterable or an iterable of iterables, being
+    careful not to disassemble strings.
         >>> iterable_to_set(['foo'])
         set(['foo'])
         >>> iterable_to_set('foo')
         set(['foo'])
+        >>> iterable_to_set((('foo'), ('bar')))
+        set(['foo', 'bar'])
     """
     if isinstance(container, six.string_types):
         container = (container,)
+    elif (len(container) and not isinstance(container[0], six.string_types)):
+        try:
+            container = [
+                element for entry in container for element in entry
+            ]
+        except TypeError:
+            # not a nested iterable
+            pass
+
     return set(container)
 
 
