@@ -12,11 +12,14 @@ addons:
     packages:
       - graphviz
 
+cache:
+  pip: true
+
 install:
-  - pip install -U pip
+  - pip install -U pip wheel
   - pip install -U setuptools
   - pip install -r doc_requirements.txt
-  - pip install .
+  - pip install -U .
 
 script:
   - haas simplesat
