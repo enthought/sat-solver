@@ -602,6 +602,64 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
         with self.assertRaises(SatisfiabilityError):
             self.resolve(request)
 
+    def test_up_to_date_package_choices(self):
+        # Given
+        envisage_4_7_2_1 = P(u"envisage 4.7.2-1; depends (apptools ^= 4.4.0, traits ^= 5.1.1)")
+        envisage_4_7_1_1 = P(u"envisage 4.7.1-1")
+        apptools_4_4_0_12 = P(u"apptools 4.4.0-12; depends (traitsui ^= 6.0.0, configobj ^= 5.0.6)")
+        apptools_4_4_0_13 = P(u"apptools 4.4.0-13; depends (traitsui ^= 6.1.0, configobj ^= 5.0.6)")
+        apptools_4_4_0_14 = P(u"apptools 4.4.0-14; depends (traitsui ^= 6.1.1, configobj ^= 5.0.6)")
+        pyface_6_0_0_5 = P(u"pyface 6.0.0-5; depends (pygments ^= 2.2.0, traits ^= 5.1.1)")
+        pyface_6_1_0_1 = P(u"pyface 6.1.0-1; depends (pygments ^= 2.2.0, traits ^= 5.1.1)")
+        pyface_6_1_0_2 = P(u"pyface 6.1.0-2; depends (pygments ^= 2.2.0, traits ^= 5.1.1)")
+        traitsui_6_0_0_3 = P(u"traitsui 6.0.0-3; depends (traits ^= 5.1.0, pyface ^= 6.0.0)")
+        traitsui_6_0_0_4 = P(u"traitsui 6.0.0-4; depends (traits ^= 5.1.1, pyface ^= 6.0.0)")
+        traitsui_6_1_0_1 = P(u"traitsui 6.1.0-1; depends (pyface ^= 6.1.0, traits ^= 5.1.1)")
+        traitsui_6_1_1_1 = P(u"traitsui 6.1.1-1; depends (pyface ^= 6.1.0, traits ^= 5.1.1)")
+        traits_5_1_1_1 = P(u"traits 5.1.1-1")
+        configobj_5_0_6_3 = P(u"configobj 5.0.6-3; depends (six ^= 1.11.0)")
+        six_1_11_0_1 = P(u"six 1.11.0-1")
+        pygments_2_2_0_1 = P(u"pygments 2.2.0-1")
+
+        packages = [
+            apptools_4_4_0_12,
+            apptools_4_4_0_13,
+            apptools_4_4_0_14,
+            configobj_5_0_6_3,
+            envisage_4_7_2_1,
+            envisage_4_7_1_1,
+            pyface_6_0_0_5,
+            pyface_6_1_0_1,
+            pyface_6_1_0_2,
+            pygments_2_2_0_1,
+            six_1_11_0_1,
+            traits_5_1_1_1,
+            traitsui_6_0_0_3,
+            traitsui_6_0_0_4,
+            traitsui_6_1_0_1,
+            traitsui_6_1_1_1,
+        ]
+        for package in packages:
+            self.repository.add_package(package)
+
+        # When
+        request = Request()
+        request.install(R("envisage"))
+        transaction = self.resolve(request)
+
+        # Then
+        expected_operations = [
+            InstallOperation(pygments_2_2_0_1),
+            InstallOperation(six_1_11_0_1),
+            InstallOperation(traits_5_1_1_1),
+            InstallOperation(configobj_5_0_6_3),
+            InstallOperation(pyface_6_1_0_2),
+            InstallOperation(traitsui_6_1_1_1),
+            InstallOperation(apptools_4_4_0_14),
+            InstallOperation(envisage_4_7_2_1),
+        ]
+        self.assertEqualOperations(transaction.operations, expected_operations)
+
 
 class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
     def test_no_conflict(self):
@@ -690,4 +748,3 @@ class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
 
         self.assertMultiLineEqual(
             ctx.exception.hint_pretty_string, r_hint_pretty_string)
-
