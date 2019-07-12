@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from collections import defaultdict
-
 import six
 
 from .policy import IPolicy, pkg_id_to_version
