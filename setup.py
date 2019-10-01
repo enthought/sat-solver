@@ -14,7 +14,7 @@ POST_RELEASE = None
 
 
 INSTALL_REQUIRES = [
-    "attrs >= 16.1.0",
+    "attrs >= 17.4.0",
     "okonomiyaki >= 0.16.6",
     "six >= 1.10.0"
 ]

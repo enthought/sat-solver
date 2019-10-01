@@ -77,7 +77,7 @@ def as_set(container):
     return set(container)
 
 
-_coerced_set = dict(default=(), convert=as_set,
+_coerced_set = dict(default=(), converter=as_set,
                     validator=instance_of(set))
 
 
