@@ -5,9 +5,11 @@
  Version 0.8.2
 ==============
 
-* Fix deprecated `convert` attribute in `constraint_modifiers.py` to
+* Fix deprecated ``convert`` attribute in ``constraint_modifiers.py`` to
   comply with attrs package release 19.2.0 (see also
-  https://www.attrs.org/en/stable/changelog.html). (#270)
+  `https://www.attrs.org/en/stable/changelog.html`_). (#270)
+* Fix typo in ``InvalidConstrain`` error message. (#266)
+* Fix error with ``UndeterminedClausePolicy`` not suggesting best packages. (#268)
 
 Internals
 ---------
