@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from collections import defaultdict
-
 import six
 
 from .policy import IPolicy, pkg_id_to_version
@@ -30,44 +28,17 @@ class UndeterminedClausePolicy(IPolicy):
 
         self._decision_set = set()
         self._requirements = set()
-        self._unsatisfied_clauses = set()
-        self._id_to_clauses = defaultdict(list)
         self._all_ids = set()
 
     def add_requirements(self, package_ids):
         self._requirements.update(package_ids)
 
-    def _update_cache_from_assignments(self, assignments):
-        changelog = assignments.consume_changelog()
-        for key in six.iterkeys(changelog):
-            for clause in self._id_to_clauses[key]:
-                if any(assignments.value(l) for l in clause.lits):
-                    self._unsatisfied_clauses.discard(clause)
-                else:
-                    self._unsatisfied_clauses.add(clause)
-
-    def _build_id_to_clauses(self, clauses):
-        """ Return a mapping from package ids to a list of clauses containing
-        that id.
-        """
-        table = defaultdict(list)
-        for c in clauses:
-            for l in c.lits:
-                table[abs(l)].append(c)
-
-        # Make sure all installed packages appear in the table
-        for pid in self._prefer_installed_pkg_ids:
-            table[pid]
-
-        self._all_ids = set(six.iterkeys(table))
-        return dict(table)
-
     def get_next_package_id(self, assignments, clauses):
         """Get the next unassigned package.
         """
         if assignments.new_keys:
-            self._id_to_clauses = self._build_id_to_clauses(clauses)
-            self._refresh_decision_set(assignments)
+            self._refresh_decision_set(assignments, clauses)
+
         candidate_id = None
         best = self._best_candidate
 
@@ -81,10 +52,11 @@ class UndeterminedClausePolicy(IPolicy):
             candidate_id = best(self._decision_set, assignments, update=True)
 
         if candidate_id is None:
-            self._refresh_decision_set(assignments)
+            self._refresh_decision_set(assignments, clauses)
             candidate_id = best(self._decision_set, assignments)
-            if candidate_id is None:
-                candidate_id = best(self._all_ids, assignments)
+
+        if candidate_id is None:
+            candidate_id = best(self._all_ids, assignments)
 
         assert assignments.get(candidate_id) is None, \
             "Trying to assign to a variable which is already assigned."
@@ -110,12 +82,21 @@ class UndeterminedClausePolicy(IPolicy):
         except ValueError:
             return None
 
-    def _refresh_decision_set(self, assignments):
-        self._update_cache_from_assignments(assignments)
+    def _refresh_decision_set(self, assignments, clauses):
+        assignments.consume_changelog()
+
+        all_ids = {abs(l) for c in clauses for l in c.lits}
+        all_ids.update(self._prefer_installed_pkg_ids)
+        self._all_ids = all_ids
+
+        unsatisfied_clauses = {
+            clause for clause in clauses
+            if not any(assignments.value(l) for l in clause.lits)
+        }
         self._decision_set.clear()
         self._decision_set.update(
             abs(lit)
-            for clause in self._unsatisfied_clauses
+            for clause in unsatisfied_clauses
             for lit in clause.lits
         )
         self._decision_set.difference_update(assignments.assigned_ids)

@@ -602,6 +602,40 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
         with self.assertRaises(SatisfiabilityError):
             self.resolve(request)
 
+    def test_up_to_date_package_choices(self):
+        # Given
+        packages = u"""
+            envisage 4.7.2-1; depends (apptools ^= 4.4.0, traits ^= 5.1.1)
+            apptools 4.4.0-12; depends (traitsui ^= 6.0.0)
+            apptools 4.4.0-14; depends (traitsui ^= 6.1.1)
+            traitsui 6.0.0-3; depends (traits ^= 5.1.0)
+            traitsui 6.0.0-4; depends (traits ^= 5.1.1)
+            traitsui 6.1.1-1; depends (traits ^= 5.1.1)
+            traits 5.1.0-1
+            traits 5.1.1-1
+        """
+        for package in packages.strip().splitlines():
+            self.repository.add_package(P(package.strip()))
+
+        # When
+        request = Request()
+        request.install(R("envisage"))
+        transaction = self.resolve(request)
+        packages = {
+            operation.package.name: str(operation.package.version)
+            for operation in transaction.operations
+        }
+
+        # Then
+        expected_packages = {
+            "traits": "5.1.1-1",
+            "traitsui": "6.1.1-1",
+            "apptools": "4.4.0-14",
+            "envisage": "4.7.2-1",
+        }
+        self.assertEqual(packages, expected_packages)
+
+
 
 class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
     def test_no_conflict(self):
@@ -690,4 +724,3 @@ class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
 
         self.assertMultiLineEqual(
             ctx.exception.hint_pretty_string, r_hint_pretty_string)
-

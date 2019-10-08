@@ -2,6 +2,23 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Version 0.8.2
+=============
+
+Released on October 8th, 2019.
+
+* Fix deprecated `convert` attribute in `constraint_modifiers.py` to
+  comply with attrs package release 19.2.0 (see also
+  `https://www.attrs.org/en/stable/changelog.html`_). (#270)
+* Fix typo in ``InvalidConstraint`` error message. (#266)
+* Fix error with ``UndeterminedClausePolicy`` not suggesting best packages. (#268)
+
+Internals
+---------
+
+* Change minimum supported version of attrs to 17.4.0. (#270)
+
+
 Version 0.8.1
 =============
 
@@ -30,6 +47,7 @@ Internals
 ---------
 
 * update runtime dependencies constraints to latest okonomiyaki (#252)
+
 
 Version 0.7.0
 =============
