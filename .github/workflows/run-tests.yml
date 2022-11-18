@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        runtime: ['3.6', '3.8']
+        runtime: ['2.7', '3.6', '3.8', 'pypy']
 
     steps:
     - name: Clone the source
