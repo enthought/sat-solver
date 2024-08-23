@@ -23,7 +23,7 @@ class _Job(object):
     def __attrs_post_init__(self):
         if self.requirement is None and self.kind != JobType.upgrade:
             raise ValueError(
-                u"_Job requirement cannot be none if kind != {}",format(
+                u"_Job requirement cannot be none if kind != {}".format(
                     JobType.upgrade
                 )
             )
@@ -91,8 +91,9 @@ class Request(object):
 
     def _add_job(self, requirement, job_type):
         if len(self.jobs) > 0:
-            if (job_type is JobType.upgrade or
-                any(job.kind == JobType.upgrade for job in self.jobs)
+            if (
+                    any(job.kind == JobType.upgrade for job in self.jobs)
+                    or job_type is JobType.upgrade
             ):
                 raise ValueError(
                     u"Requests with upgrade job can only have one job")

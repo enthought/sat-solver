@@ -360,8 +360,7 @@ class DependencySolver(object):
         if isinstance(remote_repositories, Repository):
             raise ValueError(
                 u"remote_repositories should be a sequence of "
-                 "repositories, not a repository"
-            )
+                u"repositories, not a repository")
 
         self._remote_repositories = remote_repositories
         self._last_rules_time = timed_context("Generate Rules")
@@ -459,7 +458,8 @@ class DependencySolver(object):
                     return True
                 except SatisfiabilityError:
                     return False
-            conflicting_jobs = minimal_unsatisfiable_subset(request.jobs, callback)
+            conflicting_jobs = minimal_unsatisfiable_subset(
+                request.jobs, callback)
             raise SatisfiabilityErrorWithHint(exc.unsat, conflicting_jobs)
 
     def _create_rules_and_initialize_policy(self, request):
@@ -531,7 +531,8 @@ def _convert_upgrade_request_if_needed(request, remote_repositories,
 
         for p in latest_packages:
             upgrade_request.install(
-                InstallRequirement._from_string("{} == {}".format(p.name, p.version))
+                InstallRequirement._from_string(
+                    "{} == {}".format(p.name, p.version))
             )
 
         return upgrade_request

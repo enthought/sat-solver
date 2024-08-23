@@ -16,7 +16,7 @@ from .parser import (
 )
 
 
-_FULL_PACKAGE_RC = re.compile("""\
+_FULL_PACKAGE_RC = re.compile(r"""\
         (?P<name>{})
         (?:-|\s+)
         (?P<version>{})

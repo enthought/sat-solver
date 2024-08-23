@@ -64,6 +64,7 @@ class SatisfiabilityErrorWithHint(SatisfiabilityError):
     def hint_pretty_string(self):
         return (
             u"The following jobs are conflicting:\n{}".format(
-                u"\n".join("    {}".format(str(job)) for job in self.conflicting_jobs)
+                u"\n".join(
+                    "    {}".format(str(job)) for job in self.conflicting_jobs)
             )
         )

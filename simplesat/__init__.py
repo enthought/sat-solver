@@ -15,3 +15,18 @@ except ImportError:  # pragma: no cover
     __is_released__ = False
     __version__ = __git_revision__ = "unknown"
     __version_info__ = (0, 0, 0, "unknown", 0)
+
+
+__all__ = [
+    'Requirement',
+    'InstallRequirement',
+    'PackageMetadata',
+    'RepositoryPackageMetadata',
+    'RepositoryInfo',
+    'Pool',
+    'Repository',
+    'JobType',
+    'Request',
+    '__is_released__',
+    '__version__',
+    '__version_info__']

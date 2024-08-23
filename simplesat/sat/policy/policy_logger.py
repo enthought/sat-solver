@@ -75,7 +75,7 @@ class PolicyLogger(IPolicy):
         for (i, sugg) in enumerate(ids):
             pretty = self._log_pretty_pkg_id(sugg)
             R = 'R' if sugg in required else ' '
-            I = 'I' if sugg in installed else ' '
+            I = 'I' if sugg in installed else ' '  # noqa
             change_str = ""
             try:
                 items = self._log_assignment_changes[i + 1].items()

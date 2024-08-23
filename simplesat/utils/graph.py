@@ -218,7 +218,8 @@ def breadth_first_search(start, neighbor_func, targets,
             ...     return node*2
             >>> def neighbor_func(node):
             ...     return [node + 1]
-            >>> tuple(breadth_first_search(start, neighbor_func, targets, target_func))
+            >>> tuple(breadth_first_search(
+            ...     start, neighbor_func, targets, target_func))
             ((0, 1, 2), (0, 1, 2, 3, 4, 5))
     """
     queue = deque([start])

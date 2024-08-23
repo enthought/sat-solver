@@ -11,7 +11,7 @@ _DISTRIBUTION_RS = "(?P<distribution>{})".format(_DISTRIBUTION_R)
 _VERSION_RS = "(?P<version>{})".format(_VERSION_R)
 _CONSTRAINT_RS = "(?P<constraint>[^,]*)"
 
-CONSTRAINT_BLOCK_RC = re.compile("(?P<kind>\w+)\s*\((?P<constraints>.*?)\)")
+CONSTRAINT_BLOCK_RC = re.compile(r"(?P<kind>\w+)\s*\((?P<constraints>.*?)\)")
 PACKAGE_RC = re.compile(_DISTRIBUTION_RS + _WS_RS + _VERSION_RS)
 CONSTRAINT_RC = re.compile(_DISTRIBUTION_RS + _MAYBE_WS_RS + _CONSTRAINT_RS)
 

@@ -525,14 +525,17 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
         numpy_1_10_4 = P(u"numpy 1.10.4-1; depends (mkl ^= 11.3.1)")
         numpy_1_11_3 = P(u"numpy 1.11.3-1; depends (mkl ^= 2017.0.1)")
 
-        scipy_0_17_1 = P(u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
-        scipy_0_18_1 = P(u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
+        scipy_0_17_1 = P(
+            u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
+        scipy_0_18_1 = P(
+            u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
 
         self.repository.update([
             mkl_11_3_1, mkl_2017_0_1_1, mkl_2017_0_1_2, numpy_1_10_4,
             numpy_1_11_3, scipy_0_17_1, scipy_0_18_1
         ])
-        self.installed_repository.update([mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
+        self.installed_repository.update(
+            [mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
 
         r_operations = [
             RemoveOperation(scipy_0_17_1),
@@ -560,13 +563,15 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
 
         numpy_1_10_4 = P(u"numpy 1.10.4-1; depends (mkl ^= 11.3.1)")
 
-        scipy_0_17_1 = P(u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
+        scipy_0_17_1 = P(
+            u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
 
         self.repository.update([
             mkl_11_3_1, mkl_2017_0_1_1, mkl_2017_0_1_2, numpy_1_10_4,
             scipy_0_17_1
         ])
-        self.installed_repository.update([mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
+        self.installed_repository.update(
+            [mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
 
         # When/Then
         request = Request()
@@ -583,7 +588,8 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
 
         numpy_1_10_4 = P(u"numpy 1.10.4-1; depends (mkl ^= 11.3.1)")
 
-        scipy_0_17_1 = P(u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
+        scipy_0_17_1 = P(
+            u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
 
         gnureadline_6_3 = P(u"gnureadline 6.3-1")
 
@@ -592,7 +598,8 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
             mkl_11_3_1, mkl_2017_0_1_1, mkl_2017_0_1_2, numpy_1_10_4,
             scipy_0_17_1
         ])
-        self.installed_repository.update([mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
+        self.installed_repository.update(
+            [mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
         self.installed_repository.update([gnureadline_6_3])
 
         # When/Then
@@ -636,13 +643,13 @@ class TestSolver(SolverHelpersMixin, unittest.TestCase):
         self.assertEqual(packages, expected_packages)
 
 
-
 class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
     def test_no_conflict(self):
         # Given
         mkl_2017_0_1_1 = P(u"mkl 2017.0.1-1")
         numpy_1_11_3 = P(u"numpy 1.11.3-1; depends (mkl ^= 2017.0.1)")
-        scipy_0_18_1 = P(u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
+        scipy_0_18_1 = P(
+            u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
 
         r_operations = [
             InstallOperation(mkl_2017_0_1_1),
@@ -656,7 +663,6 @@ class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
         request.install(R(u"scipy >= 0.18.0"))
         request.install(R(u"numpy >= 1.10.0"))
 
-
         # When
         transaction = self.resolve_with_hint(request)
 
@@ -668,7 +674,8 @@ class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
         mkl_11_3_1 = P(u"mkl 11.3.1-1")
         mkl_2017_0_1_1 = P(u"mkl 2017.0.1-1")
         numpy_1_11_3 = P(u"numpy 1.11.3-1; depends (mkl ^= 2017.0.1)")
-        scipy_0_18_1 = P(u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
+        scipy_0_18_1 = P(
+            u"scipy 0.18.1-1; depends (mkl ^= 2017.0.1, numpy ^= 1.11.3)")
 
         self.repository.update([
             mkl_11_3_1, mkl_2017_0_1_1, numpy_1_11_3, scipy_0_18_1,
@@ -677,14 +684,13 @@ class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
         request = Request()
         request.install(R(u"scipy >= 0.18.0"))
         request.install(R(u"numpy >= 1.10.0"))
-        request.install(R(u"mkl < 12"))  # MKL < 12 conflicts with scipy >= 0.18.0
+        # MKL < 12 conflicts with scipy >= 0.18.0
+        request.install(R(u"mkl < 12"))
 
         r_hint_pretty_string = textwrap.dedent(u"""\
             The following jobs are conflicting:
                 install numpy >= 1.10.0-0
-                install mkl < 12-0"""
-        )
-
+                install mkl < 12-0""")
 
         # When/Then
         with self.assertRaises(SatisfiabilityErrorWithHint) as ctx:
@@ -701,19 +707,20 @@ class TestSolverWithHint(SolverHelpersMixin, unittest.TestCase):
 
         numpy_1_10_4 = P(u"numpy 1.10.4-1; depends (mkl ^= 11.3.1)")
 
-        scipy_0_17_1 = P(u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
+        scipy_0_17_1 = P(
+            u"scipy 0.17.1-1; depends (mkl ^= 11.3.1, numpy ^= 1.10.4)")
 
         self.repository.update([
             mkl_11_3_1, mkl_2017_0_1_1, mkl_2017_0_1_2, numpy_1_10_4,
             scipy_0_17_1
         ])
-        self.installed_repository.update([mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
+        self.installed_repository.update(
+            [mkl_11_3_1, numpy_1_10_4, scipy_0_17_1])
 
         r_hint_pretty_string = textwrap.dedent(u"""\
             The following jobs are conflicting:
                 install mkl == 2017.0.1-2
-                install numpy == 1.10.4-1"""
-        )
+                install numpy == 1.10.4-1""")
 
         # When/Then
         request = Request()

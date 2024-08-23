@@ -4,7 +4,7 @@ from collections import OrderedDict
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.errors import (
-    InvalidConstraint, InvalidDependencyString, SolverException
+    InvalidConstraint, InvalidDependencyString
 )
 
 from ..kinds import Equal
