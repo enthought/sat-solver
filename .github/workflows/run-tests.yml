@@ -15,9 +15,9 @@ jobs:
         os: [ubuntu-20.04, macos-12, macos-latest, windows-2019]
         exclude:
         - os: macos-latest
-          python-version: 3.6
+          runtime: 3.6
         - os: macos-latest
-          python-version: 2.7
+          runtime: 2.7
     runs-on: ${{ matrix.os }}
     needs: code-lint
     steps:
