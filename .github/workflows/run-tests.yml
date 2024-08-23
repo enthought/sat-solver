@@ -11,13 +11,11 @@ jobs:
   run-tests:
     strategy:
       matrix:
-        runtime: [2.7, 3.6, 3.8, 3.11, pypy3.8]
+        runtime: [3.6, 3.8, 3.11, pypy3.8]
         os: [ubuntu-20.04, macos-12, macos-latest, windows-2019]
         exclude:
         - os: macos-latest
           runtime: 3.6
-        - os: macos-latest
-          runtime: 2.7
     runs-on: ${{ matrix.os }}
     needs: code-lint
     steps:
