@@ -1,6 +1,7 @@
 [run]
 branch = True
 source = simplesat
+relative_files = True
 
 [report]
 omit = *test*
