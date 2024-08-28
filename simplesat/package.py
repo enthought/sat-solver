@@ -80,7 +80,7 @@ class PackageMetadata(object):
             For example, consider a package that depends on the following:
                 - nose
                 - six (> 1.2, <= 1.2.3), or >= 1.2.5-2
-                    Written as intervals, (1.2, 1.2.3] or [1.2.5-2, \infty)
+                    Written as intervals, (1.2, 1.2.3] or [1.2.5-2, \\infty)
                 - MKL >= 10.1, < 11
 
             The constraint tuple representing this would be:

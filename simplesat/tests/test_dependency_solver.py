@@ -79,7 +79,8 @@ class TestRequirementsAreSatistifiable(unittest.TestCase):
         # When/Then
         result = requirements_are_satisfiable(packages, requirements)
         self.assertFalse(result.is_satisfiable)
-        result = requirements_are_satisfiable(packages, requirements, modifiers)
+        result = requirements_are_satisfiable(
+            packages, requirements, modifiers)
         self.assertTrue(result.is_satisfiable)
 
 
@@ -99,7 +100,8 @@ class TestMinUnsat(unittest.TestCase):
         packages = packages_from_definition(packages_definition)
 
         def callback(requirements):
-            return requirements_are_satisfiable(packages, requirements).is_satisfiable
+            return requirements_are_satisfiable(
+                packages, requirements).is_satisfiable
 
         r_min_unsat = [
             Requirement._from_string("numpy < 1.10"),
@@ -129,7 +131,8 @@ class TestMinUnsat(unittest.TestCase):
         packages = packages_from_definition(packages_definition)
 
         def callback(requirements):
-            return requirements_are_satisfiable(packages, requirements).is_satisfiable
+            return requirements_are_satisfiable(
+                packages, requirements).is_satisfiable
 
         r_min_unsat = [
             Requirement._from_string("MKL < 11"),
@@ -174,7 +177,8 @@ class TestMinUnsat(unittest.TestCase):
         requirements = requirements_from_definition(requirements_definition)
 
         def callback(requirements):
-            return requirements_are_satisfiable(packages, requirements).is_satisfiable
+            return requirements_are_satisfiable(
+                packages, requirements).is_satisfiable
 
         r_min_unsat = [R("MKL == 11.1.4-1"), R("pandas == 0.12.0-1")]
 
@@ -205,7 +209,8 @@ class TestMinUnsat(unittest.TestCase):
         requirements = requirements_from_definition(requirements_definition)
 
         def callback(requirements):
-            return requirements_are_satisfiable(packages, requirements).is_satisfiable
+            return requirements_are_satisfiable(
+                packages, requirements).is_satisfiable
 
         r_min_unsat = [R("P"), R("Q"), R("R")]
 

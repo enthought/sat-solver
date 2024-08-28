@@ -85,13 +85,13 @@ class UndeterminedClausePolicy(IPolicy):
     def _refresh_decision_set(self, assignments, clauses):
         assignments.consume_changelog()
 
-        all_ids = {abs(l) for c in clauses for l in c.lits}
+        all_ids = {abs(l) for c in clauses for l in c.lits}  # noqa
         all_ids.update(self._prefer_installed_pkg_ids)
         self._all_ids = all_ids
 
         unsatisfied_clauses = {
             clause for clause in clauses
-            if not any(assignments.value(l) for l in clause.lits)
+            if not any(assignments.value(l) for l in clause.lits)  # noqa
         }
         self._decision_set.clear()
         self._decision_set.update(

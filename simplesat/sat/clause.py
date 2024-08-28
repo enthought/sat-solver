@@ -74,8 +74,8 @@ class Clause(Constraint):
     def calculate_reason(self, p=None):
         """For a conflicting clause, return the reason for propagating p.
 
-        For example, if the clause is x \/ y \/ z, then the reason for
-        propagating x is -y /\ -z. By convention, f the literal p does not
+        For example, if the clause is x \\/ y \\/ z, then the reason for
+        propagating x is -y /\\ -z. By convention, f the literal p does not
         occur in the clause, the negative of the whole clause is returned.
 
         """

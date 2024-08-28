@@ -87,7 +87,7 @@ class UNSAT(object):
         self._conflict_paths.extend(paths)
 
     def _key(self, clause):
-        return tuple(sorted(l for l in clause.lits))
+        return tuple(sorted(l for l in clause.lits))  # noqa
 
     def _find_conflict_paths(self, end_clauses, relevant_clauses):
         """ Return a tuple of paths representing conflicts between a set of
