@@ -1,9 +1,6 @@
 Prototype for SAT-based dependency handling. This is a work in progress,
 do not expect any API not to change at this point.
 
-.. image:: https://travis-ci.org/enthought/sat-solver.svg?branch=master
-    :target: https://travis-ci.org/enthought/sat-solver
-
 Installation
 ============
 
