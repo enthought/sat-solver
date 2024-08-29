@@ -2,6 +2,12 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Version 0.9.0
+==============
+
+* Replace travis CI with Github Actions (#281)
+* Run tests for Python 3.11 (#284)
+
  Version 0.8.2
 ==============
 
