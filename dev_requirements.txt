@@ -3,3 +3,4 @@ PyYAML
 Jinja2
 coverage
 haas>=0.6
+mock
