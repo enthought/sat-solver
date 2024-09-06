@@ -2,6 +2,7 @@
 branch = True
 source = simplesat
 relative_files = True
+data_file = coverage
 
 [report]
 omit = *test*

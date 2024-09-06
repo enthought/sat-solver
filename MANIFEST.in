@@ -1,1 +1,3 @@
-include setup_utils.py
+include VERSION
+include *.txt
+recursive-include docs
