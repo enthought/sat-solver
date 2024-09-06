@@ -2,9 +2,13 @@ name: simplesat
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main
+      - maintenance/*
   pull_request:
-    branches: [ main ]
+    branches: 
+      - main
+      - maintenance/*
   workflow_dispatch:
 
 jobs:
