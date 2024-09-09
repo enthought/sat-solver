@@ -1,3 +1,4 @@
 include VERSION
 include *.txt
-recursive-include docs
+recursive-include docs *.bat *.py *.rst
+include docs/Makefile
