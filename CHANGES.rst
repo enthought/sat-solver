@@ -2,6 +2,11 @@
 ``simplesat`` CHANGELOG
 =======================
 
+Version 0.9.1
+=============
+
+* Fix the simplesat wheel build (#287)
+
 Version 0.9.0
 ==============
 
