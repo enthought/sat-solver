@@ -166,7 +166,7 @@ class TestPool(unittest.TestCase):
             constraint_re = re.escape(constraint)
 
             # Then
-            with self.assertRaisesRegexp(InvalidConstraint, constraint_re):
+            with self.assertRaisesRegex(InvalidConstraint, constraint_re):
                 Pool([repository])
 
     def test_accept_anyversion_constraint_on_provides_metadata(self):
