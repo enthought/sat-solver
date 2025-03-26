@@ -111,14 +111,13 @@ def main(argv=None):
         logger.warning(f'Found release for {args.tag}')
         delete_release(release, args.token)
         create_release(repository, args.tag, args.token)
+        verify_release(repository, args.tag, args.token)
     elif args.ignore:
         logger.warning(f'Found release for {args.tag}')
         exit(0)
     else:
         logger.error(f'Found release for {args.tag}')
         exit(-1)
-
-    verify_release(repository, args.tag, args.token)
 
 if __name__ == "__main__":
     main()
