@@ -40,7 +40,6 @@ jobs:
         verify: true
         verify-cert-identity: https://github.com/enthought/sat-solver/.github/workflows/release.yml@refs/tags/${{github.ref_name}}
         verify-oidc-issuer: https://token.actions.githubusercontent.com
-        release-signing-artifacts: true
         upload-signing-artifacts: true
     - name: Prepare release
       uses:  ./.github/actions/prepare-release
