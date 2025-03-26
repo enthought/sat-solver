@@ -16,7 +16,7 @@ from urllib.parse import quote, urlparse, ParseResult
 
 import requests
 
-from .common import DEFAULT_GITHUB_API_SERVER, get_release
+from .common import DEFAULT_GITHUB_API_SERVER, get_release, verify_release
 
 logger = logging.getLogger('create-release')
 
@@ -118,6 +118,7 @@ def main(argv=None):
         logger.error(f'Found release for {args.tag}')
         exit(-1)
 
+    verify_release(repository, args.tag, args.token)
 
 if __name__ == "__main__":
     main()

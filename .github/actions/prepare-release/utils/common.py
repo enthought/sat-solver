@@ -12,6 +12,8 @@ from urllib.parse import ParseResult
 
 import requests
 
+from .retry import sleeping_retry
+
 DEFAULT_GITHUB_API_SERVER = "api.github.com"
 DEFAULT_GITHUB_UPLOAD_SERVER = "uploads.github.com"
 logger = logging.getLogger(__name__)
@@ -42,5 +44,17 @@ def get_release(repository, tag, token):
     for release in response.json():
         if release['tag_name'] == tag:
             return release
+    else:
+        raise ValueError(f'Could not find release with tag {tag}')
+
+
+def verify_release(repository, tag, token, max_delay=30):
+    for _ in sleeping_retry(2, max_delay=max_delay)
+        try:
+            get_release(repository, args.tag, args.token)
+        except ValueError:
+            continue
+        else:
+            break
     else:
         raise ValueError(f'Could not find release with tag {tag}')
