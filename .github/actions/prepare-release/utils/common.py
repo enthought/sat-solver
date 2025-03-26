@@ -48,10 +48,10 @@ def get_release(repository, tag, token):
         raise ValueError(f'Could not find release with tag {tag}')
 
 
-def verify_release(repository, tag, token, max_delay=30):
+def verify_release(repository, tag, token, max_delay=60):
     for _ in sleeping_retry(2, max_delay=max_delay):
         try:
-            get_release(repository, args.tag, args.token)
+            get_release(repository, tag, token)
         except ValueError:
             continue
         else:
