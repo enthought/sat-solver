@@ -49,7 +49,7 @@ def get_release(repository, tag, token):
 
 
 def verify_release(repository, tag, token, max_delay=30):
-    for _ in sleeping_retry(2, max_delay=max_delay)
+    for _ in sleeping_retry(2, max_delay=max_delay):
         try:
             get_release(repository, args.tag, args.token)
         except ValueError:
