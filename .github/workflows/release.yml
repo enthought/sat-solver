@@ -32,12 +32,16 @@ jobs:
     - name: build wheel
       run: python -m build -s -w -n -x
     - name: sign archives
-      uses: sigstore/gh-action-sigstore-python@v3.0.0
+      uses: sigstore/gh-action-sigstore-python@v3
       with:
-        inputs: dist/simplesat*.whl dist/simplesat*.tar.gz
+        inputs: |
+          dist/simplesat*.whl
+          dist/simplesat*.tar.gz
         verify: true
         verify-cert-identity: https://github.com/enthought/sat-solver/.github/workflows/release.yml@refs/tags/${{github.ref_name}}
         verify-oidc-issuer: https://token.actions.githubusercontent.com
+        release-signing-artifacts: true
+        upload-signing-artifacts: true
     - name: Prepare release
       uses:  ./.github/actions/prepare-release
       with:
