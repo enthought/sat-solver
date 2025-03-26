@@ -106,6 +106,7 @@ def main(argv=None):
             repository, args.tag, args.token)
     except ValueError:
         create_release(repository, args.tag, args.token)
+        verify_release(repository, args.tag, args.token)
         exit(0)
     if args.force:
         logger.warning(f'Found release for {args.tag}')
