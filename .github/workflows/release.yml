@@ -1,0 +1,38 @@
+name: Build wheel and create github release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+
+jobs:
+  github-release:
+    permissions:
+      actions: read
+      contents: write
+      statuses: write
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone the source
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: install developer dependencies
+      run: -m pip install -r dev_requirements.txt
+      shell: python
+    - name: install sat-solver
+      run: -m pip install -e .
+      shell: python
+    - name: run tests
+      run: -m haas simplesat
+      working-directory: ./.github
+      shell: python
+    - name: build wheel
+      run: -m build -s -w -n -x
+      shell: python
+    - name: Prepare release
+      uses:  ./.github/actions/prepare-release
+      with:
+        tag: ${{ github.ref_name }}

@@ -1,0 +1,23 @@
+name: Prepare EDM release
+author: Ioannis Tziakos
+description: Create a draft EDM release and upload artifacts as assets
+inputs:
+  tag:
+     description: 'The tag of the new release'
+     required: true
+  shell:
+     description: 'The Python to use for the commands'
+     default: python
+runs:
+  using: "composite"
+  steps:
+    - name: create release
+      env:
+        PYTHONPATH: ${{ github.action_path }}
+      run: -m utils.create_release --token ${{ github.token }} ${{ inputs.tag }} --ignore
+      shell: ${{ inputs.shell }}
+    - name: upload assets
+      env:
+        PYTHONPATH: ${{ github.action_path }}
+      run: -m utils.upload_assets --replace --token ${{github.token}} ${{ inputs.tag }} dist/
+      shell: ${{ inputs.shell }}
