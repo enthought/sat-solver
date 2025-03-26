@@ -36,7 +36,7 @@ jobs:
       with:
         inputs: dist/simplesat*.whl dist/simplesat*.tar.gz
         verify: true
-        verify-cert-identity: https://github.com/enthought/sat-solver/.github/workflows/release@refs/heads/${{github.ref_name}}
+        verify-cert-identity: https://github.com/enthought/sat-solver/.github/workflows/release.yml@refs/tags/${{github.ref_name}}
         verify-oidc-issuer: https://token.actions.githubusercontent.com
     - name: Prepare release
       uses:  ./.github/actions/prepare-release
