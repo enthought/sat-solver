@@ -4,3 +4,6 @@ Jinja2
 coverage
 haas>=0.6
 mock
+build
+wheel
+requests
