@@ -119,7 +119,7 @@ class ScenarioTestAssistant(object):
                     i, left_s, right_s, delta)
                 self.fail(msg)
 
-            if not type(left) == type(right):
+            if type(left) is not type(right):
                 msg = "Item {0!r} differ in kinds: {1!r} vs {2!r}\n{3}"
                 self.fail(msg.format(i, left, right, delta))
 
