@@ -25,12 +25,12 @@ class TestDefaultOrderedDict(unittest.TestCase):
         self.assertEqual(data[2], [])
         if sys.version_info[:2] < (3, 12):
             r_repr = (
-                "DefaultOrderedDict(<type 'list'>, "
+                "DefaultOrderedDict(<class 'list'>, "
                 "DefaultOrderedDict([(1, [1]), (0, [0]), (2, [])]))")
         else:
             r_repr = (
                 "DefaultOrderedDict(<class 'list'>, "
-                "DefaultOrderedDict({(1, [1]), (0, [0]), (2, [])}))")
+                "DefaultOrderedDict({1: [1], 0: [0], 2: []}))")
         self.assertEqual(repr(data), r_repr)
 
     def test_pickling(self):
