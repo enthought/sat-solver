@@ -1,6 +1,6 @@
-name: Prepare EDM release
+name: Prepare simplesat release
 author: Ioannis Tziakos
-description: Create a draft sat-solver release and upload artifacts as assets
+description: Create a draft simplesat github release and upload wheel and sdist archives as assets
 inputs:
   tag:
      description: 'The tag of the new release'
