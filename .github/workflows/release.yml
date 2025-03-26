@@ -11,6 +11,7 @@ jobs:
       actions: read
       contents: write
       statuses: write
+      id-token: write
     runs-on: ubuntu-latest
     steps:
     - name: Clone the source
@@ -32,6 +33,16 @@ jobs:
     - name: build wheel
       run: -m build -s -w -n -x
       shell: python
+    - name: build wheel
+      run: -m build -s -w -n -x
+      shell: python
+    - name: sign archives
+      uses: sigstore/gh-action-sigstore-python@v3.0.0
+      with:
+        inputs: dist/simplesat*.whl dist/simplesat*.tar.gz
+        verify: true
+        verify-cert-identity: https://github.com/enthought/sat-solver/.github/workflows/release@refs/heads/${{github.ref_name}}
+        verify-oidc-issuer: https://token.actions.githubusercontent.com
     - name: Prepare release
       uses:  ./.github/actions/prepare-release
       with:
