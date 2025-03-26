@@ -6,18 +6,18 @@ inputs:
      description: 'The tag of the new release'
      required: true
   shell:
-     description: 'The Python to use for the commands'
-     default: python
+     description: 'The shell to use for the commands'
+     default: bash
 runs:
   using: "composite"
   steps:
     - name: create release
       env:
         PYTHONPATH: ${{ github.action_path }}
-      run: -m utils.create_release --token ${{ github.token }} ${{ inputs.tag }} --ignore
+      run: python -m utils.create_release --token ${{ github.token }} ${{ inputs.tag }} --ignore
       shell: ${{ inputs.shell }}
     - name: upload assets
       env:
         PYTHONPATH: ${{ github.action_path }}
-      run: -m utils.upload_assets --replace --token ${{github.token}} ${{ inputs.tag }} dist/
+      run: python -m utils.upload_assets --replace --token ${{github.token}} ${{ inputs.tag }} dist/
       shell: ${{ inputs.shell }}
