@@ -6,13 +6,11 @@ on:
 
 
 jobs:
-  github-release:
-    permissions:
-      actions: read
-      contents: write
-      statuses: write
-      id-token: write
-    runs-on: ubuntu-latest
+  run-tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-13, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Clone the source
       uses: actions/checkout@v4
@@ -27,8 +25,23 @@ jobs:
     - name: run tests
       run: python -m haas simplesat
       working-directory: ./.github
-    - name: build wheel
-      run: python -m build -s -w -n -x
+  github-release:
+    needs: run-tests
+    permissions:
+      actions: read
+      contents: write
+      statuses: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone the source
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: install release dependencies
+      run: python -m pip install build wheel requests
     - name: build wheel
       run: python -m build -s -w -n -x
     - name: sign archives
