@@ -31,7 +31,6 @@ jobs:
       actions: read
       contents: write
       statuses: write
-      id-token: write
     runs-on: ubuntu-latest
     steps:
     - name: Clone the source
