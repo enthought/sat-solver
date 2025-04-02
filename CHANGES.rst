@@ -6,7 +6,7 @@ Version 0.9.2
 
 * Support Python 3.12 (#296)
 * Provide better error message when cyclic dependencies are detected (#297)
-* Sign wheels when uploading to pypi
+* Sign wheels when uploading to pypi (#298)
 
 Version 0.9.1
 -------------
