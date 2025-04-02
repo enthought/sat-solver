@@ -1,0 +1,21 @@
+name: Download simplesat assets
+author: Ioannis Tziakos
+description: Download simplesat assets for a specific release
+inputs:
+  tag:
+     description: 'The release tag with the assets'
+     required: true
+  shell:
+     description: 'The shell to use for the commands'
+     default: bash
+  shell:
+     description: 'The folder to download the assets into'
+     default: dist/
+runs:
+  using: "composite"
+  steps:
+    - name: download assets
+      env:
+        PYTHONPATH: ${{ github.action_path }}
+      run: edm run -e pybuild -- python -m utils.download_assets --folder ${{ inputs.tag }} --token ${{github.token}} ${{ inputs.tag }}
+      shell: ${{ inputs.shell }}
