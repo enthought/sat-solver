@@ -107,7 +107,7 @@ class TestGraph(unittest.TestCase):
 
     def test_toposort_cycle_with_pretty_print(self):
         # Given
-        id2string = lambda x: bin(x)
+        id2string = lambda x: bin(x)  # noqa
         graph = {
             0: set(),
             1: set(),

@@ -44,6 +44,7 @@ CYCLE_DEF = dedent("""\
     D 1.0.0-1; depends (C ^= 0.0.0)
 """)
 
+
 class TestTransaction(unittest.TestCase):
 
     maxDiff = None
