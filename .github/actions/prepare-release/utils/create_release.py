@@ -42,7 +42,7 @@ def create_release(repository, tag, token):
         'X-GitHub-Api-Version': '2022-11-28'}
     data = {
         'tag_name': tag,
-        'name': f'{tag} Python runtime',
+        'name': f'{tag} Release',
         'body': '',
         'draft': True,
         'prerelease': False,
