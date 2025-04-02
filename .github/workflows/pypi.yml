@@ -1,0 +1,29 @@
+name: Publish new release to pypi
+
+on:
+  # Triggers the workflow when simplesat is released on Github
+  release:
+    types:
+        - released
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        required: true
+        type: string
+
+jobs:
+  pypi-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish release distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc7
