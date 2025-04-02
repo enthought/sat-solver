@@ -17,5 +17,5 @@ runs:
     - name: download assets
       env:
         PYTHONPATH: ${{ github.action_path }}
-      run: edm run -e pybuild -- python -m utils.download_assets --folder ${{ inputs.tag }} --token ${{github.token}} ${{ inputs.tag }}
+      run: edm run -e pybuild -- python -m utils.download_assets --folder ${{ inputs.folder }} --token ${{github.token}} ${{ inputs.tag }}
       shell: ${{ inputs.shell }}
