@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      actions: read
+      contents: read
+      statuses: write
     steps:
     - uses: actions/checkout@v4
       with:
@@ -28,7 +31,8 @@ jobs:
     - name: manual build
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: echo "release_tag=${{ inputs.release_tag }}" >> "$GITHUB_ENV"
-    - uses: actions/setup-python@v5
+    - name: setup Python
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     - name: install custom action dependencies
