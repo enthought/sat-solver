@@ -15,6 +15,8 @@ from ..graph import (
 
 class TestGraph(unittest.TestCase):
 
+    maxDiff = None
+
     def test_transitive_neighbors(self):
         # Given
         graph = {
@@ -99,9 +101,36 @@ class TestGraph(unittest.TestCase):
             6: {3, 5},
         }
 
-        # Then
+        # When/Then
         with self.assertRaises(ValueError):
             tuple(toposort(graph))
+
+    def test_toposort_cycle_with_pretty_print(self):
+        # Given
+        id2string = lambda x: bin(x)  # noqa
+        graph = {
+            0: set(),
+            1: set(),
+            2: {6},
+            3: {0, 2},
+            4: {0},
+            5: {1, 2},
+            6: {3, 5},
+        }
+        expected = dedent("""\
+        Cyclic dependencies exist among these items:
+        0b10 -> ['0b110']
+        0b11 -> ['0b10']
+        0b101 -> ['0b10']
+        0b110 -> ['0b11', '0b101']""")
+
+        # When
+        with self.assertRaises(ValueError) as cm:
+            tuple(toposort(graph, id2string=id2string))
+
+        # Then
+        message = cm.exception.args[0]
+        self.assertEqual(message, expected)
 
 
 class TestDependencyGraph(unittest.TestCase):

@@ -11,7 +11,7 @@ import itertools
 from simplesat.constraints.requirement import InstallRequirement
 
 
-def toposort(nodes_to_edges):
+def toposort(nodes_to_edges, id2string=None):
     """Return an iterator over topologically sorted groups of nodes.
 
     Output is a list of sets in
@@ -27,6 +27,9 @@ def toposort(nodes_to_edges):
         nodes and values are all of the nodes on which the key depends.
 
         For example, if node 1 depends on 2, we have ``{1: {2}, 2: set()}``.
+    id2string: function
+        A function to convert package id to user frendly strings for the error
+        messages.
 
     Yields
     ------
@@ -77,9 +80,14 @@ def toposort(nodes_to_edges):
                 for item, dep in six.iteritems(data)
                 if item not in ordered}
     if data:
+        if id2string is None:
+            id2string = repr
         msg = "Cyclic dependencies exist among these items:\n{}"
-        cyclic = '\n'.join(repr(x) for x in six.iteritems(data))
-        raise ValueError(msg.format(cyclic))
+        cyclic = []
+        for key, value in data.items():
+            line = id2string(key) + ' -> ' + str([id2string(x) for x in value])
+            cyclic.append(line)
+        raise ValueError(msg.format('\n'.join(cyclic)))
 
 
 def package_lit_dependency_graph(pool, package_lits, closed=True):

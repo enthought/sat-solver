@@ -104,14 +104,20 @@ class Transaction(object):
         first, second = sorted(ops, key=lambda o: rank.index(o.__class__))
         return UpdateOperation(first.package, second.package)
 
+    def _key_to_pretty_string(self, package_id):
+        if package_id > 0:
+            return '{0}-{1}'.format(*self._package_key(package_id))
+        else:
+            return '-({0}-{1})'.format(
+                *self._package_key(abs(package_id)))
+
     def _safe_operations(self, decisions, installed_package_ids):
         graph = package_lit_dependency_graph(self._pool, decisions,
                                              closed=True)
         removals = []
         installs = []
-
         # This builds from the bottom (no dependencies) up
-        for group in toposort(graph):
+        for group in toposort(graph, self._key_to_pretty_string):
             # Sort the set of independent packages for determinism
             for package_id in sorted(group, key=abs):
                 assert package_id in decisions
