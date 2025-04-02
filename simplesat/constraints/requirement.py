@@ -16,12 +16,12 @@ from .parser import (
 )
 
 
-_FULL_PACKAGE_RC = re.compile("""\
-        (?P<name>{})
-        (?:-|\s+)
-        (?P<version>{})
-        $""".format(_DISTRIBUTION_NAME_R, _VERSION_R),  # noqa
-    re.VERBOSE)
+_FULL_PACKAGE_RC = re.compile(
+    (
+        f"(?P<name>{_DISTRIBUTION_NAME_R})"
+        r"(?:-|\s+)"
+        f"(?P<version>{_VERSION_R})$"
+    ), re.VERBOSE)
 
 
 def parse_package_full_name(full_name):

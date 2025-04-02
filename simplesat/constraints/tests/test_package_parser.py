@@ -3,8 +3,7 @@ import unittest
 from okonomiyaki.versions import EnpkgVersion
 
 from simplesat.constraints.package_parser import (
-    PrettyPackageStringParser, package_to_pretty_string
-)
+    PrettyPackageStringParser, package_to_pretty_string)
 from simplesat.constraints.requirement import Requirement
 from simplesat.package import PackageMetadata
 from simplesat.errors import InvalidConstraint
@@ -21,7 +20,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         r_message = "Invalid preamble: "
 
         # Then
-        with self.assertRaisesRegexp(ValueError, r_message):
+        with self.assertRaisesRegex(ValueError, r_message):
             parse(package_string)
 
         # Given
@@ -29,7 +28,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         r_message = "Invalid preamble: 'numpy'"
 
         # Then
-        with self.assertRaisesRegexp(ValueError, r_message):
+        with self.assertRaisesRegex(ValueError, r_message):
             parse(package_string)
 
         # Given
@@ -37,7 +36,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         r_message = ("Invalid preamble: ")
 
         # Then
-        with self.assertRaisesRegexp(ValueError, r_message):
+        with self.assertRaisesRegex(ValueError, r_message):
             parse(package_string)
 
         # Given
@@ -45,7 +44,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         r_message = ("Invalid preamble: ")
 
         # Then
-        with self.assertRaisesRegexp(ValueError, r_message):
+        with self.assertRaisesRegex(ValueError, r_message):
             parse(package_string)
 
         # Given
@@ -53,7 +52,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
         r_message = ("Invalid preamble: ")
 
         # Then
-        with self.assertRaisesRegexp(ValueError, r_message):
+        with self.assertRaisesRegex(ValueError, r_message):
             parse(package_string)
 
         # Given
@@ -62,7 +61,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
                      "Unknown constraint kind: 'disparages'")
 
         # When
-        with self.assertRaisesRegexp(ValueError, r_message):
+        with self.assertRaisesRegex(ValueError, r_message):
             parse(package_string)
 
     def test_depends_simple(self):
@@ -215,7 +214,7 @@ class TestPrettyPackageStringParser(unittest.TestCase):
                      "Unknown constraint kind: 'conflits'")
 
         # Then
-        with self.assertRaisesRegexp(ValueError, r_message):
+        with self.assertRaisesRegex(ValueError, r_message):
             parse(package_string)
 
         # Given
