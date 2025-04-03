@@ -1,4 +1,4 @@
-name: Build wheel and create github release
+name: Create github release
 on:
   push:
     tags:
@@ -40,10 +40,8 @@ jobs:
       with:
         python-version: '3.11'
     - name: install release dependencies
-      run: python -m pip install build wheel requests
-    - name: build wheel
-      run: python -m build -s -w -n -x
-    - name: Prepare release
+      run: python -m pip install requests
+    - name: prepare release
       uses:  ./.github/actions/prepare-release
       with:
         tag: ${{ github.ref_name }}
