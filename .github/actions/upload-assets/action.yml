@@ -17,5 +17,5 @@ runs:
     - name: upload assets
       env:
         PYTHONPATH: ${{ github.action_path }}
-      run: edm run -e pybuild -- python -m utils.upload_assets --token ${{github.token}} --replace ${{ inputs.tag }} ${{ inputs.folder }}
+      run: python -m utils.upload_assets --token ${{github.token}} --replace ${{ inputs.tag }} ${{ inputs.folder }}
       shell: ${{ inputs.shell }}

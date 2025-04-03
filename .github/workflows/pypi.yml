@@ -21,15 +21,15 @@ jobs:
       contents: write
       statuses: write
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ github.event.release.tag_name }}
     - name: new release
       if: ${{ github.event_name == 'release' }}
       run: echo "release_tag=${{ github.event.release.tag_name }}" >> "$GITHUB_ENV"
     - name: manual build
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: echo "release_tag=${{ inputs.release_tag }}" >> "$GITHUB_ENV"
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ env.release_tag }}
     - name: setup Python
       uses: actions/setup-python@v5
       with:
@@ -59,4 +59,4 @@ jobs:
           name: release-dists
           path: dist/
       - name: publish release distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc7
+        uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70  # v1.12.3
