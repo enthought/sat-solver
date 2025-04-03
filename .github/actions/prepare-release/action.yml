@@ -1,6 +1,6 @@
 name: Prepare simplesat release
 author: Ioannis Tziakos
-description: Create a draft simplesat github release and upload wheel and sdist archives as assets
+description: Create a draft simplesat github release
 inputs:
   tag:
      description: 'The tag of the new release'
@@ -15,9 +15,4 @@ runs:
       env:
         PYTHONPATH: ${{ github.action_path }}
       run: python -m utils.create_release --token ${{ github.token }} ${{ inputs.tag }} --ignore
-      shell: ${{ inputs.shell }}
-    - name: upload assets
-      env:
-        PYTHONPATH: ${{ github.action_path }}
-      run: python -m utils.upload_assets --replace --token ${{github.token}} ${{ inputs.tag }} dist/
       shell: ${{ inputs.shell }}

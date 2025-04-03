@@ -1,0 +1,21 @@
+name: Upload simplesat assets
+author: Ioannis Tziakos
+description: Upload simplesat assets to a specific release
+inputs:
+  tag:
+     description: 'The release tag with the assets'
+     required: true
+  shell:
+     description: 'The shell to use for the commands'
+     default: bash
+  folder:
+     description: 'The folder to download the assets into'
+     default: dist/
+runs:
+  using: "composite"
+  steps:
+    - name: upload assets
+      env:
+        PYTHONPATH: ${{ github.action_path }}
+      run: edm run -e pybuild -- python -m utils.upload_assets --token ${{github.token}} --replace ${{ inputs.tag }} ${{ inputs.folder }}
+      shell: ${{ inputs.shell }}
