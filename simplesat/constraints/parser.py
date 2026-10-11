@@ -16,8 +16,8 @@ from simplesat.errors import InvalidConstraint
 # `_distribute_remove` re.Scanner seems to ignore (?i), so we have to write
 # case-insensitivity into the regex manually.
 _DISTRIBUTION_NAME_R = r"(?!\.)(?:\.?\w+)+(?<!\.)"
-_DISTRIBUTION_R = "({})".format(_DISTRIBUTION_NAME_R)
-_VERSION_R = r"((?=\d){}(?:-\w+)?$)".format(_DISTRIBUTION_NAME_R)
+_DISTRIBUTION_R = "(?:{})".format(_DISTRIBUTION_NAME_R)
+_VERSION_R = r"(?:(?=\d){}(?:-\w+)?$)".format(_DISTRIBUTION_NAME_R)
 _EQUAL_R = r"=="
 _GEQ_R = r">="
 _GT_R = r">"
